@@ -1,0 +1,16 @@
+{
+  "next-intro": "Introduction to Next.js ",
+  "next-routing": "Routing in Next.js",
+  "next-state": "State Management in Next.js",
+  "next-data-fetching": "Asynchronous JavaScript",
+  "next-seo": "SEO in Next JS",
+  "next-deploy": "Deploying a Next Js Project",
+  "next-typescript": "TypeScript in Next JS",
+  "next-forms": "Handling Forms in Next.js",
+  "next-api": "API Routes in Next.js",
+  "next-actions": "Next JS Server Actions",
+  "next-mongo": "Integrating with Prisma and MongoDB",
+  "next-auth": "Authentication and Authorization",
+  "assignments": "Next JS Assignments",
+  "js-projects": "Building projects with JavaScript"
+}

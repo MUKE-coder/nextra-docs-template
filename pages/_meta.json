@@ -1,7 +1,11 @@
 {
   "index": "Introduction",
-  "another": "Another Page",
-  "advanced": "Advanced (A Folder)",
+  "programming-tutorials": "Desishub Lessons",
+  "youtube": "YouTube Video Tutorials",
+  "website": "Website Templates Guides",
+  "course-guides": "Course Guides",
+  "courses": "Desishub Courses",
+  "how-to": "How to Guides",
   "about": {
     "title": "About",
     "type": "page"
