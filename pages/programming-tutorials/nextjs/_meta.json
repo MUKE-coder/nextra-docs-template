@@ -1,5 +1,6 @@
 {
   "next-intro": "Introduction to Next.js ",
+  "get-started": "Get Started with Next Js",
   "next-routing": "Routing in Next.js",
   "next-state": "State Management in Next.js",
   "next-data-fetching": "Asynchronous JavaScript",
@@ -11,6 +12,7 @@
   "next-actions": "Next JS Server Actions",
   "next-mongo": "Integrating with Prisma and MongoDB",
   "next-auth": "Authentication and Authorization",
+  "next-packages": "Next JS Commonly used Resources",
   "assignments": "Next JS Assignments",
   "js-projects": "Building projects with JavaScript"
 }

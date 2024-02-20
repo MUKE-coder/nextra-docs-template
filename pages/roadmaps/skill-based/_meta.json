@@ -1,15 +1,5 @@
 {
-  "index": {
-    "title": "Introduction",
-    "theme": {
-      "layout": "full",
-      "breadcrumb": false,
-      "footer": true,
-      "sidebar": true,
-      "toc": true,
-      "pagination": false
-    }
-  },
+  "index": "Introduction",
   "roadmaps": "Roadmaps Must see",
   "programming-tutorials": "Desishub Lessons",
   "youtube": "YouTube Video Tutorials",
