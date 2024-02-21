@@ -1,0 +1,605 @@
+import { Callout } from "nextra/components";
+
+# TypeScript in Next.js: A Comprehensive Guide for Beginners
+
+This serves as a guide for Next.js developers interested in incorporating TypeScript into their projects. We'll explore key concepts, installation steps, and code examples to illustrate their practical application.
+
+## What is TypeScript?
+
+TypeScript is a superset of JavaScript that adds optional static typing. This means you can define data types for variables, functions, and other constructs, improving code clarity, maintainability, and catching errors early.
+
+## Benefits of TypeScript in Next.js:
+
+- Catch errors early: Identify potential issues during development, preventing runtime bugs.
+- Improved code navigation: IDEs leverage types for better autocompletion, refactoring, and code understanding.
+- Larger projects, better structure: Enforces SOLID principles and promotes maintainability in complex applications.
+- Better documentation: Types serve as documentation directly within code, aiding team collaboration.
+
+## Why use TypeScript in Next.js in 2024?
+
+- Growing popularity: TypeScript adoption is skyrocketing across JavaScript frameworks, including Next.js.
+- Enhanced Next.js development: Next.js offers built-in support and type definitions for its features.
+- Future-proof development: Static typing aligns with modern development trends and best practices.
+
+## Installing TypeScript in a Next.js Project
+
+- Next.js provides a TypeScript-first development experience for building your React application.
+- It comes with built-in TypeScript support for automatically installing the necessary packages and configuring the proper settings.
+  <Callout type="info">
+    Next.js now ships with TypeScript, ESLint, and Tailwind CSS configuration by
+    default. - You can optionally use a src directory in the root of your
+    project to separate your application's code from configuration files.
+  </Callout>
+
+I recommend starting a new Next.js app using `create-next-app`, which sets up everything automatically for you. To create a project, run:
+
+```js filename=">_ Terminal" copy
+ npx create-next-app@latest
+```
+
+On installation, you'll see the following prompts:
+
+```js filename=">_ Terminal" lineNumbers
+  What is your project named? my-app
+  Would you like to use TypeScript? No / Yes
+  Would you like to use ESLint? No / Yes
+  Would you like to use Tailwind CSS? No / Yes
+  Would you like to use `src/` directory? No / Yes
+  Would you like to use App Router? (recommended) No / Yes
+```
+
+### TypeScript Inference Explained
+
+TypeScript, as a superset of JavaScript, offers optional static typing. This means it can automatically deduce the type of variables, functions, and other constructs based on their usage, a process known as TypeScript inference. While you can explicitly define types through annotations, inference helps make your code more concise and readable.
+
+Here's a breakdown of key points about TypeScript inference:
+
+### What can be inferred?
+
+- **Variable initialization:** When assigning a value to a variable, TypeScript infers its type based on the value's type, e.g., `let age = 30; // age is inferred as number.`
+- **Default parameter values:** The type of a function parameter with a default value is inferred based on the value's type.
+- **Function return types:** If a function doesn't have an explicit return type annotation, TypeScript attempts to infer it based on the return statements within the function.
+- **Arrays and objects:** The inferred type of arrays and objects reflects the types of their elements and properties.
+
+**Example:**
+
+```typescript copy
+let name = "John"; // Inferred type: string
+const age = 30; // Inferred type: number
+function double(num: number): number {
+  // Inferred return type: number
+  return num * 2;
+}
+const numbers = [1, 2, 3]; // Inferred type: number[]
+const person = { name: "Jane", age: 25 }; // Inferred type: { name: string, age: number }
+```
+
+### Benefits of inference:
+
+- Reduced boilerplate: Saves time and effort by avoiding unnecessary type annotations.
+- Improved readability: Cleaner code, focusing on logic rather than verbose type details.
+- Automatic error detection: Catches type mismatches early, improving code quality.
+
+### Limitations of inference:
+
+- Not always perfect: In complex scenarios, TypeScript might not infer the correct type, requiring manual annotations.
+- Reduced flexibility: Over-reliance on inference can limit code flexibility and maintainability.
+
+### Best practices:
+
+- Use inference effectively while understanding its limitations.
+- Annotate types in complex scenarios for clarity and accuracy.
+- Balance conciseness with readability and maintainability.
+
+## Typescript Basic Types
+
+### Boolean
+
+- Represents truth values: true or false.
+  -Used for conditional checks, flags, and logical operations.
+
+```js copy
+let isDone: boolean = false;
+let isLoggedIn: boolean = true;
+let showError: boolean = false;
+```
+
+### Numbers
+
+Represents numeric values, including integers and floating-point numbers.
+Used for calculations, measurements, and numerical operations.
+
+```ts copy
+let age: number = 30;
+let temperature: number = 25.5;
+```
+
+### Strings
+
+- Represents sequences of text characters.
+- Used for user input, display text, and string manipulation.
+
+```ts copy
+let name: string = "John Doe";
+let message: string = "Hello, world!";
+```
+
+### Arrays:
+
+- Represent an ordered collection of elements of the same or compatible types.
+  -Defined using square brackets [] with the element type inside.
+
+```ts copy
+// Array of numbers
+let numbers: number[] = [1, 2, 3];
+// Error: Type 'string' is not assignable to type 'number'
+numbers.push("hello"); // Compiler error
+// Array of strings
+let names: string[] = ["Alice", "Bob", "Charlie"];
+```
+
+### Tuples
+
+- Fixed-length arrays with specific element types at each position.
+- Type annotation: [type1, type2, ...]
+
+```ts copy
+// Correct usage
+let person: [string, number] = ["John", 30];
+// Error: Type 'number' is not assignable to type 'string'
+person = [25, "Doe"]; // Compiler error
+```
+
+### Functions
+
+- Defined using the function keyword, specifying input and output types.
+- Type annotation: (parameters: types) => returnType
+
+```ts copy
+function add(x: number, y: number): number {
+  return x + y;
+}
+
+// Error: Argument of type 'string' is not assignable to parameter of type 'number'
+add("5", 10); // Compiler error
+```
+
+### Void
+
+- Represents the absence of a value, often used for functions that don't return anything.
+- Type annotation: void
+
+```ts copy
+function logMessage(message: string): void {
+  console.log(message);
+}
+```
+
+### Enum
+
+- An enum is a special "class" that represents a group of constants (unchangeable variables).
+- Enums come in two flavors string and numeric. Lets start with numeric.
+  **Numeric Enums - Default**
+  By default, enums will initialize the first value to 0 and add 1 to each additional value:
+
+```ts copy
+enum CardinalDirections {
+  North,
+  East,
+  South,
+  West,
+}
+let currentDirection = CardinalDirections.North;
+// logs 0
+console.log(currentDirection);
+// throws error as 'North' is not a valid enum
+currentDirection = "North"; // Error: "North" is not assignable to type 'CardinalDirections'.
+```
+
+**Numeric Enums - Initialized**
+You can set the value of the first numeric enum and have it auto increment from that:
+
+```ts copy
+enum CardinalDirections {
+  North = 1,
+  East,
+  South,
+  West,
+}
+// logs 1
+console.log(CardinalDirections.North);
+// logs 4
+console.log(CardinalDirections.West);
+```
+
+**Numeric Enums - Fully Initialized**
+You can assign unique number values for each enum value. Then the values will not incremented automatically:
+
+```ts copy
+enum StatusCodes {
+  NotFound = 404,
+  Success = 200,
+  Accepted = 202,
+  BadRequest = 400,
+}
+// logs 404
+console.log(StatusCodes.NotFound);
+// logs 200
+console.log(StatusCodes.Success);
+```
+
+**String Enums**
+Enums can also contain strings. This is more common than numeric enums, because of their readability and intent.
+
+```ts copy
+enum CardinalDirections {
+  North = "North",
+  East = "East",
+  South = "South",
+  West = "West",
+}
+// logs "North"
+console.log(CardinalDirections.North);
+// logs "West"
+console.log(CardinalDirections.West);
+```
+
+### Object Type:
+
+- Represents a collection of key-value pairs, where keys are strings and values can be of any type.
+- Used to model complex data structures and real-world entities.
+
+```ts copy
+const car: { type: string; model: string; year: number } = {
+  type: "Toyota",
+  model: "Corolla",
+  year: 2009,
+};
+```
+
+**Type Inference**
+TypeScript can infer the types of properties based on their values.
+
+```ts copy
+const car = {
+  type: "Toyota",
+};
+car.type = "Ford"; // no error
+car.type = 2; // Error: Type 'number' is not assignable to type 'string'.
+```
+
+**Optional Properties**
+Optional properties are properties that don't have to be defined in the object definition.
+Example without optional properties
+
+```ts copy
+const car: { type: string; mileage: number } = {
+  // Error: Property 'mileage' is missing in type '{ type: string; }' but required in type '{ type: string; mileage: number; }'.
+  type: "Toyota",
+};
+car.mileage = 2000;
+```
+
+Example with Optional properties
+
+```ts copy
+const car: { type: string; mileage?: number } = {
+  // no error
+  type: "Toyota",
+};
+car.mileage = 2000;
+```
+
+### The 'Any' Type
+
+- TypeScript defaults to the any type if no type is specified, allowing any value. This basically means writing in normal javascript
+- The any type in TypeScript is a workaround for cases when you don't know what type a value might be. It allows you to assign a variable or function parameter to be of literally any type.
+- This can lead to runtime errors and reduced type safety.
+
+```js copy
+function greet(name: any) {
+  console.log(`Hello, ${name}!`);
+}
+greet("John"); // Outputs: Hello, John!
+greet(123); // Outputs: Hello, 123!
+```
+
+any lets you do extremely dangerous things in TypeScript. By marking a variable as any
+
+```js copy
+const user: any = {
+  name: "John",
+  age: 30,
+};
+
+user.roles.push("admin"); // Runtime error!
+```
+
+In the example above, we're trying to push a new value to the roles array, but the roles property doesn't exist on the user object. This will cause a runtime error, but TypeScript won't warn us about it because we've marked the user variable as any.
+
+### Any VS Unknown
+
+The unknown type is a type-safe counterpart of any, which requires you to perform a type check before using the variable. Unlike any, unknown can help prevent runtime errors by forcing you to narrow down the type of the variable before using it in your code.
+
+Here's an example of using unknown in a function argument:
+
+```js copy
+function greet(name: unknown) {
+  if (typeof name === "string") {
+    console.log(`Hello, ${name}!`);
+  }
+}
+
+greet("John"); // Outputs: Hello, John!
+greet(123); // No output
+```
+
+Overall, the any type can be useful in situations where you need more flexibility, but it comes with the cost of losing type safety. It's best to use it sparingly and with caution.
+
+### TypeScript Union Types
+
+- Union types are used when a value can be more than a single type.
+- Allow a variable to hold values of different types.
+- Type annotation: type1 | type2 | ...
+- Such as when a property would be string or number.
+  **Union | (OR)**
+- Using the | we are saying our parameter is a string or number:
+
+```ts copy
+let value: string | number = "hello";
+
+// Error: Object is of type 'object', not assignable to 'string | number'
+value = {}; // Compiler error
+
+function printStatusCode(code: string | number) {
+  console.log(`My status code is ${code}.`);
+}
+printStatusCode(404);
+printStatusCode("404");
+```
+
+### Type aliases
+
+A type alias is a name for any type, you can actually use a type alias to give a name to any type at all, not just an object type.
+
+```ts copy
+// primitive
+type SanitizedString = string;
+// Type alias for a string with maximum length of 10
+type Email = string & { length: 10 };
+
+// Union type for numbers or strings
+type ID = number | string;
+
+// tuple
+type Data = [number, string];
+
+// function
+type SetPoint = (x: number, y: number) => void;
+
+// object
+type User = {
+  id: number;
+  name: string;
+  isVerified?: boolean;
+  handler: () => void;
+};
+```
+
+### Interfaces
+
+- Interfaces are similar to type aliases, except they only apply to object types.
+- An interface may only be used to declare the shapes of objects, not rename primitives. Being concerned only with the structure and capabilities of types is why we call TypeScript a structurally typed type system.
+
+```ts copy
+interface Rectangle {
+  height: number;
+  width: number;
+}
+
+const rectangle: Rectangle = {
+  height: 20,
+  width: 10,
+};
+```
+
+**Extending Interfaces**
+
+- Interfaces can extend each other's definition.
+- Extending an interface means you are creating a new interface with the same properties as the original, plus something new.
+
+```ts copy
+interface Rectangle {
+  height: number;
+  width: number;
+}
+
+interface ColoredRectangle extends Rectangle {
+  color: string;
+}
+
+const coloredRectangle: ColoredRectangle = {
+  height: 20,
+  width: 10,
+  color: "red",
+};
+```
+
+#### Type vs Interface: Which Should You Use?
+
+**Differences Between Type Aliases and Interfaces**
+Type aliases and interfaces are very similar, and in many cases you can choose between them freely. Almost all features of an interface are available in type, the key distinction is that a type cannot be re-opened to add new properties vs an interface which is always extendable.
+**Extending an interface**
+
+```ts copy
+interface Animal {
+  name: string;
+}
+
+interface Bear extends Animal {
+  honey: boolean;
+}
+
+const bear = getBear();
+bear.name;
+bear.honey;
+```
+
+**Extending a type via intersections**
+
+```ts copy
+type Animal = {
+  name: string;
+};
+
+type Bear = Animal & {
+  honey: boolean;
+};
+
+const bear = getBear();
+bear.name;
+bear.honey;
+```
+
+For the most part, you can choose based on personal preference, and TypeScript will tell you if it needs something to be the other kind of declaration. If you would like a heuristic, use interface until you need to use features from type. (From typescript team)
+
+- the word "heuristic" refers to a rule of thumb or a general guideline that helps you decide when to use interfaces or types in TypeScript. It's not a precise rule, but rather a helpful suggestion to aid in your decision-making process.
+- You should use types by default until you need a specific feature of interfaces, like 'extends'.(Other devs say)
+- We will keep interchanging and we will notice which one best suits you (My suggestion)
+- Interfaces can't express unions, mapped types, or conditional types. Type aliases can express any type.
+- Interfaces can use extends, types can't.
+- When you're working with objects that inherit from each other, use interfaces. extends makes TypeScript's type checker run slightly faster than using &.
+
+### TypeScript Casting
+
+- There are times when working with types where it's necessary to override the type of a variable, such as when incorrect types are provided by a library.
+- Casting is the process of overriding a type.
+
+**Casting with as**
+A straightforward way to cast a variable is using the as keyword, which will directly change the type of the given variable.
+
+```ts copy
+let x: unknown = "hello";
+console.log((x as string).length);
+```
+
+Casting doesn't actually change the type of the data within the variable, for example the following code will not work as expected since the variable x is still holds a number.
+
+```ts copy
+let x: unknown = 4;
+console.log((x as string).length); // prints undefined since numbers don't have a length
+```
+
+TypeScript will still attempt to typecheck casts to prevent casts that don't seem correct, for example the following will throw a type error since TypeScript knows casting a string to a number doesn't makes sense without converting the data:
+
+```ts copy
+console.log((4 as string).length); // Error: Conversion of type 'number' to type 'string' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+```
+
+### TypeScript Generics – Use Case and Examples
+
+To understand What TypeScript Generics are lets look at the Use cases
+**Use Case for Generics**
+Let's start with a simple example, where you want to print the value of an argument passed:
+
+```ts copy
+function printData(data: number) {
+  console.log("data: ", data);
+}
+
+printData(2);
+```
+
+Now, let's suppose you want to make printData a more generic function, where you can pass any type of argument to it like: number/ string/ boolean. So, you might think to follow an approach like below:
+
+```ts copy
+function printData(data: number | string | boolean) {
+  console.log("data: ", data);
+}
+
+printData(2);
+printData("hello");
+printData(true);
+```
+
+But in the future, you might want to print an array of numbers using the same function. In that case the types will increase and it will become cumbersome to maintain all those different types.
+
+This is when Generics come into the picture.
+
+#### How Generics Work in TS
+
+Generics are like variables – to be precise, type variables – that store the type (for example number, string, boolean) as a value.
+
+So, you can solve the problem we discussed above with generics as shown below:
+
+```ts copy
+function printData<T>(data: T) {
+  console.log("data: ", data);
+}
+
+printData(2);
+printData("hello");
+printData(true);
+```
+
+In the above example printData-generics.ts, there is a slight difference in syntax:
+
+You use a type variable inside angular brackets after the function name `<T>`
+You then assign the type variable to the parameter data: T
+Let's explore these differences a bit more.
+
+To use generics, you need to use angular brackets and then specify a type variable inside them. Developers generally use T, X and Y. But it can be anything depending upon your preference.
+
+You can then assign the same variable name as the type to the parameter of the function.
+
+Now, whatever argument you pass to the function, it gets inferred and there's no need to hardcode the type anywhere.
+
+Even if you pass an array of numbers or an object to the printData function, everything will be displayed properly without TS complaining:
+
+```ts copy
+function printData<T>(data: T) {
+  console.log("data: ", data);
+}
+
+printData(2);
+printData("hello");
+printData(true);
+printData([1, 2, 3, 4, 5, 6]);
+printData([1, 2, 3, "hi"]);
+printData({ name: "Ram", rollNo: 1 });
+```
+
+Let's see another example:
+
+```ts copy
+function printData<X, Y>(data1: X, data2: Y) {
+  console.log("Output is: ", data1, data2);
+}
+
+printData("Hello", "World");
+printData(123, ["Hi", 123]);
+```
+
+In above example, we passed 2 arguments to printData and used X and Y to denote the types for both the parameters. X refers to 1st value of the argument and Y refers to 2nd value of the argument.
+
+Here as well, the types of data1 and data2 are not specified explicitly because TypeScript handles the type inference with the help of generics.
+
+#### How to Use Generics with Interfaces
+
+You can even use generics with interfaces. Let's see how that works with the help of a code snippet:
+
+```ts copy
+interface UserData<X, Y> {
+  name: X;
+  rollNo: Y;
+}
+
+const user: UserData<string, number> = {
+  name: "Ram",
+  rollNo: 1,
+};
+```
+
+In above snippet, `<string, number>` are passed to the interface UserData. In this way, UserData becomes a reusable interface in which any data type can be assigned depending upon the use case.
+
+Here in this example, name and rollNo will always be string and number, respectively. But this example was to showcase how you can use generics with interfaces in TS.

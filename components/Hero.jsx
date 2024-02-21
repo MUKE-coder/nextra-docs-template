@@ -3,6 +3,10 @@ import React from "react";
 
 export default function Hero() {
   const links = [
+    {
+      title: "Typescript in Next Js",
+      path: "/programming-tutorials/nextjs/next-typescript",
+    },
     { title: "Roadmaps Must see", path: "/roadmaps" },
     { title: "Desishub Lessons", path: "/desishub-lessons" },
     { title: "YouTube Video Tutorials", path: "/youtube-tutorials" },
