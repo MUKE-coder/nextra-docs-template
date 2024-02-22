@@ -1,6 +1,5 @@
 import Link from "next/link";
 import React from "react";
-
 export default function Hero() {
   const links = [
     {
@@ -8,12 +7,12 @@ export default function Hero() {
       path: "/programming-tutorials/nextjs/next-typescript",
     },
     { title: "Roadmaps Must see", path: "/roadmaps" },
-    { title: "Desishub Lessons", path: "/desishub-lessons" },
-    { title: "YouTube Video Tutorials", path: "/youtube-tutorials" },
-    { title: "Website Templates Guides", path: "/website-templates" },
-    { title: "Course Guides", path: "/course-guides" },
-    { title: "Desishub Courses", path: "/desishub-courses" },
-    { title: "How to Guides", path: "/how-to-guides" },
+    { title: "Desishub Lessons", path: "/programming-tutorials" },
+    { title: "YouTube Video Tutorials", path: "#" },
+    { title: "Website Templates Guides", path: "#" },
+    { title: "Course Guides", path: "#" },
+    { title: "Desishub Courses", path: "#" },
+    { title: "How to Guides", path: "#" },
   ];
 
   return (

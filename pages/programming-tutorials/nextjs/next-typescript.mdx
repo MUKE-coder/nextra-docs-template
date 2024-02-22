@@ -461,11 +461,14 @@ bear.name;
 bear.honey;
 ```
 
-For the most part, you can choose based on personal preference, and TypeScript will tell you if it needs something to be the other kind of declaration. If you would like a heuristic, use interface until you need to use features from type. (From typescript team)
+For the most part, you can choose based on personal preference, and TypeScript will tell you if it needs something to be the other kind of declaration. Use Interface until You Need Type. (From typescript team)
 
-- the word "heuristic" refers to a rule of thumb or a general guideline that helps you decide when to use interfaces or types in TypeScript. It's not a precise rule, but rather a helpful suggestion to aid in your decision-making process.
-- You should use types by default until you need a specific feature of interfaces, like 'extends'.(Other devs say)
-- We will keep interchanging and we will notice which one best suits you (My suggestion)
+Here's a helpful rule of thumb:
+
+- Always use interface for public API's definition when authoring a library or 3rd party ambient type definitions, as this allows a consumer to extend them via declaration merging if some definitions are missing.
+
+- Consider using type for your React Component Props and State, for consistency and because it is more constrained.
+
 - Interfaces can't express unions, mapped types, or conditional types. Type aliases can express any type.
 - Interfaces can use extends, types can't.
 - When you're working with objects that inherit from each other, use interfaces. extends makes TypeScript's type checker run slightly faster than using &.
@@ -494,6 +497,32 @@ TypeScript will still attempt to typecheck casts to prevent casts that don't see
 
 ```ts copy
 console.log((4 as string).length); // Error: Conversion of type 'number' to type 'string' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+```
+
+### TypeScript Type Guards
+
+Type guards are special checks you can perform on a variable to narrow down its possible types within a specific block of code. Think of them like filters that refine your understanding of a variable's type based on some condition. This allows you to access properties and methods that wouldn't be available on the wider, less specific type.
+**Built-in type guards:**
+typeof operator: Checks the type of a variable against basic types like string, number, etc. `(typeof x === "string")`.
+instanceof operator: Checks if an object belongs to a specific class `(object instanceof MyClass)`.
+in operator: Checks if a property exists on an object `("name" in object)`.
+
+```ts copy
+type alphanumeric = string | number;
+
+function add(a: alphanumeric, b: alphanumeric) {
+  if (typeof a === "number" && typeof b === "number") {
+    return a + b;
+  }
+
+  if (typeof a === "string" && typeof b === "string") {
+    return a.concat(b);
+  }
+
+  throw new Error(
+    "Invalid arguments. Both arguments must be either numbers or strings."
+  );
+}
 ```
 
 ### TypeScript Generics – Use Case and Examples
@@ -603,3 +632,184 @@ const user: UserData<string, number> = {
 In above snippet, `<string, number>` are passed to the interface UserData. In this way, UserData becomes a reusable interface in which any data type can be assigned depending upon the use case.
 
 Here in this example, name and rollNo will always be string and number, respectively. But this example was to showcase how you can use generics with interfaces in TS.
+
+## Typescript in Next JS and React
+
+### TypeScript with React Components
+
+Every file containing JSX must use the .tsx file extension. This is a TypeScript-specific extension that tells TypeScript that this file contains JSX.
+
+Writing TypeScript with React is very similar to writing JavaScript with React. The key difference when working with a component is that you can provide types for your component’s props. These types can be used for correctness checking and providing inline documentation in editors.
+
+```ts copy
+function MyButton({ title }: { title: string }) {
+  return <button>{title}</button>;
+}
+
+export default function MyApp() {
+  return (
+    <div>
+      <h1>Welcome to my app</h1>
+      <MyButton title="I'm a button" />
+    </div>
+  );
+}
+```
+
+This inline syntax is the simplest way to provide types for a component, though once you start to have a few fields to describe it can become unwieldy. Instead, you can use an interface or type to describe the component’s props:
+
+```ts copy
+interface MyButtonProps {
+  /** The text to display inside the button */
+  title: string;
+  /** Whether the button can be interacted with */
+  disabled: boolean;
+}
+
+function MyButton({ title, disabled }: MyButtonProps) {
+  return <button disabled={disabled}>{title}</button>;
+}
+
+export default function MyApp() {
+  return (
+    <div>
+      <h1>Welcome to my app</h1>
+      <MyButton title="I'm a disabled button" disabled={true} />
+    </div>
+  );
+}
+```
+
+### React Hooks
+
+The type definitions from `@types/react` include types for the built-in Hooks, so you can use them in your components without any additional setup. They are built to take into account the code you write in your component, so you will get inferred types a lot of the time and ideally do not need to handle the minutiae of providing the types.
+
+However, we can look at a few examples of how to provide types for Hooks.
+
+#### useState
+
+The useState Hook will re-use the value passed in as the initial state to determine what the type of the value should be. For example:
+
+```ts copy
+// Infer the type as "boolean"
+const [enabled, setEnabled] = useState(false);
+```
+
+Will assign the type of boolean to enabled, and setEnabled will be a function accepting either a boolean argument, or a function that returns a boolean. If you want to explicitly provide a type for the state, you can do so by providing a type argument to the useState call:
+
+```ts copy
+// Explicitly set the type to "boolean"
+const [enabled, setEnabled] = useState<boolean>(false);
+```
+
+This is not very useful in this case, but a common case where you may want to provide a type is when you have a union type. For example, status here can be one of a few different strings:
+
+```ts copy
+type Status = "idle" | "loading" | "success" | "error";
+
+const [status, setStatus] = useState<Status>("idle");
+```
+
+Also in many cases hooks are initialized with null-ish default values, and you may wonder how to provide types. Explicitly declare the type, and use a union type:
+
+```ts copy
+const [user, setUser] = useState<User | null>(null);
+
+// later...
+setUser(newUser);
+```
+
+### useReducer
+
+You can use Discriminated Unions for reducer actions. Don't forget to define the return type of reducer, otherwise TypeScript will infer it.
+
+```ts copy
+import { useReducer } from "react";
+
+const initialState = { count: 0 };
+
+type ACTIONTYPE =
+  | { type: "increment"; payload: number }
+  | { type: "decrement"; payload: string };
+
+function reducer(state: typeof initialState, action: ACTIONTYPE) {
+  switch (action.type) {
+    case "increment":
+      return { count: state.count + action.payload };
+    case "decrement":
+      return { count: state.count - Number(action.payload) };
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return (
+    <>
+      Count: {state.count}
+      <button onClick={() => dispatch({ type: "decrement", payload: "5" })}>
+        -
+      </button>
+      <button onClick={() => dispatch({ type: "increment", payload: 5 })}>
+        +
+      </button>
+    </>
+  );
+}
+```
+
+### useRef
+
+In TypeScript, useRef returns a reference that is either read-only or mutable, depends on whether your type argument fully covers the initial value or not. Choose one that suits your use case.
+**Option 1: DOM element ref**
+To access a DOM element: provide only the element type as argument, and use null as initial value. In this case, the returned reference will have a read-only .current that is managed by React. TypeScript expects you to give this ref to an element's ref prop:
+
+```ts copy
+function Foo() {
+  // - If possible, prefer as specific as possible. For example, HTMLDivElement
+  //   is better than HTMLElement and way better than Element.
+  // - Technical-wise, this returns RefObject<HTMLDivElement>
+  const divRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Note that ref.current may be null. This is expected, because you may
+    // conditionally render the ref-ed element, or you may forget to assign it
+    if (!divRef.current) throw Error("divRef is not assigned");
+
+    // Now divRef.current is sure to be HTMLDivElement
+    doSomethingWith(divRef.current);
+  });
+
+  // Give the ref to an element so React can manage it for you
+  return <div ref={divRef}>etc</div>;
+}
+```
+
+If you are sure that divRef.current will never be null, it is also possible to use the non-null assertion operator !:
+
+```ts copy
+const divRef = useRef<HTMLDivElement>(null!);
+// Later... No need to check if it is null
+doSomethingWith(divRef.current);
+```
+
+### Useful React Prop Type Examples
+
+Relevant for components that accept other React components as props.
+
+```ts copy
+export declare interface AppProps {
+  children?: React.ReactNode; // best, accepts everything React can render
+  childrenElement: React.JSX.Element; // A single React element
+  style?: React.CSSProperties; // to pass through style props
+  onChange?: React.FormEventHandler<HTMLInputElement>; // form events! the generic parameter is the type of event.target
+  //  more info: https://react-typescript-cheatsheet.netlify.app/docs/advanced/patterns_by_usecase/#wrappingmirroring
+  props: Props & React.ComponentPropsWithoutRef<"button">; // to impersonate all the props of a button element and explicitly not forwarding its ref
+  props2: Props & React.ComponentPropsWithRef<MyButtonWithForwardRef>; // to impersonate all the props of MyButtonForwardedRef and explicitly forwarding its ref
+}
+```
+
+### Redux with Typescript Coming Up SOON!
+
+{/* https://bluelight.co/blog/redux-toolkit-with-typescript */}

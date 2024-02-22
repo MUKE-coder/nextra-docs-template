@@ -1,3 +1,6 @@
+https://www.telerik.com/blogs/getting-started-typescript-react
+https://blog.bitsrc.io/react-typescript-cheetsheet-2b6fa2cecfe2
+https://ultimatecourses.com/courses/html-css
 pages/
 |-- index.js (Homepage)
 |-- programming-tutorials/
