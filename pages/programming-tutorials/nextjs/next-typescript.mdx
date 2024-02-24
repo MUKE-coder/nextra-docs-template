@@ -635,7 +635,7 @@ Here in this example, name and rollNo will always be string and number, respecti
 
 ## Typescript in Next JS and React
 
-### TypeScript with React Components
+### TypeScript with React Components props
 
 Every file containing JSX must use the .tsx file extension. This is a TypeScript-specific extension that tells TypeScript that this file contains JSX.
 
@@ -656,27 +656,147 @@ export default function MyApp() {
 }
 ```
 
-This inline syntax is the simplest way to provide types for a component, though once you start to have a few fields to describe it can become unwieldy. Instead, you can use an interface or type to describe the component’s props:
-
 ```ts copy
-interface MyButtonProps {
-  /** The text to display inside the button */
+type Product = {
   title: string;
-  /** Whether the button can be interacted with */
-  disabled: boolean;
+  price: number;
+  rating: number;
+};
+interface IProduct {
+  title: string;
+  price: number;
+  rating: number;
 }
-
-function MyButton({ title, disabled }: MyButtonProps) {
-  return <button disabled={disabled}>{title}</button>;
-}
-
-export default function MyApp() {
+export default function Product({ title, price, rating }: Product) {
   return (
     <div>
-      <h1>Welcome to my app</h1>
-      <MyButton title="I'm a disabled button" disabled={true} />
+      <h2>{title}</h2>
+      <p>{price}</p>
+      <p>{rating}</p>
     </div>
   );
+}
+```
+
+** Components with Children Props**
+
+```ts copy
+import React, { ReactNode } from 'react';
+
+type FormCardWrapperProps = {
+  children: ReactNode;
+};
+
+const FormCardWrapper({ children }:FormCardWrapperProps) => {
+  return (
+    <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+      {children}
+    </div>
+  );
+};
+
+export default FormCardWrapper;
+
+import React from 'react';
+import FormCardWrapper from './FormCardWrapper';
+
+const MyForm: React.FC = () => {
+  return (
+    <FormCardWrapper>
+      <form>
+        {/* Form inputs go here */}
+        <input type="text" placeholder="Name" />
+        <input type="email" placeholder="Email" />
+        <button type="submit">Submit</button>
+      </form>
+    </FormCardWrapper>
+  );
+};
+
+export default MyForm;
+
+```
+
+### Alternative ways to Annotate props types
+
+```ts copy
+import { FC } from "react";
+
+type Shape = {
+  name: string;
+  age: number;
+};
+
+const User: FC<Shape> = ({ name, age }) => {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>{age}</p>
+    </div>
+  );
+};
+
+export default User;
+```
+
+#### Types for Dynamic Routes
+
+For example, a blog could include the following route app/blog/`[slug]/page.js where [slug] `is the Dynamic Segment for blog posts.
+
+```ts app/blog/[slug]/page.tsx copy
+export default function Page({
+  params: { slug },
+}: {
+  params: { slug: string };
+}) {
+  return <div>My Post: {slug}</div>;
+}
+///Alternatively
+type Shape = {
+  params: { id: number };
+};
+export default function User({ params: { id } }: Shape) {
+  return <div>User id: {id}</div>;
+}
+```
+
+#### Re-Usable Types
+
+Using types to reuse types
+
+```ts copy
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+};
+
+type Admin = User & {
+  isAdmin: boolean;
+};
+
+type ServiceProvider = User & {
+  serviceType: string;
+};
+```
+
+Using Interfaces to reuse types
+
+```ts ccopy
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+};
+
+interface Admin extends User {
+  isAdmin: boolean;
+}
+
+interface ServiceProvider extends User {
+  serviceType: string;
 }
 ```
 
@@ -718,6 +838,263 @@ const [user, setUser] = useState<User | null>(null);
 // later...
 setUser(newUser);
 ```
+
+### Refs and Events Types
+
+```ts copy
+import React, { useRef, useState } from "react";
+
+// Define User type
+type User = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+const FormExample = () => {
+  // State to store submitted data
+  const [submittedData, setSubmittedData] = useState<User | null>(null);
+
+  // Refs for form fields
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Function to handle form submission
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevent default form submission behavior
+
+    // Get form field values using refs
+    const name = nameRef.current!.value;
+    // const name = nameRef.current?.value || "";
+    const email = emailRef.current?.value || "";
+    const password = passwordRef.current?.value || "";
+
+    // Create user object
+    const newUser: User = { name, email, password };
+
+    // Push user object into an array (For demonstration, you might use state or other state management tools)
+    const users: User[] = [];
+    users.push(newUser);
+
+    // Update submitted data state
+    setSubmittedData(newUser);
+  };
+
+  return (
+    <div>
+      <h2>Registration Form</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="name">Name:</label>
+          <input type="text" id="name" ref={nameRef} required />
+        </div>
+        <div>
+          <label htmlFor="email">Email:</label>
+          <input type="email" id="email" ref={emailRef} required />
+        </div>
+        <div>
+          <label htmlFor="password">Password:</label>
+          <input type="password" id="password" ref={passwordRef} required />
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+
+      {/* Display submitted data */}
+      {submittedData && (
+        <div>
+          <h2>Submitted Data:</h2>
+          <p>Name: {submittedData.name}</p>
+          <p>Email: {submittedData.email}</p>
+          <p>Password: {submittedData.password}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FormExample;
+```
+
+### Element Wrapper
+
+```ts copy
+import React from "react";
+
+type ElementWrapperProps = {
+  elementType: "div" | "h1" | "button" | "section";
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+};
+
+const ElementWrapper: React.FC<ElementWrapperProps> = ({
+  elementType,
+  children,
+  className,
+  onClick,
+}) => {
+  // Type assertion to ensure elementType is a valid JSX intrinsic element
+  const Element = elementType as keyof JSX.IntrinsicElements;
+
+  return (
+    <Element className={className} onClick={onClick}>
+      {children}
+    </Element>
+  );
+};
+
+export default ElementWrapper;
+```
+
+In this component:
+
+ElementWrapper is a functional component that accepts props of type ElementWrapperProps.
+elementType prop accepts a union type `('div' | 'h1' | 'button' | 'section')` representing valid HTML elements.
+children prop represents the content inside the element.
+className prop is optional and represents the CSS class for styling.
+onClick prop is optional and represents the click event handler.
+Inside the component, Element is declared using type assertion `(as keyof JSX.IntrinsicElements)` to ensure elementType is a valid JSX intrinsic element.
+We use Element to render the appropriate JSX element with provided props.
+Here's how you can use the ElementWrapper component:
+
+```ts copy
+// import React from "react";
+// import ElementWrapper from "./ElementWrapper";
+
+// const App = () => {
+//   return (
+//     <div>
+//       {/* Example usage of ElementWrapper */}
+//       <ElementWrapper
+//         elementType="button"
+//         onClick={() => console.log("Button clicked")}
+//       >
+//         Click me
+//       </ElementWrapper>
+//       <ElementWrapper elementType="h1" className="heading">
+//         Hello, World!
+//       </ElementWrapper>
+//       <ElementWrapper elementType="div" className="container">
+//         <p>This is a paragraph inside a div.</p>
+//       </ElementWrapper>
+//       <ElementWrapper elementType="section">
+//         <h2>Section Title</h2>
+//         <p>This is a paragraph inside a section.</p>
+//       </ElementWrapper>
+//     </div>
+//   );
+// };
+
+// export default App;
+```
+
+### Creating a Custome Button Element
+
+```ts copy
+import { ReactNode, FC } from "react";
+
+type ButtonProps = {
+  variant?: "default" | "primary" | "secondary" | "linkButton";
+  href?: string; // Only applicable for linkButton variant
+  icon?: ReactNode;
+  onClick?: () => void;
+  className?: string; // Optional additional class name
+};
+
+const Button: FC<ButtonProps> = ({
+  variant = "default",
+  href,
+  icon,
+  onClick,
+  className = "",
+  children,
+}) => {
+  let baseClassName =
+    "inline-flex items-center justify-center border font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2";
+  let styleClassName = "";
+
+  switch (variant) {
+    case "primary":
+      styleClassName =
+        "bg-blue-600 text-white border-transparent hover:bg-blue-700";
+      break;
+    case "secondary":
+      styleClassName =
+        "bg-gray-300 text-gray-700 border-gray-300 hover:bg-gray-400";
+      break;
+    case "linkButton":
+      styleClassName = "text-blue-600 border-transparent hover:text-blue-700";
+      break;
+    default:
+      styleClassName =
+        "bg-white text-gray-700 border-gray-300 hover:bg-gray-100";
+  }
+
+  const combinedClassName = `${baseClassName} ${styleClassName} ${className}`;
+
+  return (
+    <>
+      {href ? (
+        <a href={href} className={combinedClassName} onClick={onClick}>
+          {icon && <span className="mr-2">{icon}</span>}
+          {children}
+        </a>
+      ) : (
+        <button type="button" className={combinedClassName} onClick={onClick}>
+          {icon && <span className="mr-2">{icon}</span>}
+          {children}
+        </button>
+      )}
+    </>
+  );
+};
+
+export default Button;
+```
+
+In this component:
+
+We define a Button component that accepts props such as variant, href, icon, and onClick.
+The variant prop is optional and can be one of 'default', 'primary', 'secondary', or 'linkButton'.
+Based on the variant provided, we add Tailwind CSS classes to style the button accordingly.
+If href is provided `(applicable only for the 'linkButton' variant)`, we render an `<a>` tag; otherwise, we render a `<button>` tag.
+The button can have an optional icon which will be rendered before the button text.
+The onClick prop allows passing a click event handler.
+You can use this Button component as follows:
+
+```ts copy
+import React from "react";
+import Button from "./Button";
+import { HiOutlineMail } from "react-icons/hi"; // Example icon from react-icons library
+
+const App: React.FC = () => {
+  return (
+    <div>
+      <Button>Default Button</Button>
+      <Button variant="primary">Primary Button</Button>
+      <Button variant="secondary">Secondary Button</Button>
+      <Button variant="linkButton" href="#">
+        Link Button
+      </Button>
+      <Button variant="linkButton" href="#" icon={<HiOutlineMail />}>
+        Link Button with Icon
+      </Button>
+      <Button variant="primary" className="mr-2">
+        Primary Button with Custom Class
+      </Button>
+    </div>
+  );
+};
+
+export default App;
+```
+
+{/* https://www.youtube.com/watch?v=iS1K64X_eXg */}
+{/* https://gemini.google.com/app/6d3d58e6394d2185 */}
+{/* https://chat.openai.com/c/7706348d-38c0-4c9d-89d7-79614b14207c */}
+
+### Context API Coming Soon
 
 ### useReducer
 
