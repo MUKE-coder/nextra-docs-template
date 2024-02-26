@@ -1094,6 +1094,95 @@ export default App;
 {/* https://gemini.google.com/app/6d3d58e6394d2185 */}
 {/* https://chat.openai.com/c/7706348d-38c0-4c9d-89d7-79614b14207c */}
 
+### How to Use Zod and React Hook form
+
+Form validation is a fundamental aspect of building robust web applications. It ensures that the data submitted by users conforms to the expected format and business rules.
+
+#### Zod
+
+Zod is a TypeScript-first schema declaration and validation library. It simplifies type definition and data validation in TypeScript by allowing developers to declare validators once, with automatic type deduction.
+
+#### React Hook Form
+
+React Hook Form is a lightweight, high-performance library for managing forms in React applications. It uses React hooks to simplify form logic, providing a fluid and efficient development experience.
+
+It is a very complex task to handle validation. But with the help of React-hook-form and Zod, we can validate form in any real-world application so easily. Here are the steps:
+
+#### Install packages
+
+```ts copy
+npm install react-hook-form @hookform/resolvers zod
+```
+
+#### create a schema using Zod
+
+```ts copy
+import { z } from "zod";
+
+export const signinSchema = z.object({
+  email: z
+    .string({
+      required_error: "Email is required",
+    })
+    .email({
+      message: "Not a valid email",
+    }),
+  password: z
+    .string({
+      required_error: "Password is required",
+    })
+    .min(6, {
+      message: "Password too short - should be 6 chars minimum",
+    }),
+});
+```
+
+#### add useForm hook
+
+```ts copy
+"use client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const {
+  register,
+  handleSubmit,
+  reset,
+  formState: { errors },
+} = useForm({
+  resolver: zodResolver(signinSchema),
+});
+```
+
+#### Give every input a different name
+
+```ts copy
+<input {...register("name")} />
+```
+
+#### Create a function that will be called on form submit
+
+```ts copy
+const handleSignin = () => {
+  //write all the logics
+};
+
+<form onSubmit={handleSubmit(handleSignin)}></form>;
+```
+
+#### handling errors
+
+```ts copy
+{
+  errors.email?.message && (
+    <p className="text-xs font-semibold text-red-700">
+      {" "}
+      *{errors.email?.message}{" "}
+    </p>
+  );
+}
+```
+
 ### Context API Coming Soon
 
 ### useReducer
