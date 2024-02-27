@@ -1100,7 +1100,7 @@ Form validation is a fundamental aspect of building robust web applications. It 
 
 #### Zod
 
-Zod is a TypeScript-first schema declaration and validation library. It simplifies type definition and data validation in TypeScript by allowing developers to declare validators once, with automatic type deduction.
+Zod is a TypeScript-first schema declaration and validation library. It simplifies type definition and data validation in TypeScript by allowing developers to declare validators once, with automatic type deduction. Visit the the Documenntation [here](https://zod.dev/?id=strings)
 
 #### React Hook Form
 
@@ -1117,6 +1117,7 @@ npm install react-hook-form @hookform/resolvers zod
 #### create a schema using Zod
 
 ```ts copy
+//schemas/schema.ts
 import { z } from "zod";
 
 export const signinSchema = z.object({
@@ -1182,6 +1183,80 @@ const handleSignin = () => {
   );
 }
 ```
+
+#### Some other Common Validations
+
+Its a good practice to create a schema folder in the root
+
+```ts copy
+// src/schemas/schema.ts
+
+import { z } from "zod";
+
+export const formSchema = z.object({});
+```
+
+First and Last Name — We can use `z.string()` do define strings and chain a `.min() `check to apply a minimum length and add a custom error message. You can trim trailing whitespaces with `.trim().`
+
+```ts copy
+export const formSchema = z.object({
+  // ...
+  firstName: z
+    .string()
+    .trim()
+    .min(2, { message: "First name must be more than 1 character" }),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, { message: "Last name must be more than 1 character" }),
+  // ...
+});
+```
+
+Email and Website — Zod has some useful built-in validators for common string patterns.
+
+```ts copy
+export const formSchema = z.object({
+  // ...
+  email: z.string().trim().email(),
+  website: z.string().trim().url(),
+  // ...
+});
+```
+
+Password — Again, another string refinement but with an added test to check if Password and Confirm Password are the same. To compare two fields to one another, we need to run the refinement on the entire schema object. In this case, if the passwords do not match, it might be nice to show the non-matching error as an error that belongs to the Confirm Password field. We can use .`superRefine()` to gain access to the schema context and define highly customized errors.
+
+```ts copy
+export const formSchema = z
+  .object({
+    // ...
+    password: z
+      .string()
+      .refine(
+        (val) =>
+          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/.test(
+            val
+          ),
+        {
+          message:
+            "Password must be at least 8 characters long and contain at least one uppercase character, one lowercase character, and one special symbol",
+        }
+      ),
+    confirmPassword: z.string(),
+    // ...
+  })
+  .superRefine((val, ctx) => {
+    if (val.password !== val.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });
+```
+
+Visit the the Documenntation [here](https://zod.dev/?id=strings)
 
 ### Context API Coming Soon
 
