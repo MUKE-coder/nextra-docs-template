@@ -1,0 +1,19 @@
+# How to use react-hook-form with Next.js Server Actions and Zod Input validation
+
+![Hello](/server-actions.png)
+
+If you've worked with more forms within Next.js (or React in general), chances are you've used react-hook-form, a "performant, flexible and extensible forms with easy-to-use validation" (as per their website).
+
+I've used react-hook-form for a long time now and with the recent announcement of Server Actions becoming stable in Next.js 14 I've gotten curious about how to use these tools together.
+
+### Prerequisites
+
+For this guide, we assume you've got a Next.js 14 installation. Additionally, we need react-hook-form and, as a bonus, we're gonna use Zod for advanced input validation:
+
+### Install Dependencies
+
+```bash copy
+npm install react-hook-form zod @hookform/resolvers
+```
+
+It's important to note that server actions are still pretty new and some libraries, like react-hook-form, will certainly improve support of them in the future. For this guide, I'm using react-hook-form v7.48.
