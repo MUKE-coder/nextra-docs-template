@@ -1,0 +1,343 @@
+## Adding Multi-step Carousel
+
+Both the Telehealth and Inperson Visit Uses Carousel.
+We will use mult-
+
+## Single Category List Component
+
+```js copy
+import Link from "next/link";
+import React from "react";
+import CategoryCarousel from "./CategoryCarousel";
+
+export default function CategoryList({ category }) {
+  return (
+    <div className="bg-white border border-gray-300 rounded-lg  dark:bg-gray-700 dark:border-gray-700 text-slate-800 overflow-hidden">
+      <div className="bg-slate-100 dark:bg-gray-800 py-3 px-6 font-semibold border-b border-gray-300 dark:border-gray-600 text-slate-800 dark:text-slate-100 flex justify-between items-center">
+        <h2>{category.title}</h2>
+        <Link
+          className="bg-lime-600 hover:bg-lime-800 duration-300 transition-all text-slate-50 rounded-md px-4 py-2"
+          href={`/category/${category.slug}`}
+        >
+          See All
+        </Link>
+      </div>
+      <div className="bg-white dark:bg-slate-700 p-4">
+        <CategoryCarousel products={category.products} />
+      </div>
+    </div>
+  );
+}
+```
+
+### Here is the Category Carousel
+
+It Uses React Multi-Carousel
+
+```js copy
+"use client";
+import { BaggageClaim } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import Carousel from "react-multi-carousel";
+import "react-multi-carousel/lib/styles.css";
+import Product from "./Product";
+export default function CategoryCarousel({ products }) {
+  const responsive = {
+    desktop: {
+      breakpoint: { max: 3000, min: 1024 },
+      items: 4,
+      slidesToSlide: 3, // optional, default to 1.
+    },
+    tablet: {
+      breakpoint: { max: 1024, min: 464 },
+      items: 3,
+      slidesToSlide: 2, // optional, default to 1.
+    },
+    mobile: {
+      breakpoint: { max: 464, min: 0 },
+      items: 2,
+      slidesToSlide: 1, // optional, default to 1.
+    },
+  };
+  return (
+    <Carousel
+      swipeable={false}
+      draggable={false}
+      showDots={true}
+      responsive={responsive}
+      ssr={true} // means to render carousel on server-side.
+      infinite={true}
+      autoPlay={true}
+      autoPlaySpeed={5000}
+      keyBoardControl={true}
+      customTransition="all .5"
+      transitionDuration={1000}
+      containerClass="carousel-container"
+      removeArrowOnDeviceType={["tablet", "mobile"]}
+      // deviceType={}
+      dotListClass="custom-dot-list-style"
+      itemClass="px-4"
+    >
+      {products.map((product, i) => {
+        return <Product product={product} key={i} />;
+      })}
+    </Carousel>
+  );
+}
+```
+
+## Here is the Product Component
+
+```js copy
+"use client";
+import { addToCart } from "@/redux/slices/cartSlice";
+import { BaggageClaim } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+
+export default function Product({ product }) {
+  const dispatch = useDispatch();
+  function handleAddToCart() {
+    // Dispatch the reducer
+    dispatch(addToCart(product));
+    toast.success("Item added Successfully");
+  }
+  return (
+    <div className="rounded-lg mr-3  bg-white dark:bg-slate-900 overflow-hidden border shadow">
+      <Link href={`/products/${product.slug}`}>
+        <Image
+          src={product.imageUrl}
+          alt={product.title}
+          width={556}
+          height={556}
+          className="w-full h-48 object-cover"
+        />
+      </Link>
+      <div className="px-4">
+        <Link href={`/products/${product.slug}`}>
+          <h2 className="text-center dark:text-slate-200 text-slate-800 my-2 font-semibold">
+            {product.title}
+          </h2>
+        </Link>
+        <div className="flex items-center justify-between gap-2 pb-3 dark:text-slate-200 text-slate-800">
+          <p>UGX {product.salePrice}</p>
+          <button
+            onClick={() => handleAddToCart()}
+            className="flex items-center space-x-2 bg-lime-600 px-4 py-2 rounded-md text-white"
+          >
+            <BaggageClaim />
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+## Dashboard Navbar (You need to Install flowbite react)
+
+```ts copy
+"use client";
+
+import React from "react";
+import Image from "next/image";
+import { Avatar, Dropdown } from "flowbite-react";
+import { User } from "next-auth";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { AlignJustify, Bell, Mail, Search } from "lucide-react";
+
+export default function Navbar({ user }: { user: User }) {
+  const router = useRouter();
+  async function handleLogout() {
+    await signOut();
+    router.push("/");
+  }
+  return (
+    <header className="bg-white border-b border-gray-200">
+      <div className="px-4 mx-auto">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center -m-2 xl:hidden">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center p-2 text-gray-400 bg-white rounded-lg hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
+            >
+              <AlignJustify className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="flex ml-6 xl:ml-0">
+            <div className="flex items-center flex-shrink-0">
+              <img
+                className="block w-auto h-16 lg:hidden"
+                src="/logo.png"
+                alt=""
+              />
+              <img
+                className="hidden w-auto h-16 lg:block"
+                src="/logo.png"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 hidden max-w-xs ml-40 mr-auto lg:block">
+            <label htmlFor="" className="sr-only">
+              {" "}
+              Search{" "}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-5 h-5 text-gray-400" />
+              </div>
+
+              <input
+                type="search"
+                name=""
+                id=""
+                className="block w-full py-2 pl-10 border border-gray-300 rounded-lg focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                placeholder="Type to search"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end ml-auto space-x-6">
+            <div className="relative">
+              <button
+                type="button"
+                className="p-1 text-gray-700 transition-all duration-200 bg-white rounded-full hover:text-gray-900 focus:outline-none hover:bg-gray-100"
+              >
+                <Mail className="w-6 h-6" />
+              </button>
+              <span className="inline-flex items-center px-1.5 absolute -top-px -right-1 py-0.5 rounded-full text-xs font-semibold bg-indigo-600 text-white">
+                {" "}
+                2{" "}
+              </span>
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                className="p-1 text-gray-700 transition-all duration-200 bg-white rounded-full hover:text-gray-900 focus:outline-none hover:bg-gray-100"
+              >
+                <Bell className="w-6 h-6" />
+              </button>
+            </div>
+
+            <Dropdown
+              arrowIcon={false}
+              inline
+              label={
+                <Avatar
+                  alt="User settings"
+                  img={
+                    user.image ??
+                    "https://utfs.io/f/8b034fb4-1f45-425a-8c57-a7a68835311f-2558r.png"
+                  }
+                  rounded
+                />
+              }
+            >
+              <Dropdown.Header>
+                <span className="block text-sm">{user?.name}</span>
+                <span className="block truncate text-sm font-medium">
+                  {user.email}
+                </span>
+              </Dropdown.Header>
+              <Dropdown.Item>Dashboard</Dropdown.Item>
+              <Dropdown.Item>Settings</Dropdown.Item>
+              <Dropdown.Item>Earnings</Dropdown.Item>
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
+            </Dropdown>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+```
+
+## Sidebar Component
+
+```ts copy
+import { BarChart, Folder, Grid2X2, Home, Settings } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import LogoutButton from "./LogoutButton";
+import { getCategories } from "@/actions/categories";
+
+export default async function Sidebar() {
+  const categories = (await getCategories()) || [];
+  return (
+    <div className="hidden xl:flex xl:w-64 xl:flex-col border-r border-gray-300">
+      <div className="flex flex-col pt-5 overflow-y-auto">
+        <div className="flex flex-col justify-between flex-1 h-full px-4">
+          <div className="space-y-4">
+            <div>
+              <Button
+                variant="outline"
+                className="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-semibold leading-5 text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-500 hover:text-slate-50"
+              >
+                <Plus className="w-5 h-5 mr-1" />
+                Create Product
+              </Button>
+            </div>
+            <div>
+              <p className="px-4 text-xs font-semibold tracking-widest text-gray-400 uppercase">
+                Analytics
+              </p>
+              <nav className="flex-1 mt-4 space-y-1">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
+                >
+                  <Home className="flex-shrink-0 w-5 h-5 mr-4" />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/dashboard/categories"
+                  title="categories"
+                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
+                >
+                  <Grid2X2 className="flex-shrink-0 w-5 h-5 mr-4" />
+                  Categories
+                </Link>
+                <Link
+                  href="/dashboard/products"
+                  className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
+                >
+                  <Folder className="flex-shrink-0 w-5 h-5 mr-4" />
+                  Products
+                </Link>
+              </nav>
+            </div>
+          </div>
+
+          <div className="pb-4 mt-12">
+            <nav className="flex-1 space-y-1">
+              <Link
+                href="#"
+                title=""
+                className="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 text-gray-900 rounded-lg hover:bg-gray-200 group"
+              >
+                <Settings className="flex-shrink-0 w-5 h-5 mr-4" />
+                Settings
+              </Link>
+
+              <LogoutButton />
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
