@@ -1,0 +1,165 @@
+import { Steps } from "nextra/components";
+
+## Adding Dark Mode and Shadcn to your Next JS application
+
+Install and configure Shadcn.
+
+<Steps>
+### Step 1 : Install Shadcn
+ 
+```js filename=">_ Terminal" copy
+npx shadcn-ui@latest init
+````
+
+### Step 2: Configure components.json
+
+```js filename=">_ Terminal" lineNumbers copy
+Would you like to use TypeScript (recommended)? no / yes
+Which style would you like to use? › Default
+Which color would you like to use as base color? › Slate
+Where is your global CSS file? › › app/globals.css
+Do you want to use CSS variables for colors? › no / yes
+Are you using a custom tailwind prefix eg. tw-? (Leave blank if not) ...
+Where is your tailwind.config.js located? › tailwind.config.js
+Configure the import alias for components: › @/components
+Configure the import alias for utils: › @/lib/utils
+Are you using React Server Components? › no / yes
+
+```
+
+### Step 3 : Its Now Installed, You can start adding any components
+
+```
+npx shadcn-ui@latest add button
+```
+
+</Steps>
+
+## Dark mode
+
+<Steps>
+  ### Install next-themes
+  
+  ```ts copy
+  npm install next-themes
+  ````
+  ### Step 2 : Create a theme provider
+
+```ts filename="components/theme-provider.tsx" copy
+"use client";
+import * as React from "react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { type ThemeProviderProps } from "next-themes/dist/types";
+
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+```
+
+### Wrap your root layout
+
+Add the ThemeProvider to your root layout.
+
+```ts copy
+import { ThemeProvider } from "@/components/theme-provider";
+
+export default function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <>
+      <html lang="en" suppressHydrationWarning>
+        <head />
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </body>
+      </html>
+    </>
+  );
+}
+```
+
+### Install Dark Mode Toggle Button Dependencies
+
+```ts copy
+ npx shadcn-ui@latest add button dropdown-menu
+ npm i @radix-ui/react-icons
+
+```
+
+### Create a mode toggle Button
+
+In the Components folder create: `ModeToggle.tsx` file and the following code
+
+```ts copy
+"use client";
+
+import * as React from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export function ModeToggle() {
+  const { setTheme } = useTheme();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon">
+          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          System
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
+
+### Use the Toggle Button in your App
+
+In Your `page.tsx` add the following code
+
+```ts copy
+import { ModeToggle } from "@components/ModeToggle";
+
+<ModeToggle />;
+```
+
+</Steps>
+
+import { Callout } from 'nextra/components'
+ 
+<Callout type="info" emoji="ℹ️">
+  Push your Code to Github
+</Callout>
+ - Every After you make Some Changes to your code Go ahead and push your code to github using the following
+
+```ts filename=">_ Terminal"
+git add .
+git commit -m "featv- added darkmode "
+git push
+```

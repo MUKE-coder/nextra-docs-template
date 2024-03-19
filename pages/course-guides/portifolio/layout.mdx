@@ -1,0 +1,41 @@
+import { FileTree } from "nextra/components";
+
+# Adding Multiple Layouts for Front and Dasboard Pages
+
+When building projects with Next.js, we typically create an entire user interface by assembling isolated components. However, some parts of the interface require the same code snippets across multiple routes — for example, the navigation header, footer, and sidebar.
+
+To manage this, we use layouts to structure the interface in a way that contains shared code snippets. In this lesson, we’ll delve into managing layouts and nested layouts in Next.js using the App Router.
+
+Therefore the Layout helps to give a group of pages the same template which gives them a simillar look.
+
+Forxample in this app, we have the Portifolio front Pages which will be public to all visitors and there is also the dashboard pages which have a different look from the front pages.
+
+so we divide our pages into two groups: the front group => (front) and the admin group => (admin)
+
+so this means we will have 3 layouts
+
+- the main Layout (`layout.tsx `) sitted in the `app` directory directly (This layout controls the entire website)
+- the admin Layout (`layout.tsx `) sitted in the `app/(admin)` directory (This layout controls the admin pages)
+- the front Layout (`layout.tsx `) seated in the `app/(front)` directory (This layout controls the front pages of the site)
+
+so for Each Group will have its own layout,
+
+and here is the folder structure:
+
+<FileTree>
+  <FileTree.Folder name="app" defaultOpen>
+    <FileTree.Folder name="(admin)">
+      <FileTree.File name="layout.tsx" />
+      <FileTree.Folder name="dashboard">
+        <FileTree.File name="page.tsx" />
+      </FileTree.Folder>
+    </FileTree.Folder>
+    <FileTree.Folder name="(front)">
+      <FileTree.File name="layout.tsx" />
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.File name="layout.tsx" />
+    <FileTree.File name="globals.css" />
+    <FileTree.File name="favicon.ico" />
+  </FileTree.Folder>
+</FileTree>

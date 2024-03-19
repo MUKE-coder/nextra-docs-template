@@ -1,0 +1,903 @@
+# Aunthentication with Next Auth and Prisma
+
+Lets start with Prisma
+
+## Install prisma and prisma client
+
+```ts filename=">_ Terminal" copy
+npm install prisma @prisma/client
+```
+
+## Generate a prisma schema
+
+```ts filename=">_ Terminal" copy
+npx prisma init --datasource-provider mongodb
+```
+
+After the Installation,
+
+## Add your Mongodb Database URL
+
+```ts copy
+DATABASE_URL =
+  "mongodb+srv://test:test@cluster0.ns1yp.mongodb.net/myFirstDatabase";
+```
+
+## Create a prisma Schema
+
+```ts copy
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SERVICE_PROVIDER
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  password      String
+  accounts      Account[]
+  sessions      Session[]
+  isVerfied     Boolean   @default(false)
+  token         Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+
+
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String    @unique
+  imageUrl    String?
+  demoLink    String?
+  description String?
+  products    Product[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Product {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  slug          String   @unique
+  price         Float?
+  qty           Int?
+  imageUrl      String?
+  productImages String[]
+  features String[]
+  description   String?
+  categoryId    String   @db.ObjectId
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+```
+
+## Create a prisma Client Global Instance
+
+```ts copy
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+export const prismaClient = globalThis.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalThis.prisma = prismaClient;
+```
+
+## Registration of Users
+
+### Install Dependencies necessary for Registation
+
+```ts copy
+npm install resend react-email @react-email/components -E
+npm i bcrypt @types/bcrypt
+
+```
+
+We will Use Credentials for Authentication
+
+here is the Registration Form
+
+### Registration Form
+
+```ts copy
+"use client";
+import { Loader } from "lucide-react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { FaGithub, FaGoogle } from "react-icons/fa";
+
+export default function RegisterForm() {
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const [loading, setLoading] = useState(false);
+  const [emailErr, setEmailErr] = useState("");
+  async function onSubmit(data: any) {
+    try {
+      data.image =
+        "https://utfs.io/f/8b034fb4-1f45-425a-8c57-a7a68835311f-2558r.png";
+      console.log(data);
+      setLoading(true);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      const response = await fetch(`${baseUrl}/api/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        setLoading(false);
+        toast.success("User Created Successfully");
+        reset();
+        router.push(`/verify-account/${responseData.data.id}`);
+        console.log(responseData.data);
+      } else {
+        setLoading(false);
+        if (response.status === 409) {
+          setEmailErr("User with this Email already exists");
+          toast.error("User with this Email already exists");
+        } else {
+          // Handle other errors
+          console.error("Server Error:", responseData.message);
+          toast.error("Oops Something Went wrong");
+        }
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Network Error:", error);
+      toast.error("Something Went wrong, Please Try Again");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+      <div>
+        <label
+          htmlFor="name"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Your name
+        </label>
+        <input
+          {...register("name", { required: true })}
+          type="text"
+          name="name"
+          id="name"
+          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          placeholder="John Doe"
+        />
+        {errors.name && (
+          <small className="text-red-600 text-sm ">
+            This field is required
+          </small>
+        )}
+      </div>
+      <div>
+        <label
+          htmlFor="email"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Your email
+        </label>
+        <input
+          {...register("email", { required: true })}
+          type="email"
+          name="email"
+          id="email"
+          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          placeholder="name@company.com"
+        />
+        {errors.email && (
+          <small className="text-red-600 text-sm ">
+            This field is required
+          </small>
+        )}
+        <small className="text-red-600 text-sm ">{emailErr}</small>
+      </div>
+      <div>
+        <label
+          htmlFor="password"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Password
+        </label>
+        <input
+          {...register("password", { required: true })}
+          type="password"
+          name="password"
+          id="password"
+          placeholder="••••••••"
+          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+        {errors.password && (
+          <small className="text-red-600 text-sm ">
+            This field is required
+          </small>
+        )}
+      </div>
+      {loading ? (
+        <button
+          disabled
+          type="button"
+          className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+        >
+          <Loader className="inline w-4 h-4 mr-3 text-white animate-spin" />
+          Creating please wait...
+        </button>
+      ) : (
+        <button
+          type="submit"
+          className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        >
+          Sign Up
+        </button>
+      )}
+
+      <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+        >
+          Login
+        </Link>
+      </p>
+    </form>
+  );
+}
+```
+
+### Registration API
+
+```ts copy
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
+
+import { Resend } from "resend";
+import { prismaClient } from "@/prisma/db";
+import EmailTemplate from "@/components/Emails/EmailTemplate";
+
+export async function POST(request: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  try {
+    //extract the credentials
+    const { name, email, password, role = "USER" } = await request.json();
+    //Check if the user Already exists in the db
+    const existingUser = await prismaClient.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (existingUser) {
+      return NextResponse.json(
+        {
+          data: null,
+          message: `User with this email ( ${email})  already exists in the Database`,
+        },
+        { status: 409 }
+      );
+    }
+    // Encrypt the Password =>bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+    //Generate Token
+    const generateToken = () => {
+      const min = 100000; // Minimum 6-figure number
+      const max = 999999; // Maximum 6-figure number
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+    const userToken = generateToken();
+    const newUser = await prismaClient.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        token: userToken,
+      },
+    });
+
+    //Send an Email with the Token on the link as a search param
+    const token = newUser.token;
+    const userId = newUser.id;
+    const linkText = "Verify your Account ";
+    const message =
+      "Thank you for registering with Gecko. To complete your registration and verify your email address, please enter the following 6-digit verification code on our website :";
+    const sendMail = await resend.emails.send({
+      from: "Gecko <info@jazzafricaadventures.com>",
+      to: email,
+      subject: "Verify Your Email Address",
+      react: EmailTemplate({ name, token, linkText, message }),
+    });
+    console.log(token);
+    console.log(sendMail);
+    console.log(newUser);
+    return NextResponse.json(
+      {
+        data: newUser,
+        message: "User Created Successfully",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      {
+        error,
+        message: "Server Error: Something went wrong",
+      },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### React Email Template
+
+```ts copy
+import * as React from "react";
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components";
+interface EmailTemplateProps {
+  name?: string;
+  token: number;
+  linkText: string;
+  message: string;
+}
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+export const EmailTemplate = ({
+  name = "",
+  token,
+  linkText,
+  message,
+}: EmailTemplateProps) => (
+  <Html>
+    <Head />
+    <Preview>{linkText}</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Img
+          src={`${baseUrl}/static/logo.png`}
+          width="32"
+          height="32"
+          alt="Claridy"
+        />
+
+        <Text style={title}>
+          <strong>@{name}</strong>, thank you for Joining Us
+        </Text>
+
+        <Section style={section}>
+          <Text style={text}>
+            Hey <strong>{name}</strong>!
+          </Text>
+          <Text style={text}>{message}</Text>
+
+          <Button style={button}>{token}</Button>
+          <Text style={text}>
+            If you have any questions, feel free to reach out.
+          </Text>
+        </Section>
+        <Text style={links}>
+          <Link style={link}>Your security audit log</Link> ・{" "}
+          <Link style={link}>Contact support</Link>
+        </Text>
+
+        <Text style={footer}>
+          GitHub, Inc. ・88 Colin P Kelly Jr Street ・San Francisco, CA 94107
+        </Text>
+      </Container>
+    </Body>
+  </Html>
+);
+
+export default EmailTemplate;
+
+const main = {
+  backgroundColor: "#ffffff",
+  color: "#24292e",
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
+};
+
+const container = {
+  width: "480px",
+  margin: "0 auto",
+  padding: "20px 0 48px",
+};
+
+const title = {
+  fontSize: "24px",
+  lineHeight: 1.25,
+};
+
+const section = {
+  padding: "24px",
+  border: "solid 1px #dedede",
+  borderRadius: "5px",
+  textAlign: "center" as const,
+};
+
+const text = {
+  margin: "0 0 10px 0",
+  textAlign: "left" as const,
+};
+
+const button = {
+  fontSize: "24px",
+  backgroundColor: "#28a745",
+  color: "#fff",
+  lineHeight: 1.5,
+  borderRadius: "0.5em",
+  padding: "0.75em 1.5em",
+};
+
+const links = {
+  textAlign: "center" as const,
+};
+
+const link = {
+  color: "#0366d6",
+  fontSize: "12px",
+};
+
+const footer = {
+  color: "#6a737d",
+  fontSize: "12px",
+  textAlign: "center" as const,
+  marginTop: "60px",
+};
+```
+
+## Next Auth and Login
+
+### Install Next Auth
+
+```ts copy
+npm install next-auth@beta @auth/prisma-adapter
+
+```
+
+### Create the catch-all route
+
+```ts copy
+app / api / auth / [...nextauth] / route.ts;
+```
+
+and add this code
+
+```ts copy
+import { authOptions } from "@/config/auth";
+import NextAuth from "next-auth";
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
+```
+
+### Create the AuthOptions
+
+```ts copy
+import { AuthOptions, NextAuthOptions } from "next-auth";
+// import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prismaClient } from "@/prisma/db";
+
+import GoogleProvider from "next-auth/providers/google";
+import EmailProvider from "next-auth/providers/email";
+import type { Adapter } from "next-auth/adapters";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { compare } from "bcrypt";
+// more providers at https://next-auth.js.org/providers
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prismaClient) as Adapter,
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/login",
+  },
+  providers: [
+    EmailProvider({
+      server: process.env.GMAIL_EMAIL_SERVER || "", // any SMTP server will work
+      from: process.env.EMAIL_FROM || "",
+      // maxAge: 24 * 60 * 60, // How long email links are valid for (default 24h)
+    }),
+    GoogleProvider({
+      //Checking if the role exista and if not add USER Bydefault
+      // profile(profile) {
+      //   return { role: profile.role ?? "USER", ... }
+      // },
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "jb@gmail.com" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          console.log(
+            "Authorize function called with credentials:",
+            credentials
+          );
+          // Check if user credentials are Correct
+          if (!credentials?.email || !credentials?.password) {
+            throw { error: "No Inputs Found", status: 401 };
+          }
+          console.log("Pass 1 checked ");
+          //Check if user exists
+          const existingUser = await prismaClient.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          if (!existingUser) {
+            console.log("No user found");
+            throw { error: "No user found", status: 401 };
+          }
+
+          console.log("Pass 2 Checked");
+          console.log(existingUser);
+          let passwordMatch: boolean = false;
+          //Check if Password is correct
+          if (existingUser && existingUser.password) {
+            // if user exists and password exists
+            passwordMatch = await compare(
+              credentials.password,
+              existingUser.password
+            );
+          }
+          if (!passwordMatch) {
+            console.log("Password incorrect");
+            throw { error: "Password Incorrect", status: 401 };
+          }
+          console.log("Pass 3 Checked");
+          const user = {
+            id: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            role: existingUser.role,
+          };
+          //
+          console.log("User Compiled");
+          console.log(user);
+          return user;
+        } catch (error) {
+          console.log("aLL Failed");
+          console.log(error);
+          throw { error: "Something went wrong", status: 401 };
+        }
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      const dbUser = await prismaClient.user.findFirst({
+        where: { email: token.email },
+      });
+      if (!dbUser) {
+        token.id = user!.id;
+        return token;
+      }
+      return {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+        picture: dbUser.image,
+      };
+    },
+    session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+        session.user.role = token.role;
+      }
+      return session;
+    },
+  },
+};
+```
+
+### Create the Login Form
+
+```ts copy
+"use client";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import Link from "next/link";
+import { FaGoogle } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { Alert } from "flowbite-react";
+import { HiInformationCircle } from "react-icons/hi";
+export default function LoginForm() {
+  const router = useRouter();
+  const [showNotification, setShowNotification] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const [loading, setLoading] = useState(false);
+  async function onSubmit(data: any) {
+    console.log(data);
+    try {
+      setLoading(true);
+      console.log("Attempting to sign in with credentials:", data);
+      const loginData = await signIn("credentials", {
+        ...data,
+        redirect: false,
+      });
+      console.log("SignIn response:", loginData);
+      if (loginData?.error) {
+        setLoading(false);
+        toast.error("Sign-in error: Check your credentials");
+        setShowNotification(true);
+      } else {
+        // Sign-in was successful
+        setShowNotification(false);
+        reset();
+        setLoading(false);
+        toast.success("Login Successful");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Network Error:", error);
+      toast.error("Its seems something is wrong with your Network");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2 ">
+      {showNotification && (
+        <Alert color="failure" icon={HiInformationCircle}>
+          <span className="font-medium">Sign-in error!</span> Please Check your
+          credentials
+        </Alert>
+      )}
+      <div>
+        <label
+          htmlFor="email"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Your email
+        </label>
+        <input
+          {...register("email", { required: true })}
+          type="email"
+          name="email"
+          id="email"
+          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          placeholder="johndoe@gmail.com"
+        />
+        {errors.email && (
+          <small className="text-red-600 text-sm ">
+            This field is required
+          </small>
+        )}
+      </div>
+      <div>
+        <label
+          htmlFor="password"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Password
+        </label>
+        <input
+          {...register("password", { required: true })}
+          type="password"
+          name="password"
+          id="password"
+          placeholder="••••••••"
+          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+        {errors.password && (
+          <small className="text-red-600 text-sm ">
+            This field is required
+          </small>
+        )}
+      </div>
+      <div className="flex gap-4 items-center">
+        {/* <Link
+          href="/forgot-password"
+          className="shrink-0 font-medium text-blue-600 hover:underline dark:text-blue-500"
+        >
+          Forgot Password
+        </Link> */}
+        {loading ? (
+          <button
+            disabled
+            type="button"
+            className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 inline-flex items-center"
+          >
+            <svg
+              aria-hidden="true"
+              role="status"
+              className="inline w-4 h-4 mr-3 text-white animate-spin"
+              viewBox="0 0 100 101"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                fill="#E5E7EB"
+              />
+              <path
+                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                fill="currentColor"
+              />
+            </svg>
+            Signing you in please wait...
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            Login
+          </button>
+        )}
+      </div>
+      {/* <div className="flex items-center">
+        <div className="w-full bg-slate-500 h-[1px]"></div>
+        <span className="mx-2">or</span>
+        <div className="w-full bg-slate-500 h-[1px]"></div>
+      </div> */}
+      {/* <div className="">
+        <button
+          type="button"
+          className="w-full text-slate-950 bg-white hover:bg-slate-50 focus:ring-4 focus:outline-none focus:ring-slate-100 font-medium rounded-lg text-sm px-5 py-2.5 text-center justify-center flex items-center dark:focus:ring-slate-100 me-2 mb-4 border border-slate-200"
+          onClick={() => signIn("google")}
+        >
+          <FaGoogle className="mr-2 text-red-600 w-4 h-4" />
+          Sign in with Google
+        </button>
+        <button
+          onClick={() => signIn("github")}
+          type="button"
+          className="w-full justify-center text-white bg-[#24292F] hover:bg-[#24292F]/90 focus:ring-4 focus:outline-none focus:ring-[#24292F]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-gray-500 dark:hover:bg-[#050708]/30 me-2 mb-2"
+        >
+          <FaGithub className="mr-2 w-4 h-4" />
+          Sign in with Github
+        </button>
+      </div> */}
+
+      <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+        Already have an account?{" "}
+        <Link
+          href="/signup"
+          className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+        >
+          Sign Up
+        </Link>
+      </p>
+    </form>
+  );
+}
+```
+
+### Add Middleware to Protect the Dashboard Page
+
+```ts filename="middleware.ts" copy
+import { withAuth } from "next-auth/middleware";
+
+export default withAuth({
+  // Matches the pages config in `[...nextauth]`
+  pages: {
+    signIn: "/login",
+    // error: '/error',
+  },
+});
+export const config = {
+  matcher: ["/dashboard/:path*"],
+};
+```
+
+### Your .env
+
+```ts copy
+
+DATABASE_URL="mongodb+srv://gmukejohnbaptist:SPxtXF6wTr7rwGfT@cluster0.rtxthsv.mongodb.net/smartBox?retryWrites=true&w=majority"
+
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="3cc9d3166430d0605de2ede088934d4e72085ed6"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+# ANALYZE=true
+# RESEND_API_KEY=""
+RESEND_API_KEY=""
+
+UPLOADTHING_SECRET=
+UPLOADTHING_APP_ID=
+```

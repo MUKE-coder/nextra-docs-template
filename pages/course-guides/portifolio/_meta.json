@@ -1,0 +1,30 @@
+{
+  "index": {
+    "title": "Introduction",
+    "theme": {
+      "layout": "full",
+      "breadcrumb": false,
+      "footer": true,
+      "sidebar": true,
+      "toc": true,
+      "pagination": false
+    }
+  },
+  "project-setup": "Project Setup",
+  "darkmode": "Dark Mode setup",
+  "layout": "Multiple Layouts",
+  "website": "Website Templates Guides",
+  "course-guides": "Course Guides",
+  "courses": "Desishub Courses",
+  "how-to": "How to Guides",
+  "about": {
+    "title": "About",
+    "type": "page"
+  },
+  "contact": {
+    "title": "Contact ↗",
+    "type": "page",
+    "href": "https://twitter.com/shuding_",
+    "newWindow": true
+  }
+}

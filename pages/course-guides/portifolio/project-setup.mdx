@@ -1,0 +1,142 @@
+import { Tabs } from "nextra/components";
+
+# Project Set Up
+
+## System Requirements
+
+<Tabs items={["Nodejs and Npm", "Git and Github"]}>
+  <Tabs.Tab>
+    #### Download and Install Node Js
+    - Get the Latest Node Js for your operating
+    system on this Link [here](https://nodejs.org/en)
+    #### Check if you have Node Js and Npm
+```js filename=">_ Terminal" copy
+  node -v
+  npm -v
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+#### Download and Install Git
+    - Get the Latest git for your operating
+    system on this Link [here](https://git-scm.com/downloads)
+ #### Check if you have Git
+
+```js filename=">_ Terminal" copy
+git - v;
+```
+
+#### Set your Email and Username Globall
+
+```js filename=">_ Terminal" copy
+git config --global user.email "youreamil@address.com";
+git config --global user.name "yourusername";
+```
+
+  </Tabs.Tab>
+  
+</Tabs>
+
+## Create a new Next JS Project
+
+I recommend starting a new Next.js app using `create-next-app`, which sets up everything automatically for you. To create a project, run:
+
+```js filename=">_ Terminal" copy
+ npx create-next-app@latest
+```
+
+On installation, you'll see the following prompts:
+
+```js filename=">_ Terminal" lineNumbers
+  What is your project named? my-app
+  Would you like to use TypeScript? No / Yes
+  Would you like to use ESLint? No / Yes
+  Would you like to use Tailwind CSS? No / Yes
+  Would you like to use `src/` directory? No / Yes
+  Would you like to use App Router? (recommended) No / Yes
+```
+
+## Host your Project
+
+I recommend that we host our project immediately before addding alot of components, depencies and complex concepts. Follow the following steps
+
+Midify Git Ignore:
+
+- To your .gitignore file in you root of your project
+- Inside this file, add .env file to avoid leaking your secret credentials
+
+Initialize Git Repository:
+
+```js filename=">_ Terminal" copy
+ git init
+```
+
+Add Files to Staging Area:
+
+```js filename=">_ Terminal" copy
+ git add .
+```
+
+Commit Changes:
+
+```js filename=">_ Terminal" copy
+ git commit -m "initial commit"
+```
+
+Migrate to the main branch:
+
+```js filename=">_ Terminal" copy
+ git branch -M main
+```
+
+Create a New GitHub Repository:
+
+--Go to GitHub and log in to your account. Then, create a new repository by clicking on the "+" icon in the top right corner and selecting "New repository". Follow the prompts to create your repository.
+
+Add Remote Repository URL:
+Once you've created the repository on GitHub, copy the repository URL provided.
+
+Link Local Repository to GitHub Repository:
+Back in your terminal or command prompt, use the following command to link your local repository to the GitHub repository. Replace repository_url with the URL you copied in the previous step.
+
+```js filename=">_ Terminal" copy
+ git remote add origin repository_url
+```
+
+Push Changes to GitHub:
+Finally, push your local repository's commits to the GitHub repository using the following command:
+
+```js filename=">_ Terminal" copy
+ git push -u origin main
+```
+
+## Common Git errors
+
+Fatal: Not a Git Repository (or any of the parent directories):
+
+```js filename=">_ Terminal" copy
+ git init
+```
+
+Author Identity Unknown, Please Tell Me Who You Are:
+
+```js filename=">_ Terminal" copy
+git config --global user.name "Your Name"
+git config --global user.email "your_email@example.com"
+
+```
+
+Fatal: Remote Origin Already Exists:
+
+```js filename=">_ Terminal" copy
+git remote rm origin
+git remote add origin <new_remote_url>
+
+or Change the existing url
+git remote set-url origin <new_remote_url>
+
+```
+
+Host your Project on Vercel
+
+- Login tour vercel account, then add new Project from Github and then deploy
+- High Chanches are, that it will deploy successfully
