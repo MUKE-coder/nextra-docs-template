@@ -1,0 +1,156 @@
+# SEO in Next JS 14 - The Ultimate Guide (MediaMetadata,Sitemap,Robots , Google search Console, Caching)
+
+Here is the List you should check
+
+## Add Favicon in the app directory
+
+- The favicon file conventions allow you to set icons for your application.
+- Favicon is useful for adding app icons that appear in places like web browser tabs, phone home screens, and search engine results.
+- Add a favicon.ico image file to the root `/app` route segment.
+
+You can Gnerate the favicon from your logo from online favicon generators. forexample this one [**Here →**](https://realfavicongenerator.net/)
+
+## Add the Open Graph Image (OG Image) and twitter-image in the app dir
+
+- They are useful for setting the images that appear on social networks and messaging apps when a user shares a link to your site.
+- The recommended Image Size is `1200 x 630px `
+- Use an image file to set a route segment's shared image by placing an opengraph-image or twitter-image image file in the segment.
+- You can set different images for different page groups but for simplicity add your images to `/app` directory to set them to be used throught out the entire site
+- To create these images you can use [**canva.com**](https://canva.com/) or any other photo editing software
+- Inother words create 4 files og imageConfigDefault, twitter image , og alt text and twitter image alt text and place them in the app directory
+
+** Open graph image**
+
+- Add an opengraph-image.(jpg|jpeg|png|gif) image file to any route segment.
+
+** Twitter Image **
+
+- Add a twitter-image.(jpg|jpeg|png|gif) image file to any route segment.
+
+** OG Image Alt text **
+
+- Add an accompanying opengraph-image.alt.txt file in the same route segment as the opengraph-image.(jpg|jpeg|png|gif) image it's alt text.
+  ** Twitter Image Alt text **
+- Add an accompanying twitter-image.alt.txt file in the same route segment as the twitter-image.(jpg|jpeg|png|gif) image it's alt text.
+
+## Set Basic Metadata in your app Layout.tsx
+
+There are two types of Metadata : static and dynamic
+Lets start with global static Meta data in the layout
+To define static metadata, export a Metadata object from a layout.js or static page.js file.
+
+```ts copy
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    default: "My Awesome Blog",
+    template: "%s - My Awesome Blog",
+  },
+  description: "Come and read my awesome articles",
+  twitter: {
+    card: "summary_large_image",
+  },
+};
+
+export default function Layout() {}
+```
+
+## Set Basic Metadata in Other static Page
+
+In other pages Just add only titles
+
+```ts copy
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About Page",
+};
+
+export default function Page() {}
+```
+
+## Check your social media share previews
+
+You can check your social previews using online tools and here are some
+
+- [**socialsharepreview.com**](https://socialsharepreview.com/)
+- [**opengraph.xyz**](https://www.opengraph.xyz//)
+- [**Add extension**](https://chromewebstore.google.com/detail/social-share-preview/ggnikicjfklimmffbkhknndafpdlabib)
+
+- For apps on Localhost you can use [**docs.srv.us**](https://docs.srv.us/) to generate a link you can use online temperalliy or Just use an extension like[Seo meta in 1 click](https://chromewebstore.google.com/detail/seo-meta-in-1-click/bjogjfinolnhfhkbipphpdlldadpnmhc)
+
+## Quick Tips
+
+- ** Use Next/Font ** - Make sure in your layout your usung font loaded from "next/font"
+  avoid using the google font links used in css. This will ensure that the loaded and hosted locally on our website
+
+- ** Use Next Image ** - Using Next Image Optimises all your images, such as loading different Image Variations for different Screen sizes
+
+- ** Use Next Link ** - To Cache all the Pages
+
+## Dynamic Metadata
+
+These are for dynamic Pages (eg `products/[slug]/page.tsx`)
+Here is how its done
+
+```ts filename="app/products/[id]/page.ts" copy
+import type { Metadata, ResolvingMetadata } from "next";
+
+type Props = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+export async function generateMetadata(
+  { params, searchParams }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  // read route params
+  const id = params.id;
+
+  // fetch data
+  const product = await fetch(`https://.../${id}`).then((res) => res.json());
+
+  // optionally access and extend (rather than replace) parent metadata
+  const previousImages = (await parent).openGraph?.images || [];
+
+  return {
+    title: product.title,
+    description: product.description,
+    openGraph: {
+      images: [
+        {
+          url: product.imageUrl,
+        },
+      ],
+    },
+  };
+}
+
+export default function Page({ params, searchParams }: Props) {}
+```
+
+## Other Usefull concepts on Dyanmic Metadata
+
+## generateStaticParams
+
+The generateStaticParams function can be used in combination with dynamic route segments to statically generate routes at build time instead of on-demand at request time.
+
+```js filename="app/blog/[slug]/page.js" copy
+// Return a list of `params` to populate the [slug] dynamic segment
+export async function generateStaticParams() {
+  const posts = await fetch("https://.../posts").then((res) => res.json());
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+// Multiple versions of this page will be statically generated
+// using the `params` returned by `generateStaticParams`
+export default function Page({ params }) {
+  const { slug } = params;
+  // ...
+}
+```
