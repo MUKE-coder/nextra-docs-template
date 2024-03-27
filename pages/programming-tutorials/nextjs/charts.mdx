@@ -1,0 +1,447 @@
+# Ultimate Guide: Creating Dynamic Charts in Next.js with Recharts
+
+In this comprehensive guide, we'll explore how to leverage the power of Recharts, a popular React charting library, to create stunning and interactive charts within your Next.js applications. Whether you're a seasoned developer or just starting with React and Next.js, this tutorial will walk you through the process step-by-step, from setting up your Next.js project to creating various types of charts and customizing them to suit your needs.
+
+### Key Topics Covered:
+
+- Introduction to Recharts and its features
+- Setting up a Next.js project for charting
+- Installing Recharts and adding it to your Next.js application
+- Creating basic charts such as line charts, bar charts, and pie charts
+- Rendering dynamic data in charts using React state or fetching data from APIs
+- Customizing the appearance of charts with different colors, styles, and labels
+- Implementing interactivity in charts with tooltips, legends, and responsive design
+- Advanced charting techniques including animations, axis configuration, and data transformations
+- Best practices for optimizing chart performance and accessibility in Next.js applications
+- Real-world examples and use cases of Recharts in Next.js projects
+- By the end of this guide, you'll have a solid understanding of how to integrate Recharts seamlessly into your Next.js applications, enabling you to visualize data in a visually appealing and informative manner. Whether you're building a dashboard, analytics platform, or data visualization tool, Recharts in combination with Next.js will empower you to create professional-grade charts with ease.
+
+For Full Infor Read the Docs (https://recharts.org/en-US/guide)[here]
+
+### Install Dependencies
+
+```bash copy
+ npm install recharts
+```
+
+## Sample Dataset
+
+```ts copy
+// Interface for product data
+interface Product {
+  category: string;
+  sales: number;
+}
+
+// Interface for traffic and sales data
+interface TrafficSales {
+  month: string;
+  traffic: number;
+  sales: number;
+}
+
+// Interface for customer acquisition data
+interface AcquisitionChannel {
+  channel: string;
+  newCustomers: number;
+}
+
+// Interface for inventory data
+interface InventoryItem {
+  product: string;
+  stock: number;
+}
+const pieChartData = [
+  { name: "Group A", value: 400 },
+  { name: "Group B", value: 300 },
+  { name: "Group C", value: 300 },
+  { name: "Group D", value: 200 },
+];
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+// Example data (replace with your actual data)
+const productData: Product[] = [
+  { category: "Shirts", sales: 200 },
+  { category: "Pants", sales: 150 },
+  { category: "Dresses", sales: 180 },
+  { category: "Shoes", sales: 120 },
+  { category: "Accessories", sales: 80 },
+];
+
+const trafficSalesData: TrafficSales[] = [
+  { month: "Jan", traffic: 10000, sales: 800 },
+  { month: "Feb", traffic: 12000, sales: 1000 },
+  { month: "Mar", traffic: 15000, sales: 1200 },
+  { month: "Apr", traffic: 8000, sales: 700 },
+  { month: "May", traffic: 9000, sales: 850 },
+];
+
+const acquisitionData: AcquisitionChannel[] = [
+  { channel: "Organic Search", newCustomers: 50 },
+  { channel: "Email Marketing", newCustomers: 30 },
+  { channel: "Social Media", newCustomers: 20 },
+  { channel: "Paid Advertising", newCustomers: 15 },
+];
+
+const inventoryData: InventoryItem[] = [
+  { product: "Shirt A", stock: 50 },
+  { product: "Shirt B", stock: 30 },
+  { product: "Pants", stock: 25 },
+  { product: "Dress", stock: 10 },
+];
+```
+
+## Creating Re-Usable Components
+
+### Creating Re-Usable Barchart Component
+
+```ts filename="ReUsableBarChart.ts" copy
+"use client";
+
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+const productsData = [
+  { category: "Shirts", sales: 200 },
+  { category: "Pants", sales: 150 },
+  { category: "Dresses", sales: 180 },
+  { category: "Shoes", sales: 120 },
+  { category: "Accessories", sales: 80 },
+];
+
+export function ReUsableBarChart({
+  data,
+  XAxisDataKey,
+  BarDataKey,
+  BarChartColor = "#ffc107",
+  title,
+}: {
+  title: string;
+  data: any;
+  XAxisDataKey: string;
+  BarDataKey: string;
+  BarChartColor?: string;
+}) {
+  return (
+    <div className="">
+      <h3 className="px-6 py-4 scroll-m-20 text-2xl font-semibold tracking-tight">
+        {title}
+      </h3>
+      <ResponsiveContainer width="100%" height="100%" aspect={500 / 300}>
+        <BarChart data={data}>
+          <XAxis
+            dataKey={XAxisDataKey}
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => `$${value}`}
+          />
+          <Tooltip />
+          <Bar
+            dataKey={BarDataKey}
+            fill={BarChartColor}
+            radius={[4, 4, 0, 0]}
+            className="fill-primary"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+```
+
+### Creating Re-Usable LineGraph Component
+
+```ts filename="ReUsableLineGraph.ts" copy
+import React from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+const ReUsableLineGraph = ({
+  data,
+  XAxisDataKey,
+  LineOneDataKey,
+  LineTwoStroke,
+  LineOneStroke = "#387044",
+  LineTwoDataKey = "#ffc107",
+  title,
+}: {
+  title: string;
+  data: any;
+  XAxisDataKey: string;
+  LineOneDataKey: string;
+  LineTwoDataKey: string;
+  LineTwoStroke?: string;
+  LineOneStroke?: string;
+}) => {
+  const trafficSalesData = [
+    { month: "Jan", traffic: 10000, sales: 800 },
+    { month: "Feb", traffic: 12000, sales: 1000 },
+    { month: "Mar", traffic: 15000, sales: 1200 },
+    { month: "Apr", traffic: 8000, sales: 700 },
+    { month: "May", traffic: 9000, sales: 850 },
+  ];
+  return (
+    <div className="">
+      <h3 className="px-6 py-4 scroll-m-20 text-2xl font-semibold tracking-tight">
+        {title}
+      </h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data}>
+          <XAxis dataKey={XAxisDataKey} />
+          <YAxis></YAxis>
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey={LineOneDataKey}
+            stroke={LineOneStroke}
+            dot={false}
+          />
+          <Line
+            type="monotone"
+            dataKey={LineTwoDataKey}
+            stroke={LineTwoStroke}
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default ReUsableLineGraph;
+```
+
+### Creating Re-Usable Piechart Component
+
+```ts filename="ReUsablePieChart.ts" copy
+"use client";
+import React from "react";
+import {
+  PieChart,
+  Pie,
+  Sector,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+
+const ReUsablePieChart = ({
+  title,
+  data,
+  colors,
+}: {
+  title: string;
+  data: any;
+  colors: string[];
+}) => {
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+    index,
+  }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  return (
+    <div className="">
+      <h3 className="px-6 py-4 scroll-m-20 text-2xl font-semibold tracking-tight">
+        {title}
+      </h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx={150}
+            cy={150}
+            labelLine={false}
+            label={renderCustomizedLabel}
+            outerRadius={100}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {data.map((entry: any, index: any) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={colors[index % colors.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default ReUsablePieChart;
+```
+
+### Create the Analyticts Page
+
+```ts filename="analyticts" copy
+"use client";
+import { ReUsableBarChart } from "@/components/ReUsableBarChart";
+import ReUsableLineGraph from "@/components/ReUsableLineGraph";
+import ReUsablePieChart from "@/components/ReUsablePieChart";
+// analytics.tsx
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+
+// Interface for product data
+interface Product {
+  category: string;
+  sales: number;
+}
+
+// Interface for traffic and sales data
+interface TrafficSales {
+  month: string;
+  traffic: number;
+  sales: number;
+}
+
+// Interface for customer acquisition data
+interface AcquisitionChannel {
+  channel: string;
+  newCustomers: number;
+}
+
+// Interface for inventory data
+interface InventoryItem {
+  product: string;
+  stock: number;
+}
+const pieChartData = [
+  { name: "Group A", value: 400 },
+  { name: "Group B", value: 300 },
+  { name: "Group C", value: 300 },
+  { name: "Group D", value: 200 },
+];
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+// Example data (replace with your actual data)
+const productData: Product[] = [
+  { category: "Shirts", sales: 200 },
+  { category: "Pants", sales: 150 },
+  { category: "Dresses", sales: 180 },
+  { category: "Shoes", sales: 120 },
+  { category: "Accessories", sales: 80 },
+];
+
+const trafficSalesData: TrafficSales[] = [
+  { month: "Jan", traffic: 10000, sales: 800 },
+  { month: "Feb", traffic: 12000, sales: 1000 },
+  { month: "Mar", traffic: 15000, sales: 1200 },
+  { month: "Apr", traffic: 8000, sales: 700 },
+  { month: "May", traffic: 9000, sales: 850 },
+];
+
+const acquisitionData: AcquisitionChannel[] = [
+  { channel: "Organic Search", newCustomers: 50 },
+  { channel: "Email Marketing", newCustomers: 30 },
+  { channel: "Social Media", newCustomers: 20 },
+  { channel: "Paid Advertising", newCustomers: 15 },
+];
+
+const inventoryData: InventoryItem[] = [
+  { product: "Shirt A", stock: 50 },
+  { product: "Shirt B", stock: 30 },
+  { product: "Pants", stock: 25 },
+  { product: "Dress", stock: 10 },
+];
+
+const AnalyticsPage = () => {
+  return (
+    <div className="py-8 ">
+      <h1 className="text-center scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+        E-commerce Analytics
+      </h1>
+      {/* Product Performance */}
+      <div className="grid grid-cols-2 max-w-6xl mx-auto py-8">
+        <ReUsableBarChart
+          BarDataKey="sales"
+          XAxisDataKey="category"
+          data={productData}
+          title="Product Performance"
+        />
+        <ReUsableBarChart
+          BarDataKey="newCustomers"
+          XAxisDataKey="channel"
+          data={acquisitionData}
+          title="Customer Acquisition"
+          BarChartColor="#8884d8"
+        />
+
+        <ReUsableBarChart
+          BarDataKey="stock"
+          XAxisDataKey="product"
+          data={inventoryData}
+          title="Inventory Management"
+          BarChartColor="#c53333"
+        />
+        <ReUsableLineGraph
+          data={trafficSalesData}
+          XAxisDataKey="month"
+          LineOneDataKey="traffic"
+          LineTwoDataKey="sales"
+          title="Sales Trends"
+        />
+        <ReUsablePieChart
+          title="Customer"
+          data={pieChartData}
+          colors={COLORS}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AnalyticsPage;
+```
