@@ -1,1 +1,664 @@
+import { FileTree } from "nextra/components";
+
 # Data Tables
+
+## Install Dependencies
+
+You will needto Add the `<Table />` component to your project:
+
+```bash copy
+ npx shadcn-ui@latest add table
+```
+
+and Also Add tanstack/react-table dependency:
+
+```bash copy
+ npm install @tanstack/react-table
+```
+
+## Folder Structure For the Route
+
+Lets take an example i have this route called dashboard/inventory/categories
+
+<FileTree>
+  <FileTree.Folder name="categories" defaultOpen>
+    <FileTree.Folder name="new">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.File name="columns.tsx" />
+    <FileTree.File name="page.tsx" />
+  </FileTree.Folder>
+</FileTree>
+
+So go ahead and Create the route and add those files
+
+## Folder Structure For the Components
+
+<FileTree>
+  <FileTree.Folder name="components" defaultOpen>
+    <FileTree.Folder name="DataTableComponents">
+      <FileTree.File name="DataTable.tsx" />
+      <FileTree.File name="DataTablePagination.tsx" />
+      <FileTree.File name="DataTableToolbar.tsx" />
+      <FileTree.File name="DataTableViewOptions.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="DataTableColumns">
+      <FileTree.File name="ActionColumn.tsx" />
+      <FileTree.File name="DateColumn.tsx" />
+      <FileTree.File name="ImageColumn.tsx" />
+      <FileTree.File name="SortableColumn.tsx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+So go ahead and Create these Components
+
+- columns.tsx `(client component)` will contain our column definitions.
+- data-table.tsx `(client component)` will contain our `<DataTable />` component.
+- page.tsx (server component) is where we'll fetch data and render our table.
+
+## Create the Page.tsx in the categories
+
+in the Page we fetch the Data and also we need to send the Coumns and the Data to the DataTable
+
+```ts copy
+import { getCategories } from "@/actions/categories";
+import PageHeader from "@/components/Dashboard/PageHeader";
+import DataTable from "@/components/data-table-components/DataTable";
+import React from "react";
+import { columns } from "./columns";
+import { CategoryFormProps } from "@/types/types";
+import { Category } from "@prisma/client";
+
+export default async function page() {
+  const categories: Category[] = (await getCategories()) || [];
+  return (
+    <div>
+      <PageHeader
+        pageTitle="Categories"
+        path="/dashboard/categories/new"
+        linkText="Add Category"
+      />
+      <div className="py-8">
+        <DataTable data={categories} columns={columns} />
+      </div>
+    </div>
+  );
+}
+```
+
+## Create the Columns.tsx
+
+Make sure to Install all the missing shad components
+
+```ts copy
+"use client";
+
+import Image from "next/image";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import DateColumn from "@/components/DataTableColumns/DateColumn";
+import ImageColumn from "@/components/DataTableColumns/ImageColumn";
+import SortableColumn from "@/components/DataTableColumns/SortableColumn";
+// import ActionColumn from "@/components/DataTableColumns/ActionColumn";
+import CategoryForm from "@/components/Dashboard/Forms/CategoryForm";
+import { CategoryFormProps } from "@/types/types";
+import { ColumnDef } from "@tanstack/react-table";
+import ActionColumn from "@/components/DataTableColumns/ActionColumn";
+export const columns: ColumnDef<CategoryFormProps>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "title",
+    header: ({ column }) => <SortableColumn column={column} title="Title" />,
+  },
+  // {
+  //   accessorKey: "imageUrl",
+  //   header: "Category Image",
+  //   cell: ({ row }) => <ImageColumn row={row} accessorKey="imageUrl" />,
+  // },
+
+  {
+    accessorKey: "createdAt",
+    header: "Date Created",
+    cell: ({ row }) => <DateColumn row={row} accessorKey="createdAt" />,
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const category = row.original;
+      return (
+        <ActionColumn
+          row={row}
+          title="Category"
+          editEndpoint={`categories/update/${category.id}`}
+          id={category.id}
+        />
+      );
+    },
+  },
+];
+```
+
+## Create the Components in the DataTableComponents Folder
+
+### ActionColumn.tsx
+
+```ts copy
+import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import DeleteBtn from "../Actions/DeleteBtn";
+import EditBtn from "../Actions/EditBtn";
+type ActionColumnProps = {
+  row: any;
+  title: string;
+  editEndpoint: string;
+  id: string | undefined;
+};
+export default function ActionColumn({
+  row,
+  title,
+  editEndpoint,
+  id,
+}: ActionColumnProps) {
+  const isActive = row.isActive;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <DeleteBtn title={title} id={id} />
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <EditBtn title={title} editEndpoint={editEndpoint} />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
+
+### DateColumn.tsx
+
+```ts copy
+import React from "react";
+
+export default function DateColumn({
+  row,
+  accessorKey,
+}: {
+  row: any;
+  accessorKey: any;
+}) {
+  const createdAt = row.getValue(`${accessorKey}`);
+  const originalDate = new Date(createdAt);
+
+  const day = originalDate.getDate();
+  const month = originalDate.toLocaleString("default", { month: "short" });
+  const year = originalDate.getFullYear();
+
+  const formatted = `${day}th ${month} ${year}`;
+  // console.log(imageUrl);
+  return <div className="">{formatted}</div>;
+}
+```
+
+### ImageColumn.tsx
+
+```ts copy
+import Image from "next/image";
+import React from "react";
+
+export default function ImageColumn({
+  row,
+  accessorKey,
+}: {
+  row: any;
+  accessorKey: any;
+}) {
+  const imageUrl = row.getValue(`${accessorKey}`);
+  // const thum = row.getValue(`${accessorKey}`);
+  // console.log(imageUrl);
+  return (
+    <div className="shrink-0">
+      <Image
+        src={imageUrl}
+        width={500}
+        height={500}
+        alt={`${accessorKey}`}
+        className="w-10 h-10 rounded-full object-cover"
+      />
+    </div>
+  );
+}
+```
+
+### SortableColumn.tsx
+
+```ts copy
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+export default function SortableColumn({
+  column,
+  title,
+}: {
+  column: any;
+  title: string;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    >
+      {title}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+```
+
+## Create the DataTable components
+
+### DataTable.tsx
+
+```ts copy
+"use client";
+
+import * as React from "react";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useState } from "react";
+import { DataTablePagination } from "./DataTablePagination";
+import { DataTableToolbar } from "./DataTableToolbar";
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  filterKeys?: any;
+}
+export default function DataTable<TData, TValue>({
+  columns,
+  data,
+  filterKeys = ["title"],
+}: DataTableProps<TData, TValue>) {
+  const [rowSelection, setRowSelection] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      columnFilters,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+  });
+
+  return (
+    <div className="space-y-4">
+      <DataTableToolbar table={table} filterKeys={filterKeys} />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id} colSpan={header.colSpan}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <DataTablePagination table={table} />
+    </div>
+  );
+}
+```
+
+### DataTablePagination.tsx
+
+```ts copy
+"use client";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DoubleArrowLeftIcon,
+  DoubleArrowRightIcon,
+} from "@radix-ui/react-icons";
+import { Table } from "@tanstack/react-table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface DataTablePaginationProps<TData> {
+  table: Table<TData>;
+}
+import { Button } from "@/components/ui/button";
+
+export function DataTablePagination<TData>({
+  table,
+}: DataTablePaginationProps<TData>) {
+  return (
+    <div className="flex items-center justify-between px-2">
+      <div className="flex-1 text-sm text-muted-foreground">
+        {table.getFilteredSelectedRowModel().rows.length} of{" "}
+        {table.getFilteredRowModel().rows.length} row(s) selected.
+      </div>
+      <div className="flex items-center space-x-6 lg:space-x-8">
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-medium">Rows per page</p>
+          <Select
+            value={`${table.getState().pagination.pageSize}`}
+            onValueChange={(value) => {
+              table.setPageSize(Number(value));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={table.getState().pagination.pageSize} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {[10, 20, 30, 40, 50].map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            className="hidden h-8 w-8 p-0 lg:flex"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <span className="sr-only">Go to first page</span>
+            <DoubleArrowLeftIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <span className="sr-only">Go to previous page</span>
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            <span className="sr-only">Go to next page</span>
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="hidden h-8 w-8 p-0 lg:flex"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            <span className="sr-only">Go to last page</span>
+            <DoubleArrowRightIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### DataTableToolbar.tsx
+
+```ts copy
+"use client";
+
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { Table } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DataTableViewOptions } from "./DataTableViewOptions";
+
+export function DataTableToolbar({
+  table,
+  filterKeys,
+}: {
+  table: any;
+  filterKeys: any;
+}) {
+  //IF any of the keys have a value
+  const isFiltered = filterKeys.some(
+    (key: any) => table.getState().columnFilters[key]?.length > 0
+  );
+
+  const handleInputChange = (key: any, value: any) => {
+    table.getColumn(key)?.setFilterValue(value);
+  };
+
+  const handleResetClick = () => {
+    filterKeys.forEach((key: any) => {
+      table.getColumn(key)?.setFilterValue("");
+    });
+  };
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex flex-1 items-center space-x-2">
+        {filterKeys.map((key: any) => (
+          <Input
+            key={key}
+            placeholder={`Filter ${key}...`}
+            value={table.getColumn(key)?.getFilterValue() ?? ""}
+            onChange={(event) => handleInputChange(key, event.target.value)}
+            className="h-8 w-[150px] lg:w-[250px]"
+          />
+        ))}
+
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            onClick={handleResetClick}
+            className="h-8 px-2 lg:px-3"
+          >
+            Reset
+            <Cross2Icon className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      <DataTableViewOptions table={table} />
+    </div>
+  );
+}
+```
+
+### DataTableViewOptions.tsx
+
+```ts copy
+"use client";
+
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { MixerHorizontalIcon } from "@radix-ui/react-icons";
+import { Table } from "@tanstack/react-table";
+
+import { Button } from "@/components/ui/button";
+
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+interface DataTablePaginationProps<TData> {
+  table: Table<TData>;
+}
+export function DataTableViewOptions<TData>({
+  table,
+}: DataTablePaginationProps<TData>) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto hidden h-8 lg:flex"
+        >
+          <MixerHorizontalIcon className="mr-2 h-4 w-4" />
+          View
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[150px]">
+        <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {table
+          .getAllColumns()
+          .filter(
+            (column) =>
+              typeof column.accessorFn !== "undefined" && column.getCanHide()
+          )
+          .map((column) => {
+            return (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
+            );
+          })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
