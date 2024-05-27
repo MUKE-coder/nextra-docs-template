@@ -1,0 +1,532 @@
+import { Steps } from "nextra/components";
+
+# Complete Redux Toolkit in Next Js with Typescript
+
+## Introduction
+
+In this tutorial, we will learn how to integrate Redux and LocalStorage into a Next.js 14 application using TypeScript. We will start by defining key Redux terminologies, and then we will build practical examples to solidify our understanding.
+
+## Setting Up Next.js 14 with TypeScript and Install redux toolkit
+
+First, let's set up a new Next.js project with TypeScript.
+
+```bash copy
+npx create-next-app@latest nextjs-redux-ts --typescript
+cd nextjs-redux-ts
+npm install @reduxjs/toolkit react-redux
+
+```
+
+## Defining Redux Terminologies
+
+- Slice: A slice is a collection of Redux reducer logic and actions for a single feature of the application. It is created using the createSlice function from Redux Toolkit.
+
+- Action: Actions are plain objects with a type property that indicates the type of action being performed. They can also contain additional data.
+
+- Dispatch: The dispatch function is used to send actions to the Redux store.
+
+- Reducers: Reducers are functions that take the current state and an action as arguments and return a new state.
+
+- Provider: The Provider component makes the Redux store available to any nested components that need to access the Redux state.
+
+## Implementing Redux with a Counter Example
+
+<Steps>
+### Setting Up the Store:
+Create a store.ts file in the src/store directory.
+
+```ts copy
+// store/store.ts
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./counterSlice";
+
+const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;
+```
+
+### Creating a Counter Slice:
+
+Create a counterSlice.ts file in the store/slices directory.
+
+```ts copy
+// store/slices/counterSlice.ts
+import { createSlice } from "@reduxjs/toolkit";
+
+interface CounterState {
+  value: number;
+}
+
+const initialState: CounterState = {
+  value: 0,
+};
+
+const counterSlice = createSlice({
+  name: "counter",
+  initialState,
+  reducers: {
+    increment: (state) => {
+      state.value += 1;
+    },
+    decrement: (state) => {
+      state.value -= 1;
+    },
+  },
+});
+
+export const { increment, decrement } = counterSlice.actions;
+export default counterSlice.reducer;
+```
+
+### Integrating Provider in layout.tsx:
+
+Create a provider in the Providers folder and the Integrate it into the layout
+
+```ts copy
+// providers
+import { Provider } from "react-redux";
+import store from "../store/store";
+
+function Providers({ children }: { children: ReactNode }) {
+  return <Provider store={store}>{children}</Provider>;
+}
+
+export default Providers;
+```
+
+### Creating the Counter Component:
+
+Create a Counter component in the src/components directory.
+
+```ts copy
+// src/components/Counter.tsx
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store/store";
+import { increment, decrement } from "../store/counterSlice";
+
+const Counter: React.FC = () => {
+  const dispatch = useDispatch();
+  const count = useSelector((state: RootState) => state.counter.value);
+
+  return (
+    <div>
+      <h1>Counter: {count}</h1>
+      <button onClick={() => dispatch(increment())}>Increment</button>
+      <button onClick={() => dispatch(decrement())}>Decrement</button>
+    </div>
+  );
+};
+
+export default Counter;
+```
+
+### Define Typed Hooks
+
+While it's possible to import the RootState and AppDispatch types into each component, it's better to create typed versions of the useDispatch and useSelector hooks for usage in your application. This is important for a couple reasons:
+
+For useSelector, it saves you the need to type (state: RootState) every time
+For useDispatch, the default Dispatch type does not know about thunks. In order to correctly dispatch thunks, you need to use the specific customized AppDispatch type from the store that includes the thunk middleware types, and use that with useDispatch. Adding a pre-typed useDispatch hook keeps you from forgetting to import AppDispatch where it's needed.
+
+```ts copy
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "./store";
+
+// Use throughout your app instead of plain `useDispatch` and `useSelector`
+export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();
+```
+
+### Using the Counter Component:
+
+Add the Counter component to the page.tsx page.
+
+```ts copy
+// src/pages/index.tsx
+import Counter from "../components/Counter";
+
+const Home = () => {
+  return (
+    <div>
+      <h1>Redux Counter Example</h1>
+      <Counter />
+    </div>
+  );
+};
+
+export default Home;
+```
+
+</Steps>
+
+## Implementing Redux with an Add to Cart Example
+
+<Steps>
+  ### Setting Up Product Slice: 
+Create a productSlice.ts file in the src/store directory.
+
+```ts copy
+// src/store/productSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+interface CartState {
+  products: Product[];
+}
+
+const initialState: CartState = {
+  products: [],
+};
+
+const productSlice = createSlice({
+  name: "products",
+  initialState,
+  reducers: {
+    addProduct: (state, action: PayloadAction<Product>) => {
+      state.products.push(action.payload);
+    },
+    removeProduct: (state, action: PayloadAction<number>) => {
+      state.products = state.products.filter(
+        (product) => product.id !== action.payload
+      );
+    },
+  },
+});
+
+export const { addProduct, removeProduct } = productSlice.actions;
+export default productSlice.reducer;
+```
+
+### Updating the Store:
+
+Update store.ts to include the product reducer.
+
+```ts copy
+// src/store/store.ts
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./counterSlice";
+import productReducer from "./productSlice";
+
+const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+    products: productReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;
+```
+
+### Fetching Products and Displaying Them:
+
+Create a Products component in the src/components directory.
+
+```ts copy
+// src/components/Products.tsx
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store/store";
+import { addProduct, removeProduct } from "../store/productSlice";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+const Products: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const dispatch = useDispatch();
+  const cartProducts = useSelector(
+    (state: RootState) => state.products.products
+  );
+
+  useEffect(() => {
+    // Fetch products from an API or local data
+    const fetchProducts = async () => {
+      const response = await fetch("/api/products");
+      const data = await response.json();
+      setProducts(data);
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = (product: Product) => {
+    dispatch(addProduct(product));
+    localStorage.setItem("cart", JSON.stringify([...cartProducts, product]));
+  };
+
+  const handleRemoveFromCart = (productId: number) => {
+    dispatch(removeProduct(productId));
+    localStorage.setItem(
+      "cart",
+      JSON.stringify(cartProducts.filter((product) => product.id !== productId))
+    );
+  };
+
+  return (
+    <div>
+      <h1>Products</h1>
+      <ul>
+        {products.map((product) => (
+          <li key={product.id}>
+            {product.name} - ${product.price}
+            <button onClick={() => handleAddToCart(product)}>
+              Add to Cart
+            </button>
+            <button onClick={() => handleRemoveFromCart(product.id)}>
+              Remove from Cart
+            </button>
+          </li>
+        ))}
+      </ul>
+      <h2>Cart</h2>
+      <ul>
+        {cartProducts.map((product) => (
+          <li key={product.id}>
+            {product.name} - ${product.price}
+            <button onClick={() => handleRemoveFromCart(product.id)}>
+              Remove from Cart
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default Products;
+```
+
+### Using the Products Component:
+
+Add the Products component to the index.tsx page.
+
+```ts copy
+// src/pages/index.tsx
+import Counter from "../components/Counter";
+import Products from "../components/Products";
+
+const Home = () => {
+  return (
+    <div>
+      <h1>Redux Counter and Add to Cart Example</h1>
+      <Counter />
+      <Products />
+    </div>
+  );
+};
+
+export default Home;
+```
+
+</Steps>
+
+## Implementing a Multi-Step Form with React Hook Form
+
+<Steps>
+### Installing Dependencies: Install React Hook Form.
+
+```bash copy
+npm i react-hook-form
+```
+
+### Creating a Form Slice:
+
+Create a formSlice.ts file in the src/store directory to manage the form state.
+
+```ts copy
+// src/store/formSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface FormState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  step: number;
+}
+
+const initialState: FormState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  step: 1,
+};
+
+const formSlice = createSlice({
+  name: "form",
+  initialState,
+  reducers: {
+    updateForm: (state, action: PayloadAction<Partial<FormState>>) => {
+      return { ...state, ...action.payload };
+    },
+    nextStep: (state) => {
+      state.step += 1;
+    },
+    previousStep: (state) => {
+      state.step -= 1;
+    },
+  },
+});
+
+export const { updateForm, nextStep, previousStep } = formSlice.actions;
+export default formSlice.reducer;
+```
+
+### Updating the Store:
+
+Include the form reducer in store.ts.
+
+```ts copy
+// src/store/store.ts
+import { configureStore } from "@reduxjs/toolkit";
+import counterReducer from "./counterSlice";
+import productReducer from "./productSlice";
+import formReducer from "./formSlice";
+
+const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+    products: productReducer,
+    form: formReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;
+```
+
+### Creating the Multi-Step Form Component:
+
+Update the MultiStepForm component to use Redux for managing form state.
+
+```ts copy
+// src/components/MultiStepForm.tsx
+import React from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store/store";
+import { updateForm, nextStep, previousStep } from "../store/formSlice";
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+const MultiStepForm: React.FC = () => {
+  const dispatch = useDispatch();
+  const { firstName, lastName, email, phone, step } = useSelector(
+    (state: RootState) => state.form
+  );
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: { firstName, lastName, email, phone },
+  });
+
+  const onSubmit: SubmitHandler<FormData> = (data) => {
+    dispatch(updateForm(data));
+    console.log(data);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {step === 1 && (
+          <div>
+            <div>
+              <label>First Name</label>
+              <input {...register("firstName", { required: true })} />
+              {errors.firstName && <span>This field is required</span>}
+            </div>
+            <div>
+              <label>Last Name</label>
+              <input {...register("lastName", { required: true })} />
+              {errors.lastName && <span>This field is required</span>}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                handleSubmit(onSubmit)();
+                dispatch(nextStep());
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
+        {step === 2 && (
+          <div>
+            <div>
+              <label>Email</label>
+              <input {...register("email", { required: true })} />
+              {errors.email && <span>This field is required</span>}
+            </div>
+            <div>
+              <label>Phone</label>
+              <input {...register("phone", { required: true })} />
+              {errors.phone && <span>This field is required</span>}
+            </div>
+            <button type="button" onClick={() => dispatch(previousStep())}>
+              Back
+            </button>
+            <button type="submit">Submit</button>
+          </div>
+        )}
+      </form>
+    </div>
+  );
+};
+
+export default MultiStepForm;
+```
+
+### Using the Updated Multi-Step Form Component:
+
+Add the updated MultiStepForm component to the index.tsx page.
+
+```ts copy
+// src/pages/index.tsx
+import Counter from "../components/Counter";
+import Products from "../components/Products";
+import MultiStepForm from "../components/MultiStepForm";
+
+const Home = () => {
+  return (
+    <div>
+      <h1>Redux Counter, Add to Cart, and Multi-Step Form Example</h1>
+      <Counter />
+      <Products />
+      <MultiStepForm />
+    </div>
+  );
+};
+
+export default Home;
+```
+
+</Steps>

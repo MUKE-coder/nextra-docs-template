@@ -1,0 +1,50 @@
+# Complete Stripe Guide in Next Js
+
+## Getting started with Next.js, TypeScript, and Stripe Checkout
+
+### Step 1: Setting Up a TypeScript Project with Next.js
+
+Setting up a TypeScript project with Next.js is very convenient, as it automatically generates the tsconfig.json configuration file for you.
+
+```bash copy
+ npx create-next-app@latest
+```
+
+Follow the Prompts and add typescript
+
+### Managing API Keys with Next.js & Vercel
+
+#### Create .env file and add the Keys
+
+```
+# Stripe keys
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_12345
+STRIPE_SECRET_KEY=sk_12345
+```
+
+Most developers will agree that integrating payments into a Next.js application is a complex task that often results in frustrating bugs and setbacks.
+
+## Stripe Checkout for Next.js Applications
+
+Stripe Checkout is a pre-built payment page that allows you to securely collect customer payment information in your Next.js application. It offers a seamless integration with Stripe's payment processing infrastructure to handle payments with just a few lines of code.
+
+Checkout is useful for Next.js developers as it:
+
+- Speeds up implementation of payments by handling complex logic behind the scenes
+- Provides automatic localization and optimization for mobile
+- Allows custom styling to match your brand identity
+- Includes built-in security and compliance
+
+To add Checkout to a Next.js app, you'll need to:
+
+### Set up a Stripe account
+
+First, [sign up for a Stripe account](https://stripe.com/signup). Stripe offers test data and API keys to build out your integration during development.
+
+#### Install the Stripe SDK
+
+```bash copy
+ npm install @stripe/stripe-js
+```
+
+This installs the official Stripe JS SDK.
