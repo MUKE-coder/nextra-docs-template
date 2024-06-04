@@ -5,6 +5,7 @@
   "redux": "Redux Toolkit",
   "excel": "Import Data from Excel",
   "datatable": "Data Table",
+  "drag-n-drop": "Drag and Drop",
   "stripe": "Stripe Complete Guide",
   "next-routing": "Routing in Next.js",
   "next-state": "State Management in Next.js",

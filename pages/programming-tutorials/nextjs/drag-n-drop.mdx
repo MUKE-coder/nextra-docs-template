@@ -1,0 +1,187 @@
+# Implementing Drag and Drop with `dnd-kit` in a Next.js Project
+
+This guide will take you through the process of implementing a sortable list using `dnd-kit` in a Next.js project. We'll start by creating a list of users, then build the necessary components, and finally implement the drag and drop functionality.
+
+## Prerequisites
+
+Make sure you have Node.js and npm installed. Also, have a basic understanding of React and Next.js.
+
+## Step 1: Setting Up the Next.js Project
+
+First, create a new Next.js project if you don't already have one:
+
+```bash copy
+npx create-next-app@latest dnd-kit-demo
+cd dnd-kit-demo
+```
+
+## Install the required packages
+
+```bash copy
+npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+
+```
+
+## Step 2: Creating the List of Users
+
+- Create a file named data.ts in the data folder (create the folder if it doesn't exist):
+- Note the List Must have the id property, its necessary for the dnd
+
+```ts copy
+// data/users.ts
+export interface User {
+  id: number;
+  name: string;
+  initials: string;
+}
+
+export const users: User[] = [
+  { id: 1, name: "Alice Johnson", initials: "AJ" },
+  { id: 2, name: "Bob Smith", initials: "BS" },
+  { id: 3, name: "Charlie Brown", initials: "CB" },
+  { id: 4, name: "David Wilson", initials: "DW" },
+  { id: 5, name: "Eva Davis", initials: "ED" },
+  { id: 6, name: "Frank Miller", initials: "FM" },
+  { id: 7, name: "Grace Lee", initials: "GL" },
+  { id: 8, name: "Hannah White", initials: "HW" },
+  { id: 9, name: "Ian Green", initials: "IG" },
+  { id: 10, name: "Jack Black", initials: "JB" },
+];
+```
+
+## Step 3: Creating the Components
+
+### 3.1 Home Page Component
+
+Create a Home component that will render the UserList component.
+
+```ts copy
+// app/page.tsx
+import UserList from "@/components/UserList";
+import React from "react";
+
+export default function Home() {
+  return (
+    <div>
+      <UserList />
+    </div>
+  );
+}
+```
+
+### 3.2 User List Component
+
+Create the UserList component to render the sortable list of users.
+
+```ts copy
+// components/UserList.tsx
+"use client";
+import { User, users } from "@/data/users";
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import React, { useState } from "react";
+import { SortableUser } from "./SortableUser";
+
+export default function UserList() {
+  const [usersList, setUsersList] = useState(users);
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (active.id === over?.id) {
+      return;
+    }
+    setUsersList((users) => {
+      const oldIndex = users.findIndex((user) => user.id === active.id);
+      const newIndex = users.findIndex((user) => user.id === over?.id);
+      return arrayMove(users, oldIndex, newIndex);
+    });
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  return (
+    <div className="max-w-md mx-auto mt-8">
+      <h2 className="text-2xl font-bold mb-4">User List</h2>
+      <ul className="bg-white shadow-md rounded-lg">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext
+            items={usersList}
+            strategy={verticalListSortingStrategy}
+          >
+            {usersList.map((user: User) => (
+              <SortableUser key={user.id} user={user} />
+            ))}
+          </SortableContext>
+        </DndContext>
+      </ul>
+    </div>
+  );
+}
+```
+
+### 3.3 Sortable User Component
+
+Create the SortableUser component to handle each user item in the list.
+
+```ts copy
+// components/SortableUser.tsx
+import { User } from "@/data/users";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+export function SortableUser({ user }: { user: User }) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: user.id });
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={style}
+      className="flex items-center border-b border-gray-200 py-2 px-4 touch-action-none"
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
+        {user.initials}
+      </div>
+      <div className="ml-4 text-gray-700">{user.name}</div>
+    </li>
+  );
+}
+```
+
+### Explanation
+
+DndContext: The DndContext component from dnd-kit provides the context for drag and drop functionality. It handles events and sensors.
+SortableContext: The SortableContext component wraps the list of items that should be sortable. It uses a strategy to define how the items should be sorted.
+useSortable: The useSortable hook provides the necessary props and refs to make an item sortable. It returns attributes, listeners, and styling properties.
+arrayMove: The arrayMove utility from dnd-kit helps in reordering the array when an item is dragged and dropped.
