@@ -179,6 +179,19 @@ export function SortableUser({ user }: { user: User }) {
 }
 ```
 
+### 3.4 Add CSS Custom Class to Sortable item
+
+```css copy
+/* styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.touch-action-none {
+  touch-action: none;
+}
+```
+
 ### Explanation
 
 DndContext: The DndContext component from dnd-kit provides the context for drag and drop functionality. It handles events and sensors.
