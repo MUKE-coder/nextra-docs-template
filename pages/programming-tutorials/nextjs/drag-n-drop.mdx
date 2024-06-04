@@ -185,3 +185,9 @@ DndContext: The DndContext component from dnd-kit provides the context for drag 
 SortableContext: The SortableContext component wraps the list of items that should be sortable. It uses a strategy to define how the items should be sorted.
 useSortable: The useSortable hook provides the necessary props and refs to make an item sortable. It returns attributes, listeners, and styling properties.
 arrayMove: The arrayMove utility from dnd-kit helps in reordering the array when an item is dragged and dropped.
+
+- setNoderef : This option specifies which component should be moved when dragging occurs.
+- setActivatorNodeRef : This option indicates which element should be used as a reference to detect if the user is initiating a drag action.
+- listeners : This option specifies which element should be able to listen to events such as clicks and drags.
+- transform : This option is used to set up the necessary styles when an element is being moved due to the drag action.
+- transition : This option is used to set up any animations that occur while the element is being moved.
