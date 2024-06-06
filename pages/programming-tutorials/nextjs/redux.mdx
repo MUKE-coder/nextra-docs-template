@@ -173,40 +173,55 @@ export default Home;
 Create a productSlice.ts file in the src/store directory.
 
 ```ts copy
+// src/store/cartSlice.ts
 // src/store/productSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface Product {
+interface CartItem {
   id: number;
   name: string;
   price: number;
+  image: string;
 }
 
 interface CartState {
-  products: Product[];
+  cartItems: CartItem[];
 }
 
-const initialState: CartState = {
-  products: [],
+// Safely retrieve cart items from localStorage
+const getInitialCartItems = (): CartItem[] => {
+  try {
+    const storedCart = localStorage.getItem("cart");
+    if (storedCart) {
+      return JSON.parse(storedCart);
+    }
+  } catch (error) {
+    console.error("Failed to parse cart items from localStorage", error);
+  }
+  return [];
 };
 
-const productSlice = createSlice({
-  name: "products",
+const initialState: CartState = {
+  cartItems: getInitialCartItems(),
+};
+
+const cartSlice = createSlice({
+  name: "cart",
   initialState,
   reducers: {
-    addProduct: (state, action: PayloadAction<Product>) => {
-      state.products.push(action.payload);
+    addProductToCart: (state, action: PayloadAction<CartItem>) => {
+      state.cartItems.push(action.payload);
     },
-    removeProduct: (state, action: PayloadAction<number>) => {
-      state.products = state.products.filter(
-        (product) => product.id !== action.payload
+    removeProductFromCart: (state, action: PayloadAction<number>) => {
+      state.cartItems = state.cartItems.filter(
+        (item) => item.id !== action.payload
       );
     },
   },
 });
 
-export const { addProduct, removeProduct } = productSlice.actions;
-export default productSlice.reducer;
+export const { addProductToCart, removeProductFromCart } = cartSlice.actions;
+export default cartSlice.reducer;
 ```
 
 ### Updating the Store:
@@ -216,13 +231,13 @@ Update store.ts to include the product reducer.
 ```ts copy
 // src/store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "./counterSlice";
-import productReducer from "./productSlice";
+import counterSlice from "./slices/counterSlice";
+import cartSlice from "./slices/cartSlice";
 
 const store = configureStore({
   reducer: {
-    counter: counterReducer,
-    products: productReducer,
+    counter: counterSlice,
+    cart: cartSlice,
   },
 });
 
@@ -232,108 +247,74 @@ export type AppDispatch = typeof store.dispatch;
 export default store;
 ```
 
-### Fetching Products and Displaying Them:
+### Fetching Cart Items and displaying them:
 
-Create a Products component in the src/components directory.
+In the Cart Page
 
 ```ts copy
-// src/components/Products.tsx
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../store/store";
-import { addProduct, removeProduct } from "../store/productSlice";
+// app/cart
+"use client";
+import { Button } from "@/components/ui/button";
+import { useAppDispatch, useAppSelector } from "@/store/hooks/hooks";
+import { removeProductFromCart } from "@/store/slices/cartSlice";
+import { Trash } from "lucide-react";
+import Image from "next/image";
+import React from "react";
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
-
-const Products: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const dispatch = useDispatch();
-  const cartProducts = useSelector(
-    (state: RootState) => state.products.products
-  );
-
-  useEffect(() => {
-    // Fetch products from an API or local data
-    const fetchProducts = async () => {
-      const response = await fetch("/api/products");
-      const data = await response.json();
-      setProducts(data);
-    };
-
-    fetchProducts();
-  }, []);
-
-  const handleAddToCart = (product: Product) => {
-    dispatch(addProduct(product));
-    localStorage.setItem("cart", JSON.stringify([...cartProducts, product]));
-  };
-
-  const handleRemoveFromCart = (productId: number) => {
-    dispatch(removeProduct(productId));
+export default function page() {
+  const cartItems = useAppSelector((state) => state.cart.cartItems);
+  console.log(cartItems);
+  const dispatch = useAppDispatch();
+  function handleRemove(id: number) {
+    dispatch(removeProductFromCart(id));
     localStorage.setItem(
       "cart",
-      JSON.stringify(cartProducts.filter((product) => product.id !== productId))
+      JSON.stringify(cartItems.filter((product) => product.id !== id))
     );
-  };
-
+  }
   return (
-    <div>
-      <h1>Products</h1>
-      <ul>
-        {products.map((product) => (
-          <li key={product.id}>
-            {product.name} - ${product.price}
-            <button onClick={() => handleAddToCart(product)}>
-              Add to Cart
-            </button>
-            <button onClick={() => handleRemoveFromCart(product.id)}>
-              Remove from Cart
-            </button>
-          </li>
-        ))}
-      </ul>
-      <h2>Cart</h2>
-      <ul>
-        {cartProducts.map((product) => (
-          <li key={product.id}>
-            {product.name} - ${product.price}
-            <button onClick={() => handleRemoveFromCart(product.id)}>
-              Remove from Cart
-            </button>
-          </li>
-        ))}
-      </ul>
+    <div className="bg-blue-50 py-8 px-8 min-h-screen ">
+      <div className="max-w-xl bg-white rounded-xl mx-auto min-h-96 p-8">
+        <h2>Shopping Cart ({cartItems.length})</h2>
+        {cartItems.length > 0 ? (
+          <div className="space-y-3 divide-y-4 divide-gray-100 ">
+            {cartItems.map((product) => {
+              return (
+                <div className="" key={product.id}>
+                  <div className="py-3 px-4 flex items-center justify-between">
+                    <Image
+                      className="h-28 w-28 object-cover rounded"
+                      src={product.image ?? "/calcium.jpg"}
+                      width={225}
+                      height={225}
+                      alt="calcium"
+                    />
+                    <h3 className="font-semibold">{product.name}</h3>
+                    <p className="font-semibold text-sm py-2">
+                      ${product.price}
+                    </p>
+                  </div>
+                  <Button
+                    size={"sm"}
+                    onClick={() => handleRemove(product.id)}
+                    variant={"destructive"}
+                  >
+                    <Trash className="w-4 h-4 mr-2" />
+                    Remove
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center flex items-center justify-center h-full">
+            <h2>No Items in Cart</h2>
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default Products;
-```
-
-### Using the Products Component:
-
-Add the Products component to the index.tsx page.
-
-```ts copy
-// src/pages/index.tsx
-import Counter from "../components/Counter";
-import Products from "../components/Products";
-
-const Home = () => {
-  return (
-    <div>
-      <h1>Redux Counter and Add to Cart Example</h1>
-      <Counter />
-      <Products />
-    </div>
-  );
-};
-
-export default Home;
+}
 ```
 
 </Steps>
