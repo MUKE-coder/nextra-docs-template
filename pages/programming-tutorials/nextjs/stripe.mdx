@@ -1,24 +1,23 @@
-# Complete Stripe Guide in Next Js
+# Quick Stripe Guide in Next Js Ecommerce
 
 ## Getting started with Next.js, TypeScript, and Stripe Checkout
 
-### Step 1: Setting Up a TypeScript Project with Next.js
+### Step 1: Clone Git Repository
 
-Setting up a TypeScript project with Next.js is very convenient, as it automatically generates the tsconfig.json configuration file for you.
+Start by clone this git repository to simplify the product set up in the store. In the starter Code already have the Cart Functionality with redux.
 
 ```bash copy
- npx create-next-app@latest
+git clone https://github.com/MUKE-coder/nextjs-ecom-redux-starter.git
 ```
 
 Follow the Prompts and add typescript
 
-### Managing API Keys with Next.js & Vercel
+### ADD STRIPE SECRET KEY TO YOUR APP
 
-#### Create .env file and add the Keys
+Create .env file and add the secret Key
 
 ```
 # Stripe keys
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_12345
 STRIPE_SECRET_KEY=sk_12345
 ```
 
@@ -41,10 +40,379 @@ To add Checkout to a Next.js app, you'll need to:
 
 First, [sign up for a Stripe account](https://stripe.com/signup). Stripe offers test data and API keys to build out your integration during development.
 
-#### Install the Stripe SDK
+#### Install Stripe
 
 ```bash copy
- npm install @stripe/stripe-js
+ npm install stripe
 ```
 
-This installs the official Stripe JS SDK.
+## Create 2 Important Components
+
+- Create the Cart Page or Cart Modal or Checkout Page , this is page where the checkout session will be initiated . In my case i am initiating from Cart page
+
+### Cart Component
+
+```ts copy
+"use client";
+import { Button } from "@/components/ui/button";
+
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useAppDispatch, useAppSelector } from "@/store/hooks/hooks";
+import {
+  removeAllProductsFromCart,
+  removeProductFromCart,
+} from "@/store/slices/cartSlice";
+import { url } from "inspector";
+import {
+  Headset,
+  HelpCircle,
+  Loader2,
+  LogOut,
+  Mail,
+  MessageSquareMore,
+  Minus,
+  PhoneCall,
+  Plus,
+  Presentation,
+  Settings,
+  ShoppingCart,
+  Trash,
+  User,
+  UserRound,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export function CartMenu() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  async function checkout() {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    setLoading(true);
+    try {
+      const response = await fetch(`${baseUrl}/api/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ products: cartItems }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data?.url) {
+        // console.log(response.url);
+        const url = data?.url;
+        setLoading(false);
+        console.log(url);
+        dispatch(removeAllProductsFromCart());
+        window.location.href = url;
+        // router.replace(url);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setLoading(false);
+    }
+  }
+  const cartItems = useAppSelector((state) => state.cart.cartItems);
+  console.log(cartItems);
+  const dispatch = useAppDispatch();
+  function handleRemove(id: number) {
+    dispatch(removeProductFromCart(id));
+  }
+  const totalSum = cartItems.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <button className="relative inline-flex items-center p-3 text-sm font-medium text-center text-white bg-transparent rounded-lg ">
+          <ShoppingCart className="text-lime-700 dark:text-lime-500" />
+          <span className="sr-only">Cart</span>
+          <div className="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500  rounded-full -top-0 end-6 dark:border-gray-900">
+            {cartItems.length.toString().padStart(2, "0")}
+          </div>
+        </button>
+      </SheetTrigger>
+      {cartItems && cartItems.length > 0 ? (
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <h2 className="scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 border-b pb-3">
+              Shopping Cart ({cartItems.length})
+            </h2>
+          </SheetHeader>
+          {/* CONTENT HWRE */}
+          <div className="">
+            {cartItems.map((item, i) => {
+              return (
+                <div
+                  key={i}
+                  className="flex justify-between gap-4 py-3 border-b "
+                >
+                  <Image
+                    width={200}
+                    height={200}
+                    alt="cart image"
+                    src={item.image}
+                    className="w-16 h-16 rounded-lg"
+                  />
+                  <div className="space-y-2">
+                    <h2 className="text-xs font-medium">{item.name}</h2>
+                    <button
+                      onClick={() => handleRemove(item.id)}
+                      className="text-xs flex items-center text-red-500"
+                    >
+                      <Trash className="w-4 h-4 mr-1" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-sx">${item.price}</h2>
+                    <div className="flex items-center space-x-3">
+                      <button className="border shadow rounded flex items-center justify-center w-10 h-7">
+                        <Minus className="w-4 h-4" />
+                      </button>
+
+                      <p>1</p>
+                      <button className="border shadow rounded flex items-center justify-center w-10 h-7 bg-slate-800 text-white">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="space-y-1 py-3 border-b mb-3">
+              <div className="flex items-center justify-between text-sm">
+                <h2 className="font-medium">Total</h2>
+                <p>${totalSum.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            {!loading && (
+              <SheetClose asChild>
+                <Button variant={"outline"} type="submit">
+                  Continue Shopping
+                </Button>
+              </SheetClose>
+            )}
+            {loading ? (
+              <Button disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing Please wait
+              </Button>
+            ) : (
+              <Button onClick={checkout}>
+                <span>Proceed to Checkout</span>
+              </Button>
+            )}
+          </SheetFooter>
+        </SheetContent>
+      ) : (
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <h2 className="scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 border-b pb-3">
+              Empty Cart
+            </h2>
+          </SheetHeader>
+          {/* CONTENT HWRE */}
+          <div className="min-h-80  flex-col space-y-4 flex items-center justify-center">
+            <Image
+              src="/empty-cart.png"
+              width={300}
+              height={300}
+              alt="empty cart"
+              className="w-36 h-36 object-cover"
+            />
+            <h2>Your Cart Empty</h2>
+            <SheetClose asChild>
+              <Button asChild size={"sm"} variant={"outline"} type="submit">
+                <Link href="/">Continue Shopping to add Items</Link>
+              </Button>
+            </SheetClose>
+          </div>
+        </SheetContent>
+      )}
+    </Sheet>
+  );
+}
+```
+
+- Create the checkout api route, that will handle the Checkout request by the client
+
+### The Checkout Api Route
+
+````ts copy
+import { CheckoutProductProps } from "@/types/types";
+import { NextRequest, NextResponse } from "next/server";
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+async function getActiveProducts() {
+  const stripeProducts = await stripe.products.list();
+  const activeProducts = stripeProducts.data.filter(
+    (item: any) => item.active === true
+  );
+  return activeProducts;
+}
+export async function POST(request: NextRequest) {
+  try {
+    const { products } = await request.json();
+    const checkoutProducts: CheckoutProductProps[] = products;
+    // Creating Stripe Non existing Stripe Products
+    let activeProducts = await getActiveProducts();
+    try {
+      for (const product of checkoutProducts) {
+        const stripeProduct = activeProducts?.find(
+          (stripeProduct: any) =>
+            stripeProduct?.name?.toLowerCase() === product?.name?.toLowerCase()
+        );
+
+        if (stripeProduct === undefined) {
+          const unitAmount = Math.round(product.price * 100);
+
+          const prod = await stripe.products.create({
+            name: product.name,
+            default_price_data: {
+              unit_amount: unitAmount,
+              currency: "usd",
+            },
+            images: [product.image],
+          });
+          console.log(`Product created: ${prod.name}`);
+        } else {
+          console.log("Product already exists");
+        }
+      }
+    } catch (error) {
+      console.error("Error creating products:", error);
+    }
+
+    //Creating Checkout Stripe Items
+    activeProducts = await getActiveProducts();
+    let checkoutStripeProducts: any = [];
+    for (const product of checkoutProducts) {
+      const stripeProduct = activeProducts?.find(
+        (stripeProduct: any) =>
+          stripeProduct?.name?.toLowerCase() === product?.name?.toLowerCase()
+      );
+
+      if (stripeProduct) {
+        checkoutStripeProducts.push({
+          price: stripeProduct?.default_price,
+          quantity: product.qty,
+        });
+      }
+    }
+
+    //Creating Checkout Session
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    console.log(checkoutStripeProducts);
+    const session = await stripe.checkout.sessions.create({
+      line_items: checkoutStripeProducts,
+      mode: "payment",
+      success_url: `${baseUrl}/success`,
+      cancel_url: `${baseUrl}/cancel`,
+    });
+    console.log(session?.url);
+    return NextResponse.json({
+      url: session?.url,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```ts copy
+
+### The Cancel Page
+
+````
+
+import React from "react";
+
+export default function page() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="bg-white p-10 rounded-lg shadow-lg text-center">
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mx-auto mb-4">
+          <svg
+            className="w-8 h-8 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-red-500 mb-2">
+          Order Cancelled
+        </h2>
+        <p className="text-gray-700 mb-4">Your order has been cancelled.</p>
+        <button className="px-4 py-2 bg-green-500 text-white rounded-lg">
+          RETURN TO SHOP
+        </button>
+      </div>
+    </div>
+  );
+}
+
+````
+
+### The success Page
+
+```ts copy
+import React from "react";
+
+export default function page() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="bg-white p-10 rounded-lg shadow-lg text-center">
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mx-auto mb-4">
+          <svg
+            className="w-8 h-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-red-500 mb-2">
+          Order Successful
+        </h2>
+        <p className="text-gray-700 mb-4">Thank you so much for your order.</p>
+        <button className="px-4 py-2 bg-green-500 text-white rounded-md">
+          CHECK STATUS
+        </button>
+      </div>
+    </div>
+  );
+}
+
+````
