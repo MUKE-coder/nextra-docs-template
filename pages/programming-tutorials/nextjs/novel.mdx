@@ -1,0 +1,183 @@
+# Novel Editor v1 Setup
+
+[Novel](https://github.com/steven-tey/novel) is a Notion-style WYSIWYG editor with AI-powered autocompletion. Built with [Tiptap](https://tiptap.dev/) + [Vercel AI SDK](https://sdk.vercel.ai/docs).
+
+### Installation
+
+Novel has been updated to newer versions but to follow along install the "novel": "^0.1.22", version:
+Checkout the documentation for the latest version :
+[Novel docs](https://novel.sh/docs/introduction)
+
+```bash copy
+npm i novel@0.1.22
+```
+
+### Basic Usage
+
+```ts copy
+import { Editor } from "novel";
+
+export default function App() {
+  return <Editor />;
+}
+```
+
+### Advanced Usage
+
+#### Create a component to dispay the editor
+
+```ts copy
+import NovelEditor from "@/components/global/FormInputs/NovelEditor";
+
+export default function App() {
+  const [content, setContent] = useState<string | undefined>(initialContent);
+  return (
+    <div className="">
+      <NovelEditor
+        content={content}
+        setContent={setContent}
+        title="Product Content"
+      />
+    </div>
+  );
+}
+```
+
+#### Create the NovelEditor Component
+
+```ts copy
+import React from "react";
+import { Editor } from "novel";
+import { type Editor as TipTapEditor } from "@tiptap/core";
+import { Card, CardContent } from "@/components/ui/card";
+
+type NovelEditorProps = {
+  setContent: any;
+  title: string;
+  content: string | undefined;
+};
+export default function NovelEditor({
+  setContent,
+  content,
+  title,
+}: NovelEditorProps) {
+  return (
+    <Card className="">
+      <CardContent>
+        <h2 className="pt-4 pb-3">{title}</h2>
+        <Editor
+          defaultValue={{
+            type: "doc",
+            content: [],
+            // content: content as JSONContent[] | undefined,
+          }}
+          onDebouncedUpdate={(editor?: TipTapEditor) => {
+            setContent(editor?.getHTML());
+          }}
+          disableLocalStorage={true}
+          className="rounded-md border shadow-none"
+        />
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+#### Render the HTML
+
+```bash copy
+npm i html-react-parser
+
+```
+
+### Create the Component to render the parsed html
+
+```ts copy
+"use client";
+import React from "react";
+import parse from "html-react-parser";
+export default function ProductContent({
+  codeString,
+}: {
+  codeString: string | null | undefined;
+}) {
+  return <div className="parsed-html">{parse(`${codeString}`)}</div>;
+}
+```
+
+### Add the Styles to rendered html
+
+```css copy
+.parsed-html h1 {
+  @apply text-2xl font-bold my-4;
+}
+
+.parsed-html h2 {
+  @apply text-xl font-bold my-4;
+}
+
+.parsed-html h3 {
+  @apply text-lg font-bold my-4;
+}
+
+.parsed-html h4 {
+  @apply text-base font-bold my-4;
+}
+
+.parsed-html p {
+  @apply text-base leading-relaxed my-2;
+}
+
+.parsed-html img {
+  @apply max-w-full h-auto my-4 block;
+}
+
+.parsed-html code {
+  @apply bg-gray-100 px-2 py-1 rounded font-mono;
+}
+
+.parsed-html ul {
+  @apply list-disc my-4 pl-8;
+}
+
+.parsed-html ul li {
+  @apply my-2;
+}
+
+.parsed-html ol {
+  @apply list-decimal my-4 pl-8;
+}
+
+.parsed-html ol li {
+  @apply my-2;
+}
+
+.parsed-html blockquote {
+  @apply border-l-4 border-gray-300 pl-4 my-4 text-gray-600 italic;
+}
+
+.parsed-html pre {
+  @apply bg-gray-100 p-4 rounded overflow-x-auto font-mono;
+}
+
+.parsed-html a {
+  @apply text-blue-600 no-underline hover:underline;
+}
+
+.parsed-html table {
+  @apply border-collapse w-full my-4;
+}
+
+.parsed-html th,
+.parsed-html td {
+  @apply border border-gray-300 px-2 py-1 text-left;
+}
+
+.parsed-html th {
+  @apply bg-gray-100 font-bold;
+}
+
+/* .novel-list-disc {
+  list-style: circle;
+} */
+```
