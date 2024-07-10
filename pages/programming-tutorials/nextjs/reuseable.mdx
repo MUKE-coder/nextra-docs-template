@@ -1,0 +1,1143 @@
+import { Tabs } from "nextra/components";
+
+## Re-Usable Componensts
+
+These are some of my re-usable components
+
+## General Installation
+
+Install shadcn and Darkmode
+
+```bash copy
+  npx shadcn-ui@latest init
+  npm i lucide-react
+```
+
+Install Dark Mode here : [Shadcn Guide](https://ui.shadcn.com/docs/dark-mode/next)
+
+## React Quill Editor
+
+<Tabs items={['installation','code', 'usage']}>
+  <Tabs.Tab>
+      ```bash copy
+        npm i react-quill
+      ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ts copy
+    "use client";
+    import React from "react";
+    import ReactQuill from "react-quill";
+    import "react-quill/dist/quill.snow.css";
+    export default function QuillEditor({
+      label,
+      className = "sm:col-span-2",
+      value,
+      onChange,
+    }: {
+      label: string;
+      className: string;
+      value: any;
+      onChange: any;
+    }) {
+      const modules = {
+        toolbar: [
+          [{ header: [1, 2, false] }],
+          ["bold", "italic", "underline", "strike", "blockquote"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["link", "color", "image"],
+          [{ "code-block": true }],
+          ["clean"],
+        ],
+      };
+      const formats = [
+        "header",
+        "bold",
+        "italic",
+        "underline",
+        "strike",
+        "blockquote",
+        "list",
+        "bullet",
+        "link",
+        "indent",
+        "image",
+        "code-block",
+        "color",
+      ];
+      return (
+        <div className={className}>
+          <label
+            htmlFor="content"
+            className="block text-sm font-medium leading-6 text-gray-900 dark:text-slate-50 mb-2"
+          >
+            {label}
+          </label>
+          <ReactQuill
+            theme="snow"
+            value={value}
+            onChange={onChange}
+            modules={modules}
+            formats={formats}
+          />
+        </div>
+      );
+    }
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ts copy 
+    import dynamic from "next/dynamic";
+    const QuillEditor = dynamic(
+      () => import("@/components/FormInputs/QuillEditor"),
+      {
+        ssr: false,
+      }
+    );
+    const [content, setContent] = useState(initialContent);
+    <QuillEditor
+      label="Write the Content of the Meeting"
+      className=""
+      value={content}
+      onChange={setContent}
+                />
+```
+</Tabs.Tab>
+
+</Tabs>
+
+## Form Select Input
+
+<Tabs items={["installation","code", "dependent-components","usage"]}>
+  <Tabs.Tab>
+    ```bash copy 
+    npm i react-tailwindcss-select
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+"use client";
+import AddNewButton from "@/components/AddNewButton";
+import React, { useState } from "react";
+import Select from "react-tailwindcss-select";
+import { Option, Options } from "react-tailwindcss-select/dist/components/type";
+type FormSelectInputProps = {
+  options: Options;
+  label: string;
+  option: Option;
+  setOption: any;
+  href?: string;
+  labelShown?: boolean;
+  toolTipText?: string;
+};
+export default function FormSelectInput({
+  options,
+  label,
+  option,
+  setOption,
+  href,
+  toolTipText,
+  labelShown = true,
+}: FormSelectInputProps) {
+  return (
+    <div className="">
+      {labelShown && (
+        <h2 className="pb-2 block text-sm font-medium leading-6 text-gray-900">
+          Select {label}
+        </h2>
+      )}
+      <div className="flex items-center space-x-2">
+        <Select
+          isSearchable
+          primaryColor="blue"
+          value={option}
+          onChange={(item) => setOption(item)}
+          options={options}
+          placeholder={label}
+        />
+        {href && toolTipText && (
+          <AddNewButton toolTipText={toolTipText} href={href} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+   ```ts copy filename="AddNewButton.tsx"
+   import React from "react";
+import { Button } from "./ui/button";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+type AddNewButtonProps = {
+  href: string;
+  toolTipText: string;
+};
+export default function AddNewButton({ href, toolTipText }: AddNewButtonProps) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button asChild variant={"outline"} size={"sm"}>
+            <Link href={href}>
+              <Plus className="w-4 h-4" />
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{toolTipText}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+ ```ts copy
+const initialMainCategoryId = initialData?.mainCategoryId;
+  const initialCategory = mainCategories.find(
+    (item) => item.value === initialMainCategoryId
+  );
+  const [selectedMainCategory, setSelectedMainCategory] =
+    useState<any>(initialCategory);
+  <Card>
+    <CardContent>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3">
+    <FormSelectInput
+      label="Main Categories"
+      options={mainCategories}
+      option={selectedMainCategory}
+      setOption={setSelectedMainCategory}
+      toolTipText="Add New Main Category"
+      href="/dashboard/inventory/main-categories/new"
+    />
+     </div>
+      </CardContent>
+  </Card>
+```
+
+</Tabs.Tab>
+</Tabs>
+## Single Image Input
+<Tabs items={['installation', 'code', 'usage']}>
+<Tabs.Tab>
+Follow steps in the docs of [Uploathing] (https://docs.uploadthing.com/getting-started/appdir)
+
+```bash copy
+npm install uploadthing @uploadthing/react
+```
+
+</Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UploadButton } from "@/lib/uploadthing";
+import Image from "next/image";
+import React from "react";
+type ImageInputProps = {
+  title: string;
+  imageUrl: string;
+  setImageUrl: any;
+  endpoint: any;
+};
+export default function ImageInput({
+  title,
+  imageUrl,
+  setImageUrl,
+  endpoint,
+}: ImageInputProps) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-2">
+          <Image
+            alt={title}
+            className="h-40 w-full rounded-md object-cover"
+            height="300"
+            src={imageUrl}
+            width="300"
+          />
+          <UploadButton
+            className="col-span-full"
+            endpoint={endpoint}
+            onClientUploadComplete={(res) => {
+              // Do something with the response
+              console.log("Files: ", res);
+
+              setImageUrl(res[0].url);
+            }}
+            onUploadError={(error: Error) => {
+              // Do something with the error.
+              alert(`ERROR! ${error.message}`);
+            }}
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+);
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ts copy 
+  const initialImage = initialData?.imageUrl || "/placeholder.svg";
+  const [imageUrl, setImageUrl] = useState(initialImage);
+    <ImageInput
+      title="Category Image"
+      imageUrl={imageUrl}
+      setImageUrl={setImageUrl}
+      endpoint="categoryImage"
+    />
+  ```
+  </Tabs.Tab>
+  
+</Tabs>
+
+## Multiple Image Upload
+
+<Tabs items={['installation', 'code', 'usage']}>
+  <Tabs.Tab>
+  Follow steps in the docs of [Uploathing] (https://docs.uploadthing.com/getting-started/appdir)
+
+```bash copy
+npm install uploadthing @uploadthing/react
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+      import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UploadButton } from "@/lib/uploadthing";
+import Image from "next/image";
+import React from "react";
+type ImageInputProps = {
+  title: string;
+  imageUrls: string[];
+  setImageUrls: any;
+  endpoint: any;
+};
+export default function MultipleImageInput({
+  title,
+  imageUrls,
+  setImageUrls,
+  endpoint,
+}: ImageInputProps) {
+  // console.log(imageUrls);
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-2">
+          <Image
+            alt={title}
+            className="h-40 w-full rounded-md object-cover"
+            height="300"
+            src={imageUrls[0]}
+            width="300"
+          />
+          <div className="grid grid-cols-3 gap-2">
+            {imageUrls.map((imageUrl: string, i: number) => {
+              return (
+                <div key={i}>
+                  <Image
+                    alt="Product image"
+                    className="aspect-square w-full rounded-md object-cover"
+                    height="84"
+                    src={imageUrl}
+                    width="84"
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <UploadButton
+            className="col-span-full"
+            endpoint={endpoint}
+            onClientUploadComplete={(res) => {
+              // Do something with the response
+              // console.log(
+              //   "Files: ",
+              //   res.map((item) => item.url)
+              // );
+              setImageUrls(res.map((item) => item.url));
+            }}
+            onUploadError={(error: Error) => {
+              // Do something with the error.
+              alert(`ERROR! ${error.message}`);
+            }}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+      const initialImages = initialData?.productImages || [
+    "/placeholder.svg",
+    "/placeholder.svg",
+    "/placeholder.svg",
+  ];
+  const [productImages, setProductImages] = useState(initialImages);
+    <MultipleImageInput
+      title="Product Images"
+      imageUrls={productImages}
+      setImageUrls={setProductImages}
+      endpoint="productImages"
+    />
+
+    ```
+
+  </Tabs.Tab>
+</Tabs>
+
+## Text Input
+
+<Tabs items={["installation", "code", "usage"]}>
+  <Tabs.Tab>
+  See how to use React hook form under forms, Include tailwind form plugin in the tailwind config
+
+```bash copy
+npm i react-hook-form
+npm install -D @tailwindcss/forms
+```
+
+Tailwind config
+
+```ts copy
+// tailwind.config.js
+module.exports = {
+  theme: {
+    // ...
+  },
+  plugins: [
+    require("@tailwindcss/forms"),
+    // ...
+  ],
+};
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+   ```ts copy 
+import { cn } from "@/lib/utils";
+import React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import { CircleHelp, Mail } from "lucide-react";
+type TextInputProps = {
+  register: any,
+  errors: any,
+  label: string,
+  type?: string,
+  name: string,
+  toolTipText?: string,
+  unit?: string,
+  placeholder?: string,
+  icon?: any,
+};
+export default function TextInput({
+  register,
+  errors,
+  label,
+  type = "text",
+  name,
+  toolTipText,
+  unit,
+  icon,
+  placeholder,
+}: TextInputProps) {
+  const Icon = icon;
+  return (
+    <div>
+      <div className="flex space-x-2 items-center">
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium leading-6 text-gray-900"
+        >
+          {label}
+        </label>
+        {toolTipText && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button>
+                  <CircleHelp className="w-4 h-4 text-slate-500" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{toolTipText}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="relative rounded-md ">
+          {icon && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Icon className="text-slate-300 w-4 h-4" />
+            </div>
+          )}
+          <input
+            id={name}
+            type={type}
+            {...register(`${name}`, { required: true })}
+            className={cn(
+              "block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-sm",
+              (errors[`${name}`] && "focus:ring-red-500 pl-8") ||
+                (icon && "pl-8")
+            )}
+            placeholder={placeholder || label}
+          />
+          {unit && (
+            <p className="bg-white py-2 px-3 rounded-tr-md rounded-br-md absolute inset-y-0 right-1 my-[2px] flex items-center">
+              {unit}
+            </p>
+          )}
+        </div>
+        {errors[`${name}`] && (
+          <span className="text-xs text-red-600">{label} is required</span>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+  ```ts copy
+    <div className="grid gap-3 pt-3">
+      <TextInput
+        register={register}
+        errors={errors}
+        label="Product Name"
+        name="name"
+      />
+    </div>
+  ```
+
+</Tabs.Tab>
+</Tabs>
+
+## Textarea
+
+<Tabs items={["installation", "code", "usage"]}>
+  <Tabs.Tab>Install Tailwind forms Plugin</Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+    import { cn } from "@/lib/utils";
+import React from "react";
+type TextAreaProps = {
+  register: any;
+  errors: any;
+  label: string;
+  name: string;
+  helperText?: string;
+};
+export default function TextArea({
+  register,
+  errors,
+  label,
+  name,
+  helperText = "",
+}: TextAreaProps) {
+  return (
+    <div className="col-span-full">
+      <label
+        htmlFor={name}
+        className="block text-sm font-medium leading-6 text-gray-900"
+      >
+        {label}
+      </label>
+      <div className="mt-2">
+        <textarea
+          id={name}
+          {...register(`${name}`, { required: true })}
+          rows={3}
+          className={cn(
+            "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-sm",
+            errors[`${name}`] && "focus:ring-red-500"
+          )}
+        />
+        {errors[`${name}`] && (
+          <span className="text-xs text-red-600">Description is required</span>
+        )}
+      </div>
+      {helperText && (
+        <p className="mt-1 text-sm leading-6 text-gray-600">{helperText}</p>
+      )}
+    </div>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy
+    <div className="grid gap-3">
+      <TextArea
+        register={register}
+        errors={errors}
+        label="Product Description"
+        name="productDetails"
+      />
+    </div>
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+## Radio Input
+
+<Tabs items={["installation", "code", "usage"]}>
+  <Tabs.Tab>**pnpm**: Fast, disk space efficient package manager.</Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+        import React from "react";
+
+        type RadioOption = {
+        label: string;
+        id: string;
+        };
+
+        type RadioInputProps = {
+        radioOptions: RadioOption[];
+        register: any;
+        label: string;
+        name: string;
+        errors: any;
+        };
+        export default function RadioInput({
+        radioOptions,
+        register,
+        label,
+        name,
+        errors,
+        }: RadioInputProps) {
+        return (
+        <div className="grid gap-3 pt-4">
+        <h3 className=" font-semibold text-gray-900 dark:text-white">{label}</h3>
+        <ul className="items-center w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg sm:flex dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        {radioOptions.map((item, i) => {
+        return (
+        <li
+          key={i}
+          className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600"
+        >
+        <div className="flex items-center ps-3">
+        <input
+        {...register(`${name}`, { required: true })}
+        name={`${name}`}
+        id={item.id}
+        type="radio"
+        value={item.id}
+        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+        />
+        <label
+          htmlFor={item.id}
+          className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+        >
+        {item.label}
+        </label>
+        </div>
+        </li>
+        );
+        })}
+        </ul>
+        {errors[`${name}`] && (
+        <span className="text-red-600  text-sm">{label} is required</span>
+        )}
+        </div>
+        );
+        }
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ts copy 
+   const radioOptions = [
+    {
+      label: "Full",
+      id: "FULL",
+    },
+    {
+      label: "Half",
+      id: "HALF",
+    },
+    {
+      label: "Quarter",
+      id: "QUARTER",
+    },
+  ];
+    <Card>
+      <CardContent>
+        <div className="grid gap-6">
+          <RadioInput
+            radioOptions={radioOptions}
+            label="Advert Size"
+            register={register}
+            name="size"
+            errors={errors}
+          />
+        </div>
+      </CardContent>
+     </Card>
+  ```
+  </Tabs.Tab>
+</Tabs>
+
+## Submit Button and Close Button
+
+<Tabs items={["submit-btn", "close-btn", "usage"]}>
+
+  <Tabs.Tab>
+    ```ts copy 
+          import { Button } from "@/components/ui/button";
+      import { cn } from "@/lib/utils";
+      import { Loader, Plus } from "lucide-react";
+      import React from "react";
+      type SubmitButtonProps = {
+        title: string;
+        loadingTitle?: string;
+        className?: string;
+        loaderIcon?: any;
+        buttonIcon?: any;
+        loading: boolean;
+        showIcon?: boolean;
+        size?: "default" | "sm" | "lg" | "icon" | null | undefined;
+      };
+      export default function SubmitButton({
+        title,
+        loadingTitle = "Saving Please wait...",
+        loading,
+        className,
+        loaderIcon = Loader,
+        buttonIcon = Plus,
+        showIcon = true,
+      }: SubmitButtonProps) {
+        const LoaderIcon = loaderIcon;
+        const ButtonIcon = buttonIcon;
+        return (
+          <>
+            {loading ? (
+              <button
+                type="button"
+                disabled
+                className={cn(
+                  "items-center flex justify-center rounded-md bg-indigo-600/55 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 cursor-not-allowed",
+                  className
+                )}
+              >
+                <LoaderIcon className="w-4 h-4 animate-spin mr-2" />
+                {loadingTitle}
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className={cn(
+                  "flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+                  className
+                )}
+              >
+                {showIcon && <ButtonIcon className="w-4 h-4 mr-2" />}
+                {title}
+              </button>
+            )}
+          </>
+        );
+      }
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+      ```ts copy 
+       import React from "react";
+    import { Button } from "../ui/button";
+    import Link from "next/link";
+
+    export default function CloseButton({
+      href,
+      parent = "inventory",
+    }: {
+      href: string,
+      parent?: string,
+    }) {
+      return (
+        <Button type="button" variant="outline" asChild>
+          <Link
+            href={
+              parent === "" ? `/dashboard${href}` : `/dashboard/${parent}${href}`
+            }
+          >
+            Close
+          </Link>
+        </Button>
+      );
+    }
+
+      ```
+
+</Tabs.Tab>
+<Tabs.Tab>They are used in the form Form Footer and form header components</Tabs.Tab>
+</Tabs>
+
+## Forms, Form Header and Form Footer
+
+<Tabs items={['formHeader', 'formFooter','form']}>
+  <Tabs.Tab>
+    ```ts copy 
+          "use client";
+  import SubmitButton from "@/components/global/FormInputs/SubmitButton";
+  import { Button } from "@/components/ui/button";
+  import { ChevronLeft } from "lucide-react";
+  import { useRouter } from "next/navigation";
+  import React from "react";
+  import CloseButton from "../CloseButton";
+
+type FormHeaderProps = {
+title: string;
+editingId: string | undefined;
+loading: boolean;
+href: string;
+parent?: string;
+};
+export default function FormHeader({
+title,
+editingId,
+loading,
+href,
+parent,
+}: FormHeaderProps) {
+const router = useRouter();
+
+function goBack() {
+router.back();
+}
+return (
+
+{" "}
+
+<div className="flex items-center justify-between">
+  <div className="flex items-center gap-4">
+    <Button
+      onClick={goBack}
+      variant="outline"
+      size="icon"
+      className="h-7 w-7"
+      type="button"
+    >
+      <ChevronLeft className="h-4 w-4" />
+      <span className="sr-only">Back</span>
+    </Button>
+    <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
+      {editingId ? "Update" : "Create"} {title}
+    </h1>
+  </div>
+  <div className="flex items-center justify-center gap-2">
+    <CloseButton href={href} parent={parent} />
+    <SubmitButton
+      size={"sm"}
+      title={editingId ? `Update ${title}` : `Save ${title}`}
+      loading={loading}
+    />
+  </div>
+</div>
+); }
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy
+    import React from "react";
+import CloseButton from "../CloseButton";
+import SubmitButton from "@/components/global/FormInputs/SubmitButton";
+
+export default function FormFooter({
+  href,
+  editingId,
+  loading,
+  title,
+  parent,
+}: {
+  href: string,
+  editingId: string | undefined,
+  loading: boolean,
+  title: string,
+  parent?: string,
+}) {
+  return (
+    <div className="flex items-center  gap-2 py-4 justify-between ">
+      <CloseButton href={href} parent={parent} />
+      <SubmitButton
+        title={editingId ? `Update ${title}` : `Save ${title}`}
+        loading={loading}
+      />
+    </div>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy
+    "use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import FormHeader from "./FormHeader";
+import { useRouter } from "next/navigation";
+import Select from "react-tailwindcss-select";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { CategoryProps, SelectOption } from "@/types/types";
+
+import TextInput from "@/components/global/FormInputs/TextInput";
+import TextArea from "@/components/global/FormInputs/TextArea";
+
+import { generateSlug } from "@/lib/generateSlug";
+import {
+  createCategory,
+  deleteManyCategories,
+  updateCategoryById,
+} from "@/actions/category";
+import toast from "react-hot-toast";
+import SubmitButton from "@/components/global/FormInputs/SubmitButton";
+import ImageInput from "@/components/global/FormInputs/ImageInput";
+import {
+  Options,
+  SelectValue,
+} from "react-tailwindcss-select/dist/components/type";
+import { Category } from "@prisma/client";
+import FormFooter from "./FormFooter";
+import FormSelectInput from "@/components/global/FormInputs/FormSelectInput";
+
+export type SelectOptionProps = {
+  label: string;
+  value: string;
+};
+type CategoryFormProps = {
+  editingId?: string | undefined;
+  initialData?: Category | undefined | null;
+  mainCategories: SelectOptionProps[];
+};
+export default function CategoryForm({
+  editingId,
+  initialData,
+  mainCategories,
+}: CategoryFormProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CategoryProps>({
+    defaultValues: {
+      title: initialData?.title,
+      description: initialData?.description || "",
+    },
+  });
+  const router = useRouter();
+  const initialMainCategoryId = initialData?.mainCategoryId;
+  const initialCategory = mainCategories.find(
+    (item) => item.value === initialMainCategoryId
+  );
+  const [selectedMainCategory, setSelectedMainCategory] =
+    useState<any>(initialCategory);
+  const [loading, setLoading] = useState(false);
+  const initialImage = initialData?.imageUrl || "/placeholder.svg";
+  const [imageUrl, setImageUrl] = useState(initialImage);
+  const initialStatus = {
+    value: initialData?.status == true ? "true" : "false",
+    label: initialData?.status == true ? "Active" : "Disabled",
+  };
+  const [status, setStatus] = useState<any>(initialStatus);
+  const options: Options = [
+    { value: "true", label: "Active" },
+    { value: "false", label: "Disabled" },
+  ];
+  const handleChange = (item: SelectValue) => {
+    console.log("value:", item);
+    setStatus(item);
+  };
+  async function saveCategory(data: CategoryProps) {
+    try {
+      setLoading(true);
+      data.slug = generateSlug(data.title);
+      data.status = status && status.value == "true" ? true : false;
+      data.imageUrl = imageUrl;
+      data.mainCategoryId = selectedMainCategory.value;
+
+      if (editingId) {
+        await updateCategoryById(editingId, data);
+        setLoading(false);
+        // Toast
+        toast.success("Updated Successfully!");
+        //reset
+        reset();
+        //route
+        router.push("/dashboard/inventory/categories");
+        setImageUrl("/placeholder.svg");
+      } else {
+        await createCategory(data);
+        setLoading(false);
+        // Toast
+        toast.success("Successfully Created!");
+        //reset
+        reset();
+        setImageUrl("/placeholder.svg");
+        //route
+        // router.push("/dashboard/inventory/categories");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+
+}
+// async function handleDeleteAll() {
+// setLoading(true);
+// try {
+// await deleteManyCategories();
+// setLoading(false);
+// } catch (error) {
+// console.log(error);
+// }
+// }
+console.log(status);
+
+return (
+
+<form className="" onSubmit={handleSubmit(saveCategory)}>
+<FormHeader
+        href="/categories"
+        title="Category"
+        editingId={editingId}
+        loading={loading}
+      />
+
+      <div className="grid grid-cols-12 gap-6 py-8">
+        <div className="lg:col-span-8 col-span-full space-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Category Title</CardTitle>
+              <CardDescription>
+                Lipsum dolor sit amet, consectetur adipiscing elit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    label="Category Title"
+                    name="title"
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <TextArea
+                    register={register}
+                    errors={errors}
+                    label="Description"
+                    name="description"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3">
+                <FormSelectInput
+                  label="Main Categories"
+                  options={mainCategories}
+                  option={selectedMainCategory}
+                  setOption={setSelectedMainCategory}
+                  toolTipText="Add New Main Category"
+                  href="/dashboard/inventory/main-categories/new"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-4 col-span-full ">
+          <div className="grid auto-rows-max items-start gap-4 ">
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6">
+                  <Select
+                    isSearchable
+                    primaryColor="blue"
+                    value={status}
+                    onChange={handleChange}
+                    options={options}
+                    placeholder="Status"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <ImageInput
+              title="Category Image"
+              imageUrl={imageUrl}
+              setImageUrl={setImageUrl}
+              endpoint="categoryImage"
+            />
+          </div>
+        </div>
+      </div>
+      <FormFooter
+        href="/categories"
+        editingId={editingId}
+        loading={loading}
+        title="Category"
+      />
+    </form>
+
+);
+}
+
+    ```
+
+  </Tabs.Tab>
+</Tabs>
