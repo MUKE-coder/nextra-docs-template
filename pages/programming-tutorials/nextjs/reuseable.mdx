@@ -114,6 +114,20 @@ Install Dark Mode here : [Shadcn Guide](https://ui.shadcn.com/docs/dark-mode/nex
     ```bash copy 
     npm i react-tailwindcss-select
     ```
+    **Modify your Tailwind config**
+
+    ```ts copy
+    // in your tailwind.config.js
+        module.exports = {
+            // ...
+            content: [
+                "./src/**/*.{js,jsx,ts,tsx}",
+                "./node_modules/react-tailwindcss-select/dist/index.esm.js"
+            ]
+            // ...
+        };
+    ```
+
   </Tabs.Tab>
   <Tabs.Tab>
     ```ts copy 
