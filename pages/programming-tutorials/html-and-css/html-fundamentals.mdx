@@ -1,4 +1,5 @@
 import { Callout } from "nextra/components";
+import { Steps } from 'nextra/components';
 
 # **WHAT IS HTML?**
 
@@ -39,6 +40,8 @@ HTML (HyperText Markup Language) is a markup language that web developers use to
 
 HTML elements are the building blocks of HTML documents and consist of an opening tag, content, and a closing tag.
 
+**Attributes**; are used to provide additional information about HTML elements. Attributes are always included in the opening tag of an element and consist of a name and a value. They modify the default behavior or appearance of the elements they are associated with.
+
 ### Examples include;
 `<p></p>` : Used to write  paragraphs in an HTML page.
 ```HTML5 copy
@@ -49,9 +52,90 @@ HTML elements are the building blocks of HTML documents and consist of an openin
 <h1>This is a the biggest heading...</h1>
 <h6>This is a the smallest heading...</h6>
 ```
+`<span></span>`: Used for styling and grouping inline elements without affecting the flow of content.
+```HTML5 copy
+<h1>This is a the <span>heading</span>...</h1>
+```
+`<a></a>`: Defines a hyperlink, which is used to link internal pages or to external web pages. It has an **attribute** called **href** in which the actual link is placed.
+```HTML5 copy
+<a href='www.who.com'>This is a the link...</a>
+```
+`<from></from>`: Represents a form that can be submitted to a server.
+```HTML5 copy
+<form action='/submit' method='post'>
+<...form elements...>
+</form>
+```
+`<label></label>`: used to represent a caption for an item in a user interface. It has an **attribute** called **for** that acts the name of the label tag
+```HTML5 copy
+<label for="username">Username</label>
+```
+`<button></button>`:  used to create clickable buttons on a webpage.  It has an **attribute** which is known as **type** which determines the behavior of the the button types include; submit, button, reset, disabled and many more
+```HTML5 copy
+<button type="submit">Submit</button>
+  <button type="reset">Reset</button>
+```
+`<div></div>`:  It's like a box that you can use to group other HTML elements like the paragraphs  together. 
+```HTML5 copy
+<div>
+    <p>Content inside a div.</p>
+</div>
+```
+#### Lists
+These lists are essential for presenting content in a clear and organized manner.
+
+#### Types of lists
+There are two types of commonly used lists;
+
+<Steps>
+### Unordered lists
+ 
+Used for lists where the order of items doesn't matter.
+They are created using the `<ul>` and `<li>` tags.
+Each list item is preceded by a bullet point.
+```HTML5 copy
+<ul>
+  <li>Item 1</li>
+  <li>Item 2</li>
+  <li>Item 3</li>
+</ul>
+```
+
+
+ 
+### Ordered lists
+ 
+Used for lists where the order of items is important.
+They are created using the `<ol>` and `<li>` tags.
+Each list item is preceded by a number.
+```HTML5 copy
+<ol>
+  <li>First item</li>
+  <li>Second item</li>
+  <li>Third item</li>
+</ol>
+```
+</Steps>
 
 
 <Callout type="warning" emoji="⚠️">
   There are some element that don't have a closing tag and are known as self closing elements
 </Callout>
+
+`<img/>`:  Embeds an image in the document.. It has **attributes** called **src** in which the actual link of the image is placed and **alt** where short notes about the image are placed.
+```HTML5 copy
+<img src='www.who.com' alt='loading'/>
+```
+`<input/>`:  Represents a typed data field, such as a text field, checkbox, radio button, submit button, etc. It has **attributes** called **type** which shows the type of the input eg text, checkbox etc, **name** shows the name of the input, **placeholder**: shows an example of what is to be written in the input 
+```HTML5 copy
+<input type='text' name='name' placeholder='write your name here.'/>
+```
+`<br/>`:   Inserts a line break.
+```HTML5 copy
+<p>First line<br>Second line</p>
+```
+`<hr/>`:   Inserts a horizontal rule.
+```HTML5 copy
+<hr/>
+```
 
