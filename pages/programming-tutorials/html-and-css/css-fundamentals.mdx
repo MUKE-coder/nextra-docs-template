@@ -1,0 +1,113 @@
+import { Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+
+# Introduction to CSS
+
+CSS (Cascading Style Sheets) is a language used to describe the style and layout of web pages. It separates the content (HTML) from the visual presentation, allowing you to control the look and feel of multiple web pages with a single CSS file. By defining styles in a CSS file, you can easily manage and update the design of your website without altering the HTML structure
+
+### Usage of CSS
+
+CSS is used to enhance the appearance of web pages by defining styles for elements. This includes setting colors, fonts, spacing, layout, and more. It allows for a consistent look and feel across a website, making it easier to maintain and update.
+
+### CSS Syntax
+
+CSS rules are composed of selectors and declaration blocks. The selector points to the HTML element you want to style, and the declaration block contains one or more declarations separated by semicolons. Each declaration includes a property and a value, defining how the selected element should be styled
+
+**Declaration Block:** Contains one or more declarations separated by semicolons
+
+```bash copy
+p {
+color: blue;
+ font-size: 16px;
+}
+
+```
+
+### Introduction to Types of CSS
+
+When learning CSS, it's important to understand the three main ways to apply styles to HTML documents: Inline, Internal, and External CSS. Each method has its advantages and use cases. By mastering these methods, you can choose the best approach for different scenarios, ensuring your web pages are styled efficiently and effectively.
+
+**Inline CSS**
+
+Description: Inline CSS involves adding style directly within an HTML element using the style attribute. This method is useful for applying unique styles to a single element.
+
+    ```bash copy
+
+<p style="color: blue;">This is an inline styled paragraph.</p>
+
+````
+
+**Usage:** Best for quick, specific styling of individual elements without affecting
+other parts of the document
+
+**Internal CSS**
+
+Description: Internal CSS involves placing CSS rules within the style tag inside the head section of an HTML document. This method allows you to style the entire document without creating an external file
+
+    ```bash copy
+
+<head>
+    <style>
+        p {
+            color: green;
+        }
+    </style>
+</head>
+
+````
+
+**Usage**: Ideal for applying styles to a single document, especially when the styles are document-specific and do not need to be reused elsewhere.
+
+**External CSS**
+
+Description: External CSS involves linking an external .css file to an HTML document using the link tag. This method is the most efficient for managing styles across multiple web pages.
+
+**HTML File (index.html):**
+
+```bash copy
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>External CSS Example</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>This is a heading</h1>
+    <p>This is a paragraph with external CSS.</p>
+</body>
+</html>
+
+```
+
+**CSS File (styles.css):**
+
+```bash copy
+
+body {
+    background-color: lightblue;
+}
+
+h1 {
+    color: navy;
+}
+
+p {
+    font-size: 16px;
+}
+
+```
+
+**Usage**:
+In this example, the HTML file index.html links to an external CSS file styles.css using the link tag. The external CSS file contains styles that set the body background color to light blue, the heading color to navy, and the paragraph font size to 16 pixels. These styles are applied to the HTML document and can be reused across multiple HTML files by linking the same CSS file.
+
+**Inline CSS**: Styles are applied directly within the HTML element using the style attribute.
+
+**Internal CSS**: Styles are defined within the style tag inside the head section of the HTML document.
+
+**External CSS**: Styles are defined in a separate CSS file and linked to the HTML document using the link tag
+
+<Callout type="info" emoji="ℹ️">
+  Each type of CSS Type has its use cases, and understanding them allows you to
+  choose the most appropriate method for styling your web pages
+</Callout>
