@@ -1,0 +1,176 @@
+### CSS Comments
+
+CSS comments are used to annotate your CSS code, making it easier to understand and maintain. Comments can provide explanations or notes about the CSS code, which is especially useful when working on large projects or collaborating with other developers. Comments are ignored by the browser, so they do not affect the rendered page
+
+**Usage:**
+CSS comments are enclosed within /\* \*/. Anything between these symbols will be treated as a comment and not processed by the browser
+
+    ```bash copy
+
+/_ This is a single-line comment _/
+p {
+color: blue; /_ This is an inline comment _/
+}
+
+/_
+This is a
+multi-line comment
+_/
+body {
+background-color: lightgrey;
+}
+
+````
+### CSS Selectors
+
+CSS selectors are patterns used to select and style HTML elements. They are a fundamental part of CSS, determining which HTML elements will be affected by the styles you define. Understanding how selectors work is crucial for applying styles efficiently and effectively across your web pages
+
+#### Types of CSS Selectors
+
+**Universal Selector (*)**
+
+Description: Selects all elements on the page
+
+``` bash copy
+* {
+    margin: 0;
+    padding: 0;
+}
+
+````
+
+Usage: Useful for applying a global style reset.
+
+**Element Selector**
+
+Description: Selects all elements of a specific type
+
+```bad copy
+p {
+    color: blue;
+}
+
+```
+
+Usage: Targets all paragraphs (p) to set their text color to blue
+
+**Class Selector (.)**
+
+Description: Selects all elements with a specific class attribute
+
+```bash copy
+.classname {
+    font-size: 20px;
+}
+```
+
+Usage: Styles multiple elements with the class "classname"
+
+**ID Selector (#)**
+
+Description: Selects a single element with a specific ID attribute
+
+```bash copy
+#uniqueid {
+    background-color: yellow;
+}
+
+```
+
+Usage: Targets a unique element with the ID "uniqueid"
+
+**Attribute Selector**
+
+Description: Selects elements with a specific attribute or attribute value
+
+```bash copy
+a[href] {
+    color: red;
+}
+a[target="_blank"] {
+    font-weight: bold;
+}
+
+```
+
+Usage: Styles all anchor (a) tags with an href attribute, and makes anchor tags that open in a new tab (target="\_blank") bold
+
+**Descendant Selector**
+
+Description: Selects elements that are descendants of another element
+
+```bash copy
+div p {
+    color: green;
+}
+
+```
+
+**Child Selector (>)**
+
+Description: Selects elements that are direct children of a specified element
+
+```bash copy
+ul > li {
+    list-style-type: none;
+}
+```
+
+Usage: Styles list items (li) that are direct children of an unordered list (ul)
+
+**Adjacent Sibling Selector (+)**
+
+Description: Selects an element that is immediately preceded by another element
+
+```bash copy
+h1 + p {
+    margin-top: 0;
+}
+```
+
+Usage: Targets a paragraph (p) immediately following a heading (h1)
+
+**General Sibling Selector (~)**
+
+Description: Selects all elements that are siblings of a specified element
+
+```bash copy
+h1 ~ p {
+    color: purple;
+}
+
+```
+
+Usage: Styles all paragraphs (p) that are siblings of a heading (h1)
+
+**Pseudo-class Selectors**
+
+Description: Selects elements based on their state or position
+
+```bash copy
+a:hover {
+    color: orange;
+}
+p:first-child {
+    font-weight: bold;
+}
+```
+
+Usage: Changes the color of links when hovered (:hover) and makes the first child paragraph of any parent bold (:first-child)
+
+**Pseudo-element Selectors**
+
+Description: Selects and styles parts of an element
+
+```bash copy
+
+p::first-line {
+    font-variant: small-caps;
+}
+p::before {
+    content: "Note: ";
+    font-weight: bold;
+}
+```
+
+CSS selectors are a powerful tool for targeting specific HTML elements to apply styles. By understanding and using various types of selectors, you can create precise and efficient stylesheets that enhance the look and functionality of your web pages. Experimenting with different selectors will help you become more proficient in writing CSS
