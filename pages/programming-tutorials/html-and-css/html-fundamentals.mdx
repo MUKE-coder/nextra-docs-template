@@ -1,0 +1,57 @@
+import { Callout } from "nextra/components";
+
+# **WHAT IS HTML?**
+
+HTML (HyperText Markup Language) is a markup language that web developers use to structure and describe the content of a webpage (not a programming language). For example, content could be structured within a set of paragraphs, a list of bulleted points, or using images and data tables. Web browsers understand HTML and render HTML code as websites.
+
+## **HTML Document Layout**
+
+```HTML
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+
+<h1>My First Heading</h1>
+<p>My first paragraph.</p>
+
+</body>
+</html>
+
+```
+
+### Layout Exaplanations
+
+`<!DOCTYPE html>` : Is used to define the document type and version of HTML being used in a webpage and ensures that the web browser renders the page correctly according to the HTML5 specifications.
+
+`<html></html>` : is the root element of an HTML document. It encompasses all the content of the webpage.
+
+`<title></title>` : Specifies a title for the HTML page (which is shown in the browser's title bar or in the page's tab).
+
+`<head></head>` : contains meta information about the HTML page. Meta information describes the page's content, character encoding, author, keywords, viewport settings, and other details. Metadata is not displayed on the page itself but is used by browsers, search engines, and other web services to understand and process the content of the page.
+
+`<body></body>` : Acts as a container for all the visible contents, such as headings, paragraphs, images, hyperlinks, tables, lists, etc.
+
+## HTML Elements
+
+HTML elements are the building blocks of HTML documents and consist of an opening tag, content, and a closing tag.
+
+### Examples include;
+`<p></p>` : Used to write  paragraphs in an HTML page.
+```HTML5 copy
+<p>This is a paragraph tag/element</p>
+```
+`<h1></h1>`-`<h6></h6>` : Represent six levels of section headings h1 being the biggest and h6 being the smallest.
+```HTML5 copy
+<h1>This is a the biggest heading...</h1>
+<h6>This is a the smallest heading...</h6>
+```
+
+
+<Callout type="warning" emoji="⚠️">
+  There are some element that don't have a closing tag and are known as self closing elements
+</Callout>
+
