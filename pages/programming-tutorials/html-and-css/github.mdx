@@ -10,6 +10,73 @@ collaborate with other programmers on code projects,share code publicly or priva
 #### Getting started with GitHub.
 Go to <Link className='text-blue-500' href="https://github.com/">**GitHub**</Link> and sign up for a free account if you haven't already.
 
+#### Commonly used git commands to manage github repositories
+
+**1. Initializing a Repository**
+```bash copy
+git init
+```
+This command initializes a new Git repository in the current directory.
+
+**2. Cloning a Repository**
+```bash copy
+git clone <repository_url>
+```
+This command clones(copy) an existing repository using its  URL provided by github to your local machine.
+
+**3. Checking the Status**
+```bash copy
+git status
+```
+This command shows the status of the working directory. It lets you see which changes have been staged(made), which haven't, and which files aren't being tracked by Git.
+
+**4. Adding Files**
+```bash copy
+git add .
+```
+This command  adds all changes in the directory.
+
+**5. Committing Changes**
+```bash copy
+git commit -m "commit message"
+```
+This command commits the staged changes under  a descriptive message.
+
+**6. Pushing Changes to a Remote Repository**
+```bash copy
+git push origin <branch_name>
+```
+This command pushes the committed changes to the specified branch of the remote repository.
+
+**7. Pulling Changes from a Remote Repository**
+```bash copy
+git pull origin <branch_name>
+```
+This command fetches and merges changes from the specified branch of the remote repository into your current branch.
+
+**8. Creating a New Branch**
+```bash copy
+git branch <branch_name>
+```
+This command creates a new branch with the specified name.
+```bash copy
+git branch 
+```
+Lists all branches in your local repository.
+
+**9. Merging a Branch**
+```bash copy
+git merge <branch_name>
+```
+This command merges the specified branch into the current branch.
+
+**10. Deleting a Branch**
+```bash copy
+git branch -d <branch_name>
+```
+This command deletes the specified branch.
+
+
 ## GITHUB DESKTOP
 **Definition :**
 Is a graphical user interface (GUI) application that provides a convenient way to interact with GitHub repositories(projects). It simplifies the Git workflow, making it accessible to developers who prefer a visual approach over the command line.
@@ -57,4 +124,14 @@ Choose where you want to clone the repository on your local machine by clicking 
 
 Finally click the clone button to start cloning.
 
-**2.  Make Changes and Commit**
+**2.  Add a Local Repository**
+
+Launch GitHub Desktop on your computer. In the top menu, click on **File** and select **Add Local Repository...**
+
+A dialog box will appear. Click the **Choose...** button to navigate to the directory where your local repository is stored. Select the folder and click **Open.**
+
+After selecting the folder, confirm by clicking the "Add Repository" button.  
+
+If the repository is new and hasn't been published to GitHub yet, once you click the **Publish repository** button, a dialog box will appear asking for details about your repository, enter a name for your repository, optionally, you can add a description and Choose the visibility of your repository (Public or Private).
+
+Finally click on the **Publish Repository** button to publish your local repository to GitHub.
