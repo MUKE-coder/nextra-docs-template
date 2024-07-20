@@ -2,6 +2,43 @@ import { Callout } from "nextra/components";
 
 # Next Js SEO Complete Guide
 
+**How to handle SEO in Next.js Application: The Developers Handbook** is a guide for Next.js developers to learn how to optimize their applications for search engines. The guide covers a wide range of topics, including:
+
+- **Understanding SEO fundamentals:** What is SEO? Why is it important? How do search engines work?
+- **Optimizing Next.js metadata:** How to use Next.js's built-in Metadata API to define and manage SEO metadata for your application.
+- **Generating dynamic SEO metadata:** How to generate SEO metadata for dynamic pages and content.
+- **Improving page performance:** How to make your Next.js pages load quickly and efficiently, which is important for both SEO and user experience.
+- **Using structured data:** How to use JSON-LD to markup your content with structured data, which can help search engines better understand and rank your pages.
+- **Testing and monitoring your SEO:** How to use SEO tools to test and monitor your application's SEO performance.
+
+# **SEO fundamentals**
+
+## **What is SEO?**
+
+Search engine optimization (SEO) is the process of optimizing a website or web page so that it ranks higher in search engine results pages (SERPs) for relevant keywords. When a user searches for a keyword, search engines like Google and Bing return a list of websites that are relevant to that keyword. The higher a website ranks in the SERPs, the more likely it is that users will click on it.
+
+**Why is SEO important?**
+
+SEO is important because it can help you attract more visitors to your website. When your website ranks higher in SERPs, more people will see it and click on it. This can lead to increased traffic, leads, and sales.
+
+**How do search engines work?**
+
+Search engines use a variety of factors to rank websites, including:
+
+- **Keyword relevance:** Search engines try to match the keywords that users are searching for with the content of websites.
+- **Page authority:** Search engines give more weight to websites that have high authority. Authority is determined by factors such as the number of backlinks a website has, the quality of those backlinks, and the age of the website.
+- **Page quality:** Search engines also consider the quality of the content on a website. This includes factors such as the readability of the content, the use of images and videos, and the overall user experience.
+
+**Understanding SEO fundamentals is essential for any Next.js developer who wants to optimize their applications for search engines.** By understanding the basics of how search engines work and what factors they consider when ranking websites, you can make informed decisions about how to improve your application's SEO performance.
+
+**Here are some additional notes on SEO fundamentals:**
+
+- **Keyword research:** The first step to optimizing your website for SEO is to conduct keyword research. This involves identifying the keywords that your target audience is searching for and that are relevant to your website.
+- **On-page optimization:** Once you have identified your target keywords, you need to optimize your website's content and structure for those keywords. This includes using the keywords throughout your website, including in your page titles, meta descriptions, headers, and body text.
+- **Off-page optimization:** Off-page optimization involves building backlinks to your website from other high-quality websites. Backlinks are one of the most important factors that search engines use to determine the authority of a website.
+
+**By following these SEO fundamentals, you can improve your Next.js application's visibility in search engine results pages and attract more visitors to your website.**
+
 ## Adding favicon to your application
 
 ### Favicon
@@ -10,6 +47,22 @@ import { Callout } from "nextra/components";
 - Add a `favicon.ico` image file to the root `/app` route segment.
 
 ## Layout Metadata (Global SEO set up)
+
+To define static metadata, export a [`Metadata` object](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadata-object) from a `layout.js` or static `page.js` file.
+
+These metatags can help search engines better understand your website and rank it higher in search results pages. They can also help social media platforms display your website content more prominently. The metadata object you have provided contains the following metatags:
+
+- **MetadataBase:** This metatag tells search engines and social media platforms where to find the root of your website.
+- **Title:** This metatag is the most important metatag for SEO. It tells search engines what your website is about and what pages on your website are relevant to specific search queries.
+- **Description:** This metatag provides a brief overview of your website and its content. It is often used by search engines to display a snippet of text on search results pages.
+- **ApplicationName:** This metatag is not as important for SEO as the other metatags, but it can be useful for social media platforms to identify your website.
+- **Keywords:** This metatag is a list of words and phrases that are relevant to your website content. It can help search engines better understand your website and rank it higher for relevant search queries.
+- **Authors:** This metatag identifies the authors of your website content. It can be helpful for social media platforms and other websites to display your content more prominently.
+- **Creator:** This metatag identifies the creator of your website. It is not as important for SEO as the other metatags, but it can be helpful for other websites to identify your website and link to it.
+- **Publisher:** This metatag identifies the publisher of your website. It is not as important for SEO as the other metatags, but it can be helpful for other websites to identify your website and link to it.
+- **Alternates:** This metatag specifies alternate URLs for your website in different languages. This can be helpful for search engines and social media platforms to display your website content to users who are searching in different languages.
+- **openGraph:** This metatag specifies metadata for social media platforms, such as Facebook and Twitter. This metadata can be used to display your website content more prominently on social media.
+- **twitter:** This metatag specifies metadata for Twitter. This metadata can be used to display your website content more prominently on Twitter.
 
 ### Create a Site config file
 
@@ -135,6 +188,20 @@ export async function generateMetadata({ params: { slug } }) {
       images: [product.thumbnail],
     },
   };
+}
+```
+
+### Generating Static Params
+
+The generateStaticParams function can be used in combination with dynamic route segments to statically generate routes at build time instead of on-demand at request time.
+
+```ts copy
+export async function generateStaticParams() {
+  const posts = await fetch("https://.../posts").then((res) => res.json());
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
 }
 ```
 
