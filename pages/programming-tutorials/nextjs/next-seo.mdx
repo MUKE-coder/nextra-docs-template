@@ -129,6 +129,11 @@ export async function generateMetadata({ params: { slug } }) {
     alternates: {
       canonical: `/products/${product?.slug}`,
     },
+    openGraph: {
+      title: product.title,
+      description: product.description,
+      images: [product.thumbnail],
+    },
   };
 }
 ```
@@ -282,8 +287,8 @@ export default function robots() {
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
-      disallow: "/private/",
+      allow: ["/", "/product", "/category"],
+      disallow: [],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
