@@ -72,6 +72,7 @@ Add the following Code in the site.ts file. Fill in all the necessary informaton
 ```ts copy
 export const siteConfig = {
   name: "Online Docs ",
+  title: "Its the best on the Market ",
   url: "https://ui.shadcn.com",
   ogImage: "https://ui.shadcn.com/og.jpg",
   description:
@@ -93,25 +94,36 @@ import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: {
-    default: siteConfig.name,
-    template: `%s - ${siteConfig.name}`,
+    default: siteConfig.title,
+    template: `%s - ${siteConfig.title}`,
   },
   metadataBase: new URL(siteConfig.url),
   description: siteConfig.description,
   keywords: [
-    "Next.js",
-    "React",
-    "Tailwind CSS",
-    "Server Components",
-    "Radix UI",
+    "buy online",
+    "best deals",
+    "discount shopping",
+    "online marketplace",
+    "shop now",
+    "free shipping",
+    "exclusive offers",
+    "trendy products",
+    "customer favorites",
+    "latest arrivals",
   ],
   authors: [
     {
-      name: "shadcn",
-      url: "https://shadcn.com",
+      name: "stockify",
+      url: "https://stockify.com",
     },
   ],
-  creator: "shadcn",
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-US": "/en-US",
+    },
+  },
+  creator: "stockify",
   openGraph: {
     type: "website",
     locale: "en_US",
