@@ -1,16 +1,141 @@
-# SEO in Next JS 14 - The Ultimate Guide (MediaMetadata,Sitemap,Robots , Google search Console, Caching)
+import { Callout } from "nextra/components";
 
-Here is the List you should check
+# Next Js SEO Complete Guide
 
-## Add Favicon in the app directory
+## Adding favicon to your application
 
-- The favicon file conventions allow you to set icons for your application.
-- Favicon is useful for adding app icons that appear in places like web browser tabs, phone home screens, and search engine results.
-- Add a favicon.ico image file to the root `/app` route segment.
+### Favicon
 
-You can Gnerate the favicon from your logo from online favicon generators. forexample this one [**Here →**](https://realfavicongenerator.net/)
+- Head to [https://favicon.io/](https://favicon.io/) and upload your logo png and then genrate the favicon
+- Add a `favicon.ico` image file to the root `/app` route segment.
 
-## Add the Open Graph Image (OG Image) and twitter-image in the app dir
+## Layout Metadata (Global SEO set up)
+
+### Create a Site config file
+
+Create a folder called `config` and in it create `site.ts`
+Add the following Code in the site.ts file. Fill in all the necessary informaton
+
+```ts copy
+export const siteConfig = {
+  name: "Online Docs ",
+  url: "https://ui.shadcn.com",
+  ogImage: "https://ui.shadcn.com/og.jpg",
+  description:
+    "Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.",
+  links: {
+    twitter: "https://twitter.com/shadcn",
+    github: "https://github.com/shadcn-ui/ui",
+  },
+};
+
+export type SiteConfig = typeof siteConfig;
+```
+
+### Update the Global Layout file with metadata informaton
+
+```ts copy
+import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.name,
+    template: `%s - ${siteConfig.name}`,
+  },
+  metadataBase: new URL(siteConfig.url),
+  description: siteConfig.description,
+  keywords: [
+    "Next.js",
+    "React",
+    "Tailwind CSS",
+    "Server Components",
+    "Radix UI",
+  ],
+  authors: [
+    {
+      name: "shadcn",
+      url: "https://shadcn.com",
+    },
+  ],
+  creator: "shadcn",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteConfig.url,
+    title: siteConfig.name,
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+    creator: "@shadcn",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: `${siteConfig.url}/site.webmanifest`,
+};
+```
+
+## Metadata for individual Pages (Server and Client Side)
+
+- For the Normal Pages, such as about, blogs just add the following code.
+
+<Callout emoji="👾">
+  If a page has a layout file, the put the code in the layout file
+</Callout>
+
+```ts copy
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Beautiful Charts",
+  description:
+    "Built using Recharts. Copy and paste into your apps. Open Source.",
+};
+```
+
+## Extended Metadata from Layout to Single Pages
+
+## Dynamic Pages SEO - Generate metadata
+
+If in your app you have some bit of data fetching from a server or db, then you can generate the metadata dynamically. You can use `generateMetadata` function to fetch metadata that requires dynamic values.
+
+Fetch the Metadata dynamically as shown below.
+
+```ts copy
+//app/products/[slug]
+export async function generateMetadata({ params: { slug } }) {
+  //Fetch all the products, then find a single product
+  const products = await getProducts();
+  const product = products.find((product) => product.slug == slug);
+  return {
+    title: product?.title,
+    description: product?.seoDescription,
+    alternates: {
+      canonical: `/products/${product?.slug}`,
+    },
+  };
+}
+```
+
+## OpenGraph-image and twitter-image
+
+The `opengraph-image` and `twitter-image` file conventions allow you to set Open Graph and Twitter images for a route segment.
 
 - They are useful for setting the images that appear on social networks and messaging apps when a user shares a link to your site.
 - The recommended Image Size is `1200 x 630px `
@@ -19,138 +144,168 @@ You can Gnerate the favicon from your logo from online favicon generators. forex
 - To create these images you can use [**canva.com**](https://canva.com/) or any other photo editing software
 - Inother words create 4 files og imageConfigDefault, twitter image , og alt text and twitter image alt text and place them in the app directory
 
-** Open graph image**
+They are useful for setting the images that appear on social networks and messaging apps when a user shares a link to your site.
 
-- Add an opengraph-image.(jpg|jpeg|png|gif) image file to any route segment.
+### [**`opengraph-image`**](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image#opengraph-image)
 
-** Twitter Image **
+Add an `opengraph-image.(jpg|jpeg|png|gif)` image file to any route segment.
 
-- Add a twitter-image.(jpg|jpeg|png|gif) image file to any route segment.
+### [**`twitter-image`**](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image#twitter-image)
 
-** OG Image Alt text **
+Add a `twitter-image.(jpg|jpeg|png|gif)` image file to any route segment.
 
-- Add an accompanying opengraph-image.alt.txt file in the same route segment as the opengraph-image.(jpg|jpeg|png|gif) image it's alt text.
-  ** Twitter Image Alt text **
-- Add an accompanying twitter-image.alt.txt file in the same route segment as the twitter-image.(jpg|jpeg|png|gif) image it's alt text.
+### [**`opengraph-image.alt.txt`**](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image#opengraph-imagealttxt)
 
-## Set Basic Metadata in your app Layout.tsx
+Add an accompanying `opengraph-image.alt.txt` file in the same route segment as the `opengraph-image.(jpg|jpeg|png|gif)` image it's alt text.
 
-There are two types of Metadata : static and dynamic
-Lets start with global static Meta data in the layout
-To define static metadata, export a Metadata object from a layout.js or static page.js file.
+### [**`twitter-image.alt.txt`**](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image#twitter-imagealttxt)
 
-```ts copy
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: {
-    default: "My Awesome Blog",
-    template: "%s - My Awesome Blog",
-  },
-  description: "Come and read my awesome articles",
-  twitter: {
-    card: "summary_large_image",
-  },
-};
-
-export default function Layout() {}
-```
-
-## Set Basic Metadata in Other static Page
-
-In other pages Just add only titles
-
-```ts copy
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "About Page",
-};
-
-export default function Page() {}
-```
+Add an accompanying `twitter-image.alt.txt` file in the same route segment as the `twitter-image.(jpg|jpeg|png|gif)` image it's alt text.
 
 ## Check your social media share previews
 
 You can check your social previews using online tools and here are some
 
-- [**socialsharepreview.com**](https://socialsharepreview.com/)
-- [**opengraph.xyz**](https://www.opengraph.xyz//)
-- [**Add extension**](https://chromewebstore.google.com/detail/social-share-preview/ggnikicjfklimmffbkhknndafpdlabib)
+- [socialsharepreview.com](https://socialsharepreview.com/)
+- [opengraph.xyz](https://www.opengraph.xyz//)
+- [Add extension](https://chromewebstore.google.com/detail/social-share-preview/ggnikicjfklimmffbkhknndafpdlabib)
 
 - For apps on Localhost you can use [**docs.srv.us**](https://docs.srv.us/) to generate a link you can use online temperalliy or Just use an extension like[Seo meta in 1 click](https://chromewebstore.google.com/detail/seo-meta-in-1-click/bjogjfinolnhfhkbipphpdlldadpnmhc)
 
-## Quick Tips
+## Other SEO Quick Tips
 
-- ** Use Next/Font ** - Make sure in your layout your usung font loaded from "next/font"
+- **Use Next/Font** - Make sure in your layout your usung font loaded from "next/font"
   avoid using the google font links used in css. This will ensure that the loaded and hosted locally on our website
 
-- ** Use Next Image ** - Using Next Image Optimises all your images, such as loading different Image Variations for different Screen sizes
+- **Use Next Image** - Using Next Image Optimises all your images, such as loading different Image Variations for different Screen sizes
 
-- ** Use Next Link ** - To Cache all the Pages
+- **Use Next Link** - To Cache all the Pages
 
-## Dynamic Metadata
+## Sitemap
 
-These are for dynamic Pages (eg `products/[slug]/page.tsx`)
-Here is how its done
+A sitemap is a file that lists all of the pages on your website, along with their corresponding URLs and other relevant information. Sitemaps are used by search engines to crawl and index your website more efficiently.
 
-```ts filename="app/products/[id]/page.ts" copy
-import type { Metadata, ResolvingMetadata } from "next";
+Sitemaps are useful for SEO in a number of ways:
 
-type Props = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+- They help search engines discover all of the pages on your website.This is important because search engines need to be able to index all of your pages in order to rank them in search results pages.
+- They provide search engines with information about the structure of your website.This information can help search engines to understand the relationships between your pages and to rank them more accurately.
+- They can help search engines to prioritize crawling and indexing your most important pages. This can help your most important pages to rank higher in search results pages.
 
-export async function generateMetadata(
-  { params, searchParams }: Props,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-  // read route params
-  const id = params.id;
+### Generate Static Sitemap
 
-  // fetch data
-  const product = await fetch(`https://.../${id}`).then((res) => res.json());
+Add a `sitemap.js` or `sitemap.ts` file that returns Sitemap.
 
-  // optionally access and extend (rather than replace) parent metadata
-  const previousImages = (await parent).openGraph?.images || [];
-
-  return {
-    title: product.title,
-    description: product.description,
-    openGraph: {
-      images: [
-        {
-          url: product.imageUrl,
-        },
-      ],
+```ts copy
+//app/sitemap.ts
+export default function sitemap() {
+  return [
+    {
+      url: "https://acme.com",
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 1,
     },
+    {
+      url: "https://acme.com/about",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: "https://acme.com/blog",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+  ];
+}
+```
+
+### Generate Dynamic Sitemap
+
+If your fetching data in your application, then you need to generate your sitemap dynamically. so modify your sitemap.js
+
+```ts copy
+//app/sitemap.js
+import getCategories from "./libs/getCategories";
+import getProducts from "./libs/getProducts";
+
+export default async function sitemap() {
+  const baseUrl = "https://lighthousefurniture.com";
+
+  const products = await getProducts();
+  const categories = await getCategories();
+  const productUrls = products.map((product) => {
+    return {
+      url: `${baseUrl}/products/${product.slug}`,
+      lastModified: new Date(),
+    };
+  });
+  const categoryUrls = categories.map((category) => {
+    return {
+      url: `${baseUrl}/categories/${category.slug}`,
+      lastModified: new Date(),
+    };
+  });
+
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+    },
+    ...productUrls,
+    ...categoryUrls,
+  ];
+}
+```
+
+## Generate Static Robots.txt
+
+A robots.txt file is a text file that tells search engine crawlers which pages on your website they are allowed to crawl and index. Robots.txt files are important for SEO because they can help you to control how your website is indexed and ranked by search engines.
+
+Here are some of the benefits of using a robots.txt file:
+
+- You can prevent search engines from crawling and indexing pages that are not ready for public viewing.This can be useful for pages that are still under construction or that contain sensitive information.
+- A robots.txt file can be used to give search engines the exact location of your sitemap. This can help search engines to find your sitemap more easily and to crawl and index your website more efficiently.
+
+```tsx copy
+export default function robots() {
+  const baseUrl = "https://lighthousefurniture.com";
+  return {
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: "/private/",
+    },
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-
-export default function Page({ params, searchParams }: Props) {}
 ```
 
-## Other Usefull concepts on Dyanmic Metadata
+## Google My Business
 
-## generateStaticParams
+- Google My Business helps your Business rank Locally and here is a full **Guide** from **Mailchimp**, that i found usefull 👉 [here](https://mailchimp.com/marketing-glossary/google-my-business/#The_advantages_of_Google_My_Business)
 
-The generateStaticParams function can be used in combination with dynamic route segments to statically generate routes at build time instead of on-demand at request time.
+### How to set up your account
 
-```js filename="app/blog/[slug]/page.js" copy
-// Return a list of `params` to populate the [slug] dynamic segment
-export async function generateStaticParams() {
-  const posts = await fetch("https://.../posts").then((res) => res.json());
+If you’ve already got a Google My Business account set up, skip ahead to the optimization section. If you haven’t, here’s how to claim your location in Google business listing. Please note that Google occasionally makes updates, so some of the wording may be a little different. Just follow these easy steps:
 
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
-}
+- Go to [google.com/business](https://google.com/business).
+- Click “Manage now.”
+- Enter your business name and click “Next.”
+- Enter your address. If you’re a service area business and don’t have a physical store but deliver services (such as a plumber or electrician), click the “I deliver goods and services to my customers” and “Hide my address” checkboxes.
+- Choose your primary business category. It’s important to pick the most accurate category that describes what you do.
+- Add your phone number.
+- Add your website URL
 
-// Multiple versions of this page will be statically generated
-// using the `params` returned by `generateStaticParams`
-export default function Page({ params }) {
-  const { slug } = params;
-  // ...
-}
-```
+## Google Search Console
+
+- Google Search Console (GSC) is a free tool that helps you monitor your site’s search performance and technical SEO healthand here is a full **Guide** from **Semrush**, that i found usefull 👉 [here](https://www.semrush.com/blog/google-search-console/)
