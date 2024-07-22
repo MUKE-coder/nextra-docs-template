@@ -2,5 +2,6 @@
   "index": "Introduction",
   "html-and-css": "Html and Css Tutorial",
   "js": "Javascript Tutorial",
-  "nextjs": "Next JS and TypeScript"
+  "nextjs": "Next JS and TypeScript",
+  "nodejs": "Node Js and Typescript"
 }

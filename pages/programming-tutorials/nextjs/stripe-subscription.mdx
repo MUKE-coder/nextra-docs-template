@@ -1,0 +1,498 @@
+import { Callout } from "nextra/components";
+
+# Stripe Subscription in Next Js
+
+In this guide, you will learn how to add Stripe subscriptions to a Next.js project with TypeScript and App Router.
+
+## Prerequisites
+
+In order to create the entire flow it will be necessary to have a database and authentication in order to associate the Stripe subscriptions with users.
+
+## Step 1: Create an empty Next.js project
+
+To get started, copy and run the following command to create an empty Next.js project with the App Router and TypeScript.
+
+```bash copy
+
+npx create-next-app@latest
+
+```
+
+## Step 2: Install the Stripe SDK
+
+Run the following command to install the Stripe SDK.
+
+```bash copy
+
+npm install stripe @stripe/stripe-js
+
+```
+
+## Step 3: Get the Stripe API key
+
+Login to the Stripe dashboard in order to get your Stripe secret key. Create a new Stripe project. Next, click on Developers > API keys. Then, copy your test Stripe secret key.
+
+Then, create a .env file for your environment variables and add your Stripe secret API key.
+
+```ts copy
+STRIPE_SECRET_KEY = sk_12345;
+NEXT_PUBLIC_STRIPE_PUBLIC_KEY = sk_122455;
+```
+
+Next, create a folder called lib and a file inside that folder called stripe.ts
+
+```ts copy
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+  typescript: true,
+});
+```
+
+## Step 4: Add subscription plans
+
+In the Stripe dashboard, in the menu on the left, navigate to Products:
+More > Product catalog. Select Add product in order to create a subscription plan. Copy the price ID of the plan, we will use it later in the Stripe checkout to identify which plan the user wants to purchase.
+
+<Callout type="info" emoji="ℹ️">
+  Note: Do not copy the product ID. Each product can have multiple prices
+  associated with it for example a monthly price as well as an annual price. You
+  want to copy the price ID and pass it later to Stripe checkout.
+</Callout>
+## Step 5:Create a subscribe component.
+
+```ts copy
+"use client";
+
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/nextjs";
+import axios from "axios";
+import { loadStripe } from "@stripe/stripe-js";
+import { toast } from "sonner";
+
+type PricingSwitchProps = {
+  onSwitch: (value: string) => void;
+};
+
+type PricingCardProps = {
+  user: any;
+  handleCheckout: any;
+  priceIdMonthly: any;
+  priceIdYearly: any;
+  isYearly?: boolean;
+  title: string;
+  monthlyPrice?: number;
+  yearlyPrice?: number;
+  description: string;
+  features: string[];
+  actionLabel: string;
+  popular?: boolean;
+  exclusive?: boolean;
+};
+
+const PricingHeader = ({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) => (
+  <section className="text-center">
+    <h2 className="text-3xl lg:text-5xl font-bold">{title}</h2>
+    <p className="text-lg text-gray-400 pt-1">{subtitle}</p>
+    <br />
+  </section>
+);
+
+const PricingSwitch = ({ onSwitch }: PricingSwitchProps) => (
+  <Tabs defaultValue="0" className="w-40 mx-auto" onValueChange={onSwitch}>
+    <TabsList className="py-6 px-2">
+      <TabsTrigger value="0" className="text-base">
+        Monthly
+      </TabsTrigger>
+      <TabsTrigger value="1" className="text-base">
+        Yearly
+      </TabsTrigger>
+    </TabsList>
+  </Tabs>
+);
+
+const PricingCard = ({
+  user,
+  handleCheckout,
+  isYearly,
+  title,
+  priceIdMonthly,
+  priceIdYearly,
+  monthlyPrice,
+  yearlyPrice,
+  description,
+  features,
+  actionLabel,
+  popular,
+  exclusive,
+}: PricingCardProps) => (
+  <Card
+    className={cn(
+      `w-72 flex flex-col justify-between py-1 ${
+        popular ? "border-rose-400" : "border-zinc-700"
+      } mx-auto sm:mx-0`,
+      {
+        "animate-background-shine bg-white dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] transition-colors":
+          exclusive,
+      }
+    )}
+  >
+    <div>
+      <CardHeader className="pb-8 pt-4">
+        {isYearly && yearlyPrice && monthlyPrice ? (
+          <div className="flex justify-between">
+            <CardTitle className="text-zinc-700 dark:text-zinc-300 text-lg">
+              {title}
+            </CardTitle>
+            <div
+              className={cn(
+                "px-2.5 rounded-xl h-fit text-sm py-1 bg-zinc-200 text-black dark:bg-zinc-800 dark:text-white",
+                {
+                  "bg-gradient-to-r from-orange-400 to-rose-400 dark:text-black ":
+                    popular,
+                }
+              )}
+            >
+              Save ${monthlyPrice * 12 - yearlyPrice}
+            </div>
+          </div>
+        ) : (
+          <CardTitle className="text-zinc-700 dark:text-zinc-300 text-lg">
+            {title}
+          </CardTitle>
+        )}
+        <div className="flex gap-0.5">
+          <h3 className="text-3xl font-bold">
+            {yearlyPrice && isYearly
+              ? "$" + yearlyPrice
+              : monthlyPrice
+              ? "$" + monthlyPrice
+              : "Custom"}
+          </h3>
+          <span className="flex flex-col justify-end text-sm mb-1">
+            {yearlyPrice && isYearly ? "/year" : monthlyPrice ? "/month" : null}
+          </span>
+        </div>
+        <CardDescription className="pt-1.5 h-12">{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {features.map((feature: string) => (
+          <CheckItem key={feature} text={feature} />
+        ))}
+      </CardContent>
+    </div>
+    <CardFooter className="mt-2">
+      <Button
+        onClick={() =>
+          handleCheckout(isYearly ? priceIdYearly : priceIdMonthly, true)
+        }
+        className="relative inline-flex w-full items-center justify-center rounded-md bg-black text-white dark:bg-white px-6 font-medium  dark:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+      >
+        <div className="absolute -inset-0.5 -z-10 rounded-lg bg-gradient-to-b from-[#c7d2fe] to-[#8678f9] opacity-75 blur" />
+        {actionLabel}
+      </Button>
+    </CardFooter>
+  </Card>
+);
+
+const CheckItem = ({ text }: { text: string }) => (
+  <div className="flex gap-2">
+    <CheckCircle2 size={18} className="my-auto text-green-400" />
+    <p className="pt-0.5 text-zinc-700 dark:text-zinc-300 text-sm">{text}</p>
+  </div>
+);
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
+
+export default function Pricing() {
+  const [isYearly, setIsYearly] = useState<boolean>(false);
+  const togglePricingPeriod = (value: string) =>
+    setIsYearly(parseInt(value) === 1);
+  const { user } = useUser();
+
+  const handleCheckout = async (priceId: string, subscription: boolean) => {
+    try {
+      const { data } = await axios.post(
+        `/api/payments/create-checkout-session`,
+        {
+          userId: user?.id,
+          email: user?.emailAddresses?.[0]?.emailAddress,
+          priceId,
+        }
+      );
+
+      console.log("data", data);
+      if (data.sessionId) {
+        const stripe = await stripePromise;
+        console.log("stripe", stripe);
+
+        const response = await stripe?.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+
+        console.log("response", response);
+
+        return response;
+      } else {
+        console.error("Failed to create checkout session");
+        toast("Failed to create checkout session");
+        return;
+      }
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      toast("Error during checkout");
+      return;
+    }
+  };
+
+  const plans = [
+    {
+      title: "Basic",
+      monthlyPrice: 10,
+      yearlyPrice: 100,
+      description: "Essential features you need to get started",
+      features: [
+        "Example Feature Number 1",
+        "Example Feature Number 2",
+        "Example Feature Number 3",
+      ],
+      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      actionLabel: "Get Started",
+    },
+    {
+      title: "Pro",
+      monthlyPrice: 25,
+      yearlyPrice: 250,
+      description: "Perfect for owners of small & medium businessess",
+      features: [
+        "Example Feature Number 1",
+        "Example Feature Number 2",
+        "Example Feature Number 3",
+      ],
+      actionLabel: "Get Started",
+      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      popular: true,
+    },
+    {
+      title: "Enterprise",
+      price: "Custom",
+      description: "Dedicated support and infrastructure to fit your needs",
+      features: [
+        "Example Feature Number 1",
+        "Example Feature Number 2",
+        "Example Feature Number 3",
+        "Super Exclusive Feature",
+      ],
+      actionLabel: "Contact Sales",
+      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
+      exclusive: true,
+    },
+  ];
+
+  return (
+    <div>
+      <PricingHeader
+        title="Sample Pricing Plans"
+        subtitle="Use these sample pricing cards in your SAAS"
+      />
+      <PricingSwitch onSwitch={togglePricingPeriod} />
+      <section className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-8 mt-8">
+        {plans.map((plan) => {
+          return (
+            <PricingCard
+              user={user}
+              handleCheckout={handleCheckout}
+              key={plan.title}
+              {...plan}
+              isYearly={isYearly}
+            />
+          );
+        })}
+      </section>
+    </div>
+  );
+}
+```
+
+## Step 6: Create a Stripe checkout endpoint
+
+We will be using the Stripe hosted checkout page to allow our users to purchase a subscription plan.
+
+In order to redirect users to this page, we will need to setup an API endpoint that will get the ID of the price associated with our subscription.
+
+We will also need to pass a user ID to the Stripe checkout session as metadata in order to retrieve it later when we receive the webhook event.
+
+```ts copy
+
+// api/payments/create-checkout-session/route.ts
+import { stripe } from "@/lib/stripe";
+
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function POST(req: NextRequest) {
+  const { userId, email, priceId, subscription } = await req.json();
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { userId, email, priceId },
+      mode: "subscription",
+      billing_address_collection: "auto",
+      customer_email: user.email, // optional
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
+      allow_promotion_codes: true,
+      // subscription_data: {
+      //   trial_settings: {
+      //     end_behavior: {
+      //       missing_payment_method: "cancel",
+      //     },
+      //   },
+      //   trial_period_days: 7,
+      },
+    });
+
+    return NextResponse.json({ sessionId: session.id });
+  } catch (error) {
+    console.error("Error creating checkout session:", error);
+    return NextResponse.json({ error: "Failed to create checkout session" });
+  }
+}
+```
+
+Notice the subscription_data object, which tells Stripe to add a trial period of 7 days. It’s a great way to let your users test the product for free before making the decision to purchase a premium plan.
+
+## Step7: Create prisma Schema
+
+```ts copy
+//schema here
+```
+
+## Step 8: Setup a webhook event handler
+
+When the user successfully completes the checkout process, Stripe will send webhook events to a webhook event handler, which is an API endpoint on our server that will handle these events by updating our database.
+
+First, in the Stripe dashboard go to Developers > Webhooks > Test in local environment. Then, make sure to install the Stripe CLI on your operating system. Once installed, run the stripe login command in your IDE as well as the listen command to forward Stripe webhook events to /webhook.
+
+```bash copy
+stripe login
+
+stripe listen --forward-to localhost:3000/webhook
+
+```
+
+After running these commands, Stripe should provide you with a webhook secret. Make sure to copy it and put it in a .env file as STRIPE_WEBHOOK_SECRET. We will need it later.
+
+```ts copy
+STRIPE_WEBHOOK_SECRET = whsec_1234;
+```
+
+Now, we can create our webhook event handler API endpoint that will listen to requests at /webhook and process them. Create a folder in the app directory called api/webhook. Add a route.ts file inside.
+
+```ts copy
+import Stripe from "stripe";
+import { NextRequest } from "next/server";
+import { headers } from "next/headers";
+type METADATA = {
+  userId: string;
+  priceId: string;
+};
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function POST(request: NextRequest) {
+  const body = await request.text();
+  const endpointSecret = process.env.STRIPE_SECRET_WEBHOOK_KEY!;
+  const sig = headers().get("stripe-signature") as string;
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+  } catch (err) {
+    return new Response(`Webhook Error: ${err}`, {
+      status: 400,
+    });
+  }
+
+  const eventType = event.type;
+  if (
+    eventType !== "checkout.session.completed" &&
+    eventType !== "checkout.session.async_payment_succeeded"
+  )
+    return new Response("Server Error", {
+      status: 500,
+    });
+  const data = event.data.object;
+  const metadata = data.metadata as METADATA;
+  const userId = metadata.userId;
+  const priceId = metadata.priceId;
+  const created = data.created;
+  const currency = data.currency;
+  const customerDetails = data.customer_details;
+  const amount = data.amount_total;
+  const transactionDetails = {
+    userId,
+    priceId,
+    created,
+    currency,
+    customerDetails,
+    amount,
+  };
+  try {
+    // database update here
+    return new Response("Subscription added", {
+      status: 200,
+    });
+  } catch (error) {
+    return new Response("Server error", {
+      status: 500,
+    });
+  }
+}
+```
+
+## Steps to Create a Webhook Endpoint in Stripe
+
+- Log in to Your Stripe Dashboard:
+- Navigate to Webhooks Settings:
+- Once logged in, locate the “Developers” section in the dashboard. This section is typically accessible from the left sidebar menu. 3. Access Webhooks:
+
+- Within the “Developers” section, find and click on the “Webhooks” option. This action will take you to the webhooks settings page. 4. Add Endpoint:
+
+- On the webhooks settings page, locate the “Add endpoint” button and click on it to initiate the process of creating a new webhook endpoint. 4. Configure Webhook Endpoint:
+
+- In the “Add Endpoint” form, provide the following details:
+- Endpoint URL: Enter the URL of the server-side endpoint in your application that will receive webhook events from Stripe.
+- Events to Send: Select the types of events you want Stripe to send to this endpoint. You can choose from a list of predefined event types or select “All events” to receive notifications for all event types.
+- Version: Choose the version of the API you want to use for webhook events.
+- Signing Secret (Optional): Optionally, you can generate a signing secret that will be used to sign webhook events for added security. This is recommended to prevent unauthorized access to your webhook endpoint. 5. Save Endpoint:
+
+- After providing the necessary information, click on the “Add Endpoint” or “Save” button to create the webhook endpoint. 6. Click over the webhook, then click on reveal signing secret, past the signing secret in STRIPE_SECRET_WEBHOOK_KEY env variable.
+
+In the webhook event handler, we listen for a specific event called checkout.session.completed. This event is sent by Stripe when the user completes the payment.
+
+Our job is to update the database with the user and subscription. We also verify that the request came from Stripe using the headers.
+
+Here is the Webhooks docs [https://docs.stripe.com/webhooks](https://docs.stripe.com/webhooks)
