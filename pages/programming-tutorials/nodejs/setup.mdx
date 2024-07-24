@@ -1,0 +1,136 @@
+import { Steps } from "nextra/components";
+import { Tabs } from "nextra/components";
+
+# Node Js Setup with typescript
+
+## Node Js Setup
+
+<Steps>
+### Step 1: Create a folder
+
+```bash copy
+   mkdir nodejs-with-ts
+   cd nodejs-with-ts/
+```
+
+### Step 2 : Initialise a node js project
+
+<Tabs items={["pnpm", "npm"]}>
+  <Tabs.Tab>
+
+```bash copy
+   pnpm init -y
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  
+  ```bash copy 
+    npm init -y 
+  ```
+  
+  </Tabs.Tab>
+</Tabs>
+
+### Step 3 : Install Dependencies
+
+<Tabs items={["pnpm", "npm"]}>
+  <Tabs.Tab>
+
+```bash copy
+   pnpm init -y
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+Install Expesss
+
+```bash copy
+  npm i express prisma @prisma/client bcrypt cors dotenv
+```
+
+Install Other Dev Dependencies
+
+```bash copy
+npm i -D typescript
+ npm i -D @types/express
+ npm i -D @types/node
+ npm i -D @types/bcrypt
+ npm install -D tsc-alias
+ npm i ts-node-dev --save-dev
+ npm install -D tsconfig-paths
+```
+
+Generate tsconfig file to be able run node commands
+
+```bash copy
+ npx tsc --init
+```
+
+Modify the tsconfig
+
+```ts copy
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2016",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+
+
+```
+
+Modify your scripts in the package.json file
+
+```ts copy
+"scripts": {
+    "dev": "tsnd --respawn -r tsconfig-paths/register --pretty --transpile-only ./src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node ./dist",
+    "postinstall": "prisma generate"
+  },
+```
+
+  </Tabs.Tab>
+</Tabs>
+
+</Steps>
+
+## Create your Express app
+
+```ts copy
+import express from "express";
+// import "src/db";
+import productRouter from "./routes/product";
+import userRouter from "./routes/users";
+import categoryRouter from "./routes/category";
+require("dotenv").config();
+const cors = require("cors");
+
+const app = express();
+
+// Allow CORS requests from localhost:your-client-port (replace with your actual client port)
+app.use(cors());
+const PORT = process.env.PORT || 8000;
+app.use(express.json());
+app.listen(PORT, () => {
+  console.log(`Server is running on http:localhost:${PORT}`);
+});
+//Product Routes
+app.use("/api/v1", productRouter);
+app.use("/api/v1", userRouter);
+app.use("/api/v1", categoryRouter);
+```
