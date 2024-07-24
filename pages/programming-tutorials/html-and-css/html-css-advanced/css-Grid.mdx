@@ -1,0 +1,221 @@
+import { Callout } from "nextra/components";
+
+## Grid
+
+CSS Grid Layout, or simply Grid, is a powerful layout system in CSS that allows for the creation of complex, responsive web designs. It enables you to arrange elements in rows and columns, providing greater control over layout compared to older methods like floats or flexbox.
+
+![Hello](/Css-Grid.jpg)
+
+### Grid Container Properties
+
+#### 1) display: grid
+
+**Description:** Defines an element as a grid container, transforming its direct children into grid items
+
+```bash copy
+css Grid
+.container {
+    display: grid;
+}
+
+```
+
+#### 2) grid-column-gap and grid-row-gap (or gap)
+
+**Description:** Specifies the space (gaps) between columns and rows
+
+```bash copy
+
+.container {
+    display: grid;
+    gap: 10px; /* 10px gap between both rows and columns */
+}
+
+
+```
+
+#### 3) grid-template-columns and grid-template-rows:
+
+**Description:** Defines the columns and rows of the grid with a space-separated list of values
+
+**Values:** Can be specified in units such as pixels (px), percentages (%), fractions (fr), or auto.
+
+```bash copy
+.container {
+    display: grid;
+    grid-template-columns: repeat(3, 300px); /* Three columns: first and last are 1 fraction, middle is 2 fractions */
+    grid-template-rows: 100px auto 100px; /* Three rows: first and last are 100px, middle adjusts to content */
+    or
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); */
+    grid-template-rows: repeat(auto-fit, minmax(400px, 1fr)); */
+}
+
+```
+
+### CSS Grid: Responsive Layout with auto-fit and minmax
+
+CSS Grid's repeat, auto-fit, and minmax functions are incredibly powerful for creating responsive layouts. This combination allows you to create a flexible grid that adjusts the number of columns based on the available space, ensuring that each column maintains a minimum and maximum size
+
+**Key Concepts**
+
+#### 1) grid-template-columns:
+
+Defines the column structure of the grid.
+
+#### 2) repeat():
+
+A function that repeats a set of columns or rows.
+
+**repeat(auto-fit, ...):** Creates as many columns as will fit into the container.
+
+**repeat(auto-fill, ...):** Similar to auto-fit, but may create empty columns if the space is available.
+
+#### 3) minmax(min, max):
+
+Defines a size range for the columns or rows.
+
+**min:** The minimum size.,
+**max:** The maximum size
+
+Html page
+
+```bash copy
+
+Html
+.grid {
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Grid Layout</title>
+</head>
+<body>
+    <div class="grid">
+        <div class="grid-item">Item 1</div>
+        <div class="grid-item">Item 2</div>
+        <div class="grid-item">Item 3</div>
+        <div class="grid-item">Item 4</div>
+        <div class="grid-item">Item 5</div>
+        <div class="grid-item">Item 6</div>
+    </div>
+</body>
+</html>
+
+}
+
+```
+
+css page
+
+```bash copy
+
+Css
+ <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 10px;
+        }
+        .grid-item {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+```
+
+### 4) CSS Grid: Aligning and Justifying Items
+
+**PlaceContent**
+
+In CSS Grid, the place-content property is a shorthand for aligning and justifying the entire grid content within the grid container. It combines align-content and justify-content into a single property, making it simpler to manage the overall alignment of the grid.
+
+**Description:** Aligns the entire grid content along both the horizontal (inline) and vertical (block) axes within the grid container.
+
+**values**
+
+**start:** Items are aligned to the start of the cross axis.
+
+**End:** Items are aligned to the end of the cross axis.
+
+**center:** Items are centered along the cross axis.
+
+**stretch:** Stretches the content to fill the container.
+
+**space-between:** Distributes the content evenly with the first item at the start and the last item at the end.
+
+**space-around:** Distributes the content with equal space around each item.
+
+**space-evenly:** Distributes the content with equal space between each item.
+
+```bash copy 
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 10px;
+    place-content: center; /* Centers all grid content */
+    height: 100vh; /* Full viewport height */
+}
+
+
+```
+
+<Callout type="info" emoji="ℹ️">
+  Just like Flexbox, CSS Grid also provides powerful properties for aligning and
+  justifying items within the grid container. These properties allow you to
+  control the placement and alignment of grid items, ensuring a consistent and
+  visually appealing layout
+</Callout>
+
+**align-items:**
+
+**Description:** Aligns Grid items along the cross axis (vertical by default).
+
+**Values:**
+
+**stretch (default):** Items stretch to fill the container.
+
+**start:** Items are aligned to the start of the cross axis.
+
+**End:** Items are aligned to the end of the cross axis.
+
+**center:** Items are centered along the cross axis.
+
+**baseline:** Items are aligned along their baselines.
+
+```bash copy
+
+Css Grid
+.container {
+    display: grid;
+    gap: 10px;
+    align-content: center; /* Aligns all rows to the center vertically */
+}
+
+```
+
+**justify-content:**
+
+**Description:** Aligns Grid items along the main axis (horizontal by default).
+
+**Values:**
+
+**start (default):** Items are aligned to the start of the container.
+
+**End:** Items are aligned to the end of the container.
+
+**center:** Items are centered along the main axis.
+
+**space-between:** Items are evenly distributed, with the first item at the start and the last item at the end.
+
+**space-around:** Items are evenly distributed with equal space around them.
+
+**space-evenly:** Items are evenly distributed with equal space between them
+
+![Hello](/flex4.jpg)
+
+<Callout type="info" emoji="ℹ️">
+  By using this approach, you can easily arrange items in a neat and organized way, and it will adjust automatically to fit the screen size, just like how your toy box would adjust to hold more toys or bigger toys if needed
+</Callout>

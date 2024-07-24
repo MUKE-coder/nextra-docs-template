@@ -1,0 +1,97 @@
+import { Callout } from "nextra/components";
+
+## Flex box
+
+The CSS Flexible Box Layout, commonly known as Flexbox, is a layout model that allows you to design complex and responsive layouts with ease. It is particularly useful for aligning items in a container and distributing space within the container
+
+![Hello](/Css-flex.jpg)
+
+### Key Concepts and Properties
+
+#### 1) display: flex
+
+**Description:** Defines a flex container and enables flexbox for its direct children (flex items)
+
+```bash copy
+css
+
+.container {
+    display: flex;
+}
+
+```
+
+#### 2) flex-direction:
+
+**Description:** Specifies the direction of the flex items within the flex container
+
+**Values:**
+
+**row (default):** Items are placed in a row, from left to right.
+
+**row-reverse:** Items are placed in a row, from right to left.
+
+**column:** Items are placed in a column, from top to bottom.
+
+**column-reverse:** Items are placed in a column, from bottom to top
+
+```bash copy
+css
+
+.container {
+    display: flex;
+    flex-direction: row;
+}
+
+```
+
+![Hello](/flex2.jpg)
+
+#### 3) align-items:
+
+**Description:** Aligns flex items along the cross axis (vertical by default).
+
+**Values:**
+
+**stretch (default):** Items stretch to fill the container.
+
+**flex-start:** Items are aligned to the start of the cross axis.
+
+**flex-end:** Items are aligned to the end of the cross axis.
+
+**center:** Items are centered along the cross axis.
+
+**baseline:** Items are aligned along their baselines.
+
+![Hello](/flex3.jpg)
+
+#### 4) justify-content:
+
+**Description:** Aligns flex items along the main axis (horizontal by default).
+
+**Values:**
+
+**flex-start (default):** Items are aligned to the start of the container.
+
+**flex-end:** Items are aligned to the end of the container.
+
+**center:** Items are centered along the main axis.
+
+**space-between:** Items are evenly distributed, with the first item at the start and the last item at the end.
+
+**space-around:** Items are evenly distributed with equal space around them.
+
+**space-evenly:** Items are evenly distributed with equal space between them
+
+![Hello](/flex4.jpg)
+
+#### Example
+
+![Hello](/flex5.jpg)
+
+<Callout type="info" emoji="ℹ️">
+  CSS Flexbox is a powerful layout tool that provides flexibility and control
+  over the arrangement of elements within a container. By mastering Flexbox
+  properties, you can create responsive and dynamic web layouts that adapt to
+  different screen sizes and content variations
+</Callout>

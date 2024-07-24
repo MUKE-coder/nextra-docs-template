@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* .grid: {
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); */
+  /* grid-template-columns: repeat(3, 300px); */
+  /* grid-template-columns: repeat(3, 1fr); */
+
