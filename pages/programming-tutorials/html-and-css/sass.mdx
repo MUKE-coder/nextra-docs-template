@@ -1,0 +1,68 @@
+import { Steps } from 'nextra/components'
+
+#### Introduction
+
+Sass (Syntactically Awesome Style Sheets) is a pre-processor language that extends the capabilities of CSS. It provides a more dynamic and efficient way to write CSS, making it easier to manage large stylesheets by offering features such as variables, nested rules, mixins, and functions.
+
+**Sass compiler:** In order to use sass efficiently an extension was Introduced to avoid the installation of sass using the commandline and it is called **live sass compiler by Glenn Marks.**
+
+### installation of sass live compiler
+
+<Steps>
+### Open VS Code
+ 
+Launch Visual Studio Code.
+ 
+### Access Extensions
+ 
+ Go to the Extensions tab in the sidebar (usually on the left) or use the shortcut (Ctrl+Shift+X).  In the search bar, type "Live Sass Compiler and locate the extension by Glenn Marks and click the "Install" button.
+</Steps>
+
+#### Enabling Live Compilation
+
+**Open an SCSS File:** Create or open an SCSS file (.scss extension) in your project.
+Activate Live Sass:
+
+**On the status Bar:** Look for a button in the status bar at the bottom that might say "Click to Watch Sass" or a similar indication. Click it to enable live compilation.
+
+
+#### **Why we use Sass?**
+
+**Improved Maintainability:** Sass makes your stylesheets more organized and readable. Variables and mixins allow you to manage styles centrally, making updates easier and reducing the risk of errors.
+
+**Enhanced Features:** Sass offers functionalities not available in vanilla CSS, including operations, functions for color manipulation, and control flow statements.
+
+### Key Features of Sass
+
+**Variables:** Variables in Sass make it easy to manage and reuse values eg colors, fonts etc throughout your stylesheet.
+```SCSS copy
+//variables//
+$font-stack: Helvetica, sans-serif;
+$primary-color: #333;
+ 
+ //usage of variables//
+body {
+  font-family: $font-stack;
+  color: $primary-color;
+}
+```
+
+**Nesting:** Nesting in Sass allows you to write your CSS in a nested hierarchy that follows the same visual structure of your HTML. This makes it easier to read and maintain.
+```SCSS copy
+nav {
+//all other tags are placed inside a 
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li { display: inline-block; }
+
+  a {
+    display: block;
+    padding: 6px 12px;
+    text-decoration: none;
+  }
+}
+```

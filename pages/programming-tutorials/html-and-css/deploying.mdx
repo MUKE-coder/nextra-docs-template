@@ -1,0 +1,95 @@
+import { Steps } from 'nextra/components'
+
+# Deployment and Hosting
+
+### Deployment
+
+Refers to the process of transferring a web application from a local development environment to a live server where it can be accessed by users. 
+
+##### Steps under taken during deployment
+
+<Steps>
+### Build Process
+ 
+Converting source code into a format that can be efficiently run on a server. This might include compiling, bundling, and minifying code.
+ 
+### Configuration
+ 
+Setting environment variables, configuring servers, and setting up databases.
+
+### Testing
+ 
+Ensuring that the application works as expected in the live environment. This may involve running automated tests or manual testing.
+
+### Transfer
+ 
+Uploading the application files to the server. This can be done via FTP, SSH, or through deployment tools and services.
+
+### Monitoring and Maintenance
+ 
+Continuously monitoring the application for issues and making updates as needed.
+</Steps>
+
+### Hosting
+
+This is the service that provides the space (storage) for your website's files and the computing power to run it, or provides the infrastructure necessary to run a website or the web application which include;
+
+**Web Server:** A server that delivers web pages to users' browsers upon request. Popular web servers include Apache, Nginx, and Microsoft's Internet Information Services (IIS).
+
+**Domain Name:** A human-readable address (like example.com) that users can type into their browsers to access the website. Domain names are registered through domain registrars.
+
+**Storage:** Space on a server to store the website's files, including HTML, CSS, JavaScript, images, and other assets.
+
+**Bandwidth:** The amount of data that can be transferred from the server to users over a period. Higher bandwidth allows more users to access the site simultaneously.
+
+**Security:** Measures to protect the website from threats such as DDoS **(Distributed Denial-of-Service)** attacks, hacking attempts, and malware. This includes SSL certificates for HTTPS, firewalls, and regular security updates.
+
+#### Types of Hosting
+
+**Shared Hosting:** Multiple websites share the same server and resources. This is cost-effective but can be slower and less secure.
+
+**VPS Hosting:** A Virtual Private Server (VPS) provides more control and resources than shared hosting, with each website running on its own virtual environment.
+
+**Dedicated Hosting:** An entire server is dedicated to one website. This offers maximum performance and control but is more expensive.
+
+**Cloud Hosting**: Websites are hosted on a network of servers in the cloud, offering scalability and reliability. Examples include Amazon Web Services (AWS), Google Cloud Platform (GCP), and Microsoft Azure.
+
+**Managed Hosting:** The hosting provider takes care of server management tasks, including updates, security, and backups.
+
+### Deployment and Hosting Services.
+
+#### Vercel 
+ A service for hosting websites and web applications with continuous deployment from Git repositories.
+ ##### Deployment and Hosting using Vercel
+
+ <Steps>
+###  Prepare Your Application
+ 
+Ensuring your code is clean and free of errors,
+setting environment variables for production, 
+building your application (if necessary).
+
+### Create a Vercel Account
+ 
+Sign up for a free or paid Vercel account using your gitHub credentials in oreder link your Git provider account to Vercel.
+ 
+### Import your Project
+
+Select the Git repository containing your website code and import it into Vercel.
+
+### Framework (Optional)
+ 
+Vercel often automatically detects the framework your project uses (e.g., Next.js, Gatsby). You can confirm or adjust this setting if needed.
+
+### Set Environment Variables
+ 
+If your application requires environment variables
+
+**Go to Project Settings:** Navigate to your project settings on Vercel.
+
+**Environment Variables:** Add the required environment variables under the "Environment Variables" section.
+
+### Deploy Your Project
+ 
+Press the deploy button and Vercel will build and deploy your website. You'll be provided with a live URL for your website.  If connected to a Git repository, Vercel will automatically deploy your project every time you push changes to the connected branch.
+</Steps>
