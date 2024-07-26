@@ -58,193 +58,47 @@ More > Product catalog. Select Add product in order to create a subscription pla
   associated with it for example a monthly price as well as an annual price. You
   want to copy the price ID and pass it later to Stripe checkout.
 </Callout>
-## Step 5:Create a subscribe component.
+## Step 5:Create .env file
+```bash copy 
+STRIPE_MONTHLY_PRICE_ID=<get_from_stripe>
+STRIPE_YEARLY_PRICE_ID=<get_from_stripe>
+STRIPE_SECRET_KEY=<get_from_stripe>
+STRIPE_WEBHOOK_SECRET=<get_from_stripe>
+NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL=<get_from_stripe>
+NEXT_PUBLIC_BASE_URL ="http://localhost:3000"
+
+````
+## Step 5:Create a Pricing Page.
 
 ```ts copy
 "use client";
-
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
-import { cn } from "@/lib/utils";
-import { useUser } from "@clerk/nextjs";
+import BoldHeading from "@/components/BoldHeading";
+import { Check, Loader2 } from "lucide-react";
 import axios from "axios";
+import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
-import { toast } from "sonner";
-
-type PricingSwitchProps = {
-  onSwitch: (value: string) => void;
-};
-
-type PricingCardProps = {
-  user: any;
-  handleCheckout: any;
-  priceIdMonthly: any;
-  priceIdYearly: any;
-  isYearly?: boolean;
-  title: string;
-  monthlyPrice?: number;
-  yearlyPrice?: number;
-  description: string;
-  features: string[];
-  actionLabel: string;
-  popular?: boolean;
-  exclusive?: boolean;
-};
-
-const PricingHeader = ({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) => (
-  <section className="text-center">
-    <h2 className="text-3xl lg:text-5xl font-bold">{title}</h2>
-    <p className="text-lg text-gray-400 pt-1">{subtitle}</p>
-    <br />
-  </section>
-);
-
-const PricingSwitch = ({ onSwitch }: PricingSwitchProps) => (
-  <Tabs defaultValue="0" className="w-40 mx-auto" onValueChange={onSwitch}>
-    <TabsList className="py-6 px-2">
-      <TabsTrigger value="0" className="text-base">
-        Monthly
-      </TabsTrigger>
-      <TabsTrigger value="1" className="text-base">
-        Yearly
-      </TabsTrigger>
-    </TabsList>
-  </Tabs>
-);
-
-const PricingCard = ({
-  user,
-  handleCheckout,
-  isYearly,
-  title,
-  priceIdMonthly,
-  priceIdYearly,
-  monthlyPrice,
-  yearlyPrice,
-  description,
-  features,
-  actionLabel,
-  popular,
-  exclusive,
-}: PricingCardProps) => (
-  <Card
-    className={cn(
-      `w-72 flex flex-col justify-between py-1 ${
-        popular ? "border-rose-400" : "border-zinc-700"
-      } mx-auto sm:mx-0`,
-      {
-        "animate-background-shine bg-white dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] transition-colors":
-          exclusive,
-      }
-    )}
-  >
-    <div>
-      <CardHeader className="pb-8 pt-4">
-        {isYearly && yearlyPrice && monthlyPrice ? (
-          <div className="flex justify-between">
-            <CardTitle className="text-zinc-700 dark:text-zinc-300 text-lg">
-              {title}
-            </CardTitle>
-            <div
-              className={cn(
-                "px-2.5 rounded-xl h-fit text-sm py-1 bg-zinc-200 text-black dark:bg-zinc-800 dark:text-white",
-                {
-                  "bg-gradient-to-r from-orange-400 to-rose-400 dark:text-black ":
-                    popular,
-                }
-              )}
-            >
-              Save ${monthlyPrice * 12 - yearlyPrice}
-            </div>
-          </div>
-        ) : (
-          <CardTitle className="text-zinc-700 dark:text-zinc-300 text-lg">
-            {title}
-          </CardTitle>
-        )}
-        <div className="flex gap-0.5">
-          <h3 className="text-3xl font-bold">
-            {yearlyPrice && isYearly
-              ? "$" + yearlyPrice
-              : monthlyPrice
-              ? "$" + monthlyPrice
-              : "Custom"}
-          </h3>
-          <span className="flex flex-col justify-end text-sm mb-1">
-            {yearlyPrice && isYearly ? "/year" : monthlyPrice ? "/month" : null}
-          </span>
-        </div>
-        <CardDescription className="pt-1.5 h-12">{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        {features.map((feature: string) => (
-          <CheckItem key={feature} text={feature} />
-        ))}
-      </CardContent>
-    </div>
-    <CardFooter className="mt-2">
-      <Button
-        onClick={() =>
-          handleCheckout(isYearly ? priceIdYearly : priceIdMonthly, true)
-        }
-        className="relative inline-flex w-full items-center justify-center rounded-md bg-black text-white dark:bg-white px-6 font-medium  dark:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-      >
-        <div className="absolute -inset-0.5 -z-10 rounded-lg bg-gradient-to-b from-[#c7d2fe] to-[#8678f9] opacity-75 blur" />
-        {actionLabel}
-      </Button>
-    </CardFooter>
-  </Card>
-);
-
-const CheckItem = ({ text }: { text: string }) => (
-  <div className="flex gap-2">
-    <CheckCircle2 size={18} className="my-auto text-green-400" />
-    <p className="pt-0.5 text-zinc-700 dark:text-zinc-300 text-sm">{text}</p>
-  </div>
-);
-
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
-
-export default function Pricing() {
-  const [isYearly, setIsYearly] = useState<boolean>(false);
-  const togglePricingPeriod = (value: string) =>
-    setIsYearly(parseInt(value) === 1);
-  const { user } = useUser();
-
-  const handleCheckout = async (priceId: string, subscription: boolean) => {
+export default function page() {
+  // const user = await currentUser();
+  const [loading, setLoading] = useState(false);
+  async function handleStripe(priceId: string) {
+    setLoading(true);
     try {
-      const { data } = await axios.post(
-        `/api/payments/create-checkout-session`,
-        {
-          userId: user?.id,
-          email: user?.emailAddresses?.[0]?.emailAddress,
-          priceId,
-        }
-      );
-
-      console.log("data", data);
-      if (data.sessionId) {
+      const res = await axios.post(`/api/checkout`, {
+        priceId,
+      });
+      if (res.data) {
+        setLoading(false);
+        console.log("data", res.data);
+      }
+      if (res.data.sessionId) {
         const stripe = await stripePromise;
         console.log("stripe", stripe);
 
         const response = await stripe?.redirectToCheckout({
-          sessionId: data.sessionId,
+          sessionId: res.data.sessionId,
         });
 
         console.log("response", response);
@@ -252,87 +106,117 @@ export default function Pricing() {
         return response;
       } else {
         console.error("Failed to create checkout session");
-        toast("Failed to create checkout session");
+        toast.error("Failed to create checkout session");
         return;
       }
     } catch (error) {
-      console.error("Error during checkout:", error);
-      toast("Error during checkout");
-      return;
+      setLoading(false);
+      console.log(error);
     }
-  };
-
+  }
   const plans = [
     {
-      title: "Basic",
-      monthlyPrice: 10,
-      yearlyPrice: 100,
-      description: "Essential features you need to get started",
+      title: "Starter",
+      description: "Best option for personal use & for your next project",
+      price: 29,
+      priceId: "price_1PfZLO0748fNmgXYOppKYz3B",
       features: [
-        "Example Feature Number 1",
-        "Example Feature Number 2",
-        "Example Feature Number 3",
+        " Individual configuration",
+        "No setup, or hidden fees",
+        "Team size: 1 developer",
+        "Premium support: 6 months",
+        "Free updates: 6 months",
       ],
-      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      actionLabel: "Get Started",
     },
     {
-      title: "Pro",
-      monthlyPrice: 25,
-      yearlyPrice: 250,
-      description: "Perfect for owners of small & medium businessess",
+      title: "Company",
+      description: "Relevant for multiple users, extended & premium support.",
+      price: 99,
+      priceId: "price_1PfZOr0748fNmgXYbfUQgaN3",
       features: [
-        "Example Feature Number 1",
-        "Example Feature Number 2",
-        "Example Feature Number 3",
+        " Individual configuration",
+        "No setup, or hidden fees",
+        "Team size: 10 developers",
+        "Premium support: 24 months",
+        "Free updates: 24 months",
       ],
-      actionLabel: "Get Started",
-      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      popular: true,
     },
     {
       title: "Enterprise",
-      price: "Custom",
-      description: "Dedicated support and infrastructure to fit your needs",
+      description:
+        "Best for large scale uses and extended redistribution rights.",
+      price: 499,
+      priceId: "price_1PfZQ50748fNmgXYdBzwfE5x",
       features: [
-        "Example Feature Number 1",
-        "Example Feature Number 2",
-        "Example Feature Number 3",
-        "Super Exclusive Feature",
+        "Individual configuration",
+        "No setup, or hidden fees",
+        "Team size: 100+ developers",
+        "Premium support: 36 months",
+        "Free updates: 36 months",
       ],
-      actionLabel: "Contact Sales",
-      priceIdMonthly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      priceIdYearly: "price_1OHwQqKCuFqcLnh8QmcSRSQ9",
-      exclusive: true,
     },
   ];
-
   return (
-    <div>
-      <PricingHeader
-        title="Sample Pricing Plans"
-        subtitle="Use these sample pricing cards in your SAAS"
-      />
-      <PricingSwitch onSwitch={togglePricingPeriod} />
-      <section className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-8 mt-8">
-        {plans.map((plan) => {
-          return (
-            <PricingCard
-              user={user}
-              handleCheckout={handleCheckout}
-              key={plan.title}
-              {...plan}
-              isYearly={isYearly}
-            />
-          );
-        })}
-      </section>
-    </div>
+    <section className="bg-white dark:bg-gray-900">
+      <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
+        <div className="mx-auto max-w-screen-md text-center mb-8 lg:mb-12">
+          <BoldHeading heading="Pricing" />
+          <p className="mb-5 pt-3 font-light text-gray-500 sm:text-xl dark:text-gray-400">
+            This is Our simplified pricing , save 25% off for every package for
+            a limited period of time
+          </p>
+        </div>
+        <div className="space-y-8 lg:grid lg:grid-cols-3 sm:gap-6 xl:gap-10 lg:space-y-0">
+          {plans.map((plan, i) => {
+            return (
+              <div className="flex flex-col p-6 mx-auto max-w-lg text-center text-gray-900 bg-white rounded-lg border border-gray-100 shadow dark:border-gray-600 xl:p-8 dark:bg-gray-800 dark:text-white">
+                <h3 className="mb-4 text-2xl font-semibold">{plan.title}</h3>
+                <p className="font-light text-gray-500 sm:text-lg dark:text-gray-400">
+                  {plan.description}
+                </p>
+                <div className="flex justify-center items-baseline my-8">
+                  <span className="mr-2 text-5xl font-extrabold">
+                    ${plan.price}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    /month
+                  </span>
+                </div>
+
+                <ul role="list" className="mb-8 space-y-4 text-left">
+                  {plan.features.map((feature, i) => {
+                    return (
+                      <li key={i} className="flex items-center space-x-3">
+                        <Check className="flex-shrink-0 w-5 h-5 text-green-500 dark:text-green-400" />
+
+                        <span>{feature}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <button
+                  onClick={() => handleStripe(plan.priceId)}
+                  className="text-white bg-tertiary-600 hover:bg-tertiary-700 focus:ring-4 focus:ring-tertiary-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:text-white  dark:focus:ring-tertiary-900"
+                >
+                  Get started
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="py-4 text-center">
+          {loading && (
+            <Button disabled>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing Please wait
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
-```
+````
 
 ## Step 6: Create a Stripe checkout endpoint
 
@@ -343,29 +227,30 @@ In order to redirect users to this page, we will need to setup an API endpoint t
 We will also need to pass a user ID to the Stripe checkout session as metadata in order to retrieve it later when we receive the webhook event.
 
 ```ts copy
-
 // api/payments/create-checkout-session/route.ts
-import { stripe } from "@/lib/stripe";
 
+import getCurrentUser from "@/lib/getCurrentUser";
+// import { stripe } from "@/lib/getStripe";
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// import Stripe from "stripe";
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
-  const { userId, email, priceId, subscription } = await req.json();
-
+  const { priceId } = await req.json();
+  const user = await getCurrentUser();
+  const userId = user.id;
+  const email = user.email;
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { userId, email, priceId },
       mode: "subscription",
+      customer_email: email,
       billing_address_collection: "auto",
-      customer_email: user.email, // optional
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}&&userId=${userId}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cancel`,
-      allow_promotion_codes: true,
       // subscription_data: {
       //   trial_settings: {
       //     end_behavior: {
@@ -373,13 +258,14 @@ export async function POST(req: NextRequest) {
       //     },
       //   },
       //   trial_period_days: 7,
-      },
+      // },
     });
 
     return NextResponse.json({ sessionId: session.id });
+    // return NextResponse.json(user);
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    return NextResponse.json({ error: "Failed to create checkout session" });
+    return NextResponse.json({ error });
   }
 }
 ```
@@ -388,8 +274,55 @@ Notice the subscription_data object, which tells Stripe to add a trial period of
 
 ## Step7: Create prisma Schema
 
-```ts copy
-//schema here
+```prisma copy
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  free
+  premium
+}
+
+enum SubscriptionPeriod {
+  monthly
+  yearly
+}
+
+model User {
+  id         String  @id @default(cuid()) @map("_id")
+  email      String  @unique
+  name       String?
+  image      String?
+  plan       Plan    @default(free)
+  customerId String? @unique // Stripe customer ID, this will be important when we need to delete the subscription
+
+  Subscription Subscription?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id     String             @id @default(cuid()) @map("_id")
+  userId String             @unique
+  plan   Plan
+  period SubscriptionPeriod
+
+  startDate DateTime @default(now())
+  endDate   DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id])
+}
+
 ```
 
 ## Step 8: Setup a webhook event handler
@@ -414,62 +347,129 @@ STRIPE_WEBHOOK_SECRET = whsec_1234;
 Now, we can create our webhook event handler API endpoint that will listen to requests at /webhook and process them. Create a folder in the app directory called api/webhook. Add a route.ts file inside.
 
 ```ts copy
+import prisma from "@/db/prisma";
+import { stripe } from "@/lib/stripe";
 import Stripe from "stripe";
-import { NextRequest } from "next/server";
-import { headers } from "next/headers";
-type METADATA = {
-  userId: string;
-  priceId: string;
-};
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export async function POST(request: NextRequest) {
-  const body = await request.text();
-  const endpointSecret = process.env.STRIPE_SECRET_WEBHOOK_KEY!;
-  const sig = headers().get("stripe-signature") as string;
+const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+
+export async function POST(req: Request) {
+  const body = await req.text();
+
+  const sig = req.headers.get("stripe-signature")!;
   let event: Stripe.Event;
+
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
-  } catch (err) {
-    return new Response(`Webhook Error: ${err}`, {
-      status: 400,
-    });
+    event = stripe.webhooks.constructEvent(body, sig, WEBHOOK_SECRET);
+  } catch (err: any) {
+    console.error("Webhook signature verification failed.", err.message);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  const eventType = event.type;
-  if (
-    eventType !== "checkout.session.completed" &&
-    eventType !== "checkout.session.async_payment_succeeded"
-  )
-    return new Response("Server Error", {
-      status: 500,
-    });
-  const data = event.data.object;
-  const metadata = data.metadata as METADATA;
-  const userId = metadata.userId;
-  const priceId = metadata.priceId;
-  const created = data.created;
-  const currency = data.currency;
-  const customerDetails = data.customer_details;
-  const amount = data.amount_total;
-  const transactionDetails = {
-    userId,
-    priceId,
-    created,
-    currency,
-    customerDetails,
-    amount,
-  };
+  // Handle the event
   try {
-    // database update here
-    return new Response("Subscription added", {
-      status: 200,
-    });
+    switch (event.type) {
+      case "checkout.session.completed":
+        const session = await stripe.checkout.sessions.retrieve(
+          (event.data.object as Stripe.Checkout.Session).id,
+          {
+            expand: ["line_items"],
+          }
+        );
+        const customerId = session.customer as string;
+        const customerDetails = session.customer_details;
+
+        if (customerDetails?.email) {
+          const user = await prisma.user.findUnique({
+            where: { email: customerDetails.email },
+          });
+          if (!user) throw new Error("User not found");
+
+          if (!user.customerId) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { customerId },
+            });
+          }
+
+          const lineItems = session.line_items?.data || [];
+
+          for (const item of lineItems) {
+            const priceId = item.price?.id;
+            const isSubscription = item.price?.type === "recurring";
+
+            if (isSubscription) {
+              let endDate = new Date();
+              if (priceId === process.env.STRIPE_YEARLY_PRICE_ID!) {
+                endDate.setFullYear(endDate.getFullYear() + 1); // 1 year from now
+              } else if (priceId === process.env.STRIPE_MONTHLY_PRICE_ID!) {
+                endDate.setMonth(endDate.getMonth() + 1); // 1 month from now
+              } else {
+                throw new Error("Invalid priceId");
+              }
+              // it is gonna create the subscription if it does not exist already, but if it exists it will update it
+              await prisma.subscription.upsert({
+                where: { userId: user.id! },
+                create: {
+                  userId: user.id,
+                  startDate: new Date(),
+                  endDate: endDate,
+                  plan: "premium",
+                  period:
+                    priceId === process.env.STRIPE_YEARLY_PRICE_ID!
+                      ? "yearly"
+                      : "monthly",
+                },
+                update: {
+                  plan: "premium",
+                  period:
+                    priceId === process.env.STRIPE_YEARLY_PRICE_ID!
+                      ? "yearly"
+                      : "monthly",
+                  startDate: new Date(),
+                  endDate: endDate,
+                },
+              });
+
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { plan: "premium" },
+              });
+            } else {
+              // one_time_purchase
+            }
+          }
+        }
+        break;
+      case "customer.subscription.deleted": {
+        const subscription = await stripe.subscriptions.retrieve(
+          (event.data.object as Stripe.Subscription).id
+        );
+        const user = await prisma.user.findUnique({
+          where: { customerId: subscription.customer as string },
+        });
+        if (user) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { plan: "free" },
+          });
+        } else {
+          console.error("User not found for the subscription deleted event.");
+          throw new Error("User not found for the subscription deleted event.");
+        }
+
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
   } catch (error) {
-    return new Response("Server error", {
-      status: 500,
-    });
+    console.error("Error handling event", error);
+    return new Response("Webhook Error", { status: 400 });
   }
+
+  return new Response("Webhook received", { status: 200 });
 }
 ```
 
