@@ -1,0 +1,102 @@
+import { Callout } from "nextra/components";
+
+import Link from "next/link";
+
+## Css Clip-path
+
+The clip-path property in CSS is a powerful tool that allows you to define a specific region of an element to display, effectively "clipping" the rest of the element. This can be used to create various shapes and mask effects, enhancing the visual appeal and creativity of your web design.
+
+![hello](/clip-path.png)
+
+<Callout type="info" emoji="ℹ️">
+  Get started by visiting Css Clip-path Generator [Clip-path Generator
+  Page](https://bennettfeely.com/clippy/)
+</Callout>
+
+### Basic Shapes
+
+![hello](/shapes.png)
+
+#### Rectangle
+
+Clips the element into a rectangle shape
+
+```bash copy
+
+.rectangle {
+     clip-path: inset(10% 20% 30% 40%)
+}
+
+```
+
+**This creates a diamond shape by specifying three points.**
+
+![hello](/path.png)
+
+#### Circle
+
+Clips the element into a circular shape
+
+```bash copy
+
+.circle {
+    clip-path: circle(50%);
+}
+
+```
+
+**This creates a circular clip with a radius of 50% of the element's size.**
+
+#### trapezium
+
+Clips the element into a trapezium shape
+
+```bash copy
+
+.trapezium {
+      clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+```
+
+**This creates a diamond shape by specifying four points.**
+
+![trapezium](/path2.png)
+
+#### Triangle
+
+Clips the element into a Triangle shape defined by a series of points.
+
+```bash copy
+
+.triangle {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+```
+
+**This creates a diamond shape by specifying three points.**
+
+![Triangle](/path1.png)
+
+#### Polygon
+
+Clips the element into a polygonal shape defined by a series of points.
+
+```bash copy
+
+.polygon {
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+```
+
+**This creates a diamond shape by specifying four points.**
+
+<Callout type="info" emoji="ℹ️">
+  Using the clip-path property with the inset() function allows you to create
+  custom rectangular shapes by specifying insets from each side of the element.
+  This can be useful for creating unique visual effects and layouts, enhancing
+  the overall design and user experience of your web pages. By mastering the
+  clip-path property, you can add dynamic and engaging elements to your designs
+</Callout>
