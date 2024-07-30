@@ -121,3 +121,122 @@ Y--;
  console.log(Y)
 //It will display 4 in the browser's console.
 ```
+
+**b. Assignment Operators:** Assignment operators are used to assign values to variables.
+
+**Assignment (=):** Assigns a value to a variable.
+```js copy
+let x = 10;
+ console.log(X)
+```
+**c.  Comparison Operators:** Comparison operators compare two values and return a boolean result ('true' or 'false').
+
+**Equal (==):** Compares two values for equality (type conversion is performed).
+```js copy
+let result = (5 == '5'); // true
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+**Strict Equal (===): **  Compares two values for equality without type conversion.
+```js copy
+let result = (5 === '5'); // true
+ console.log(result)
+ //It will display false in the browser's console.
+ ```
+
+**Not Equal (!=):**  Compares two values for inequality (type conversion is performed).
+```js copy
+const result = (5 != '5'); 
+ console.log(result)
+ //It will display false in the browser's console.
+ ```
+
+**Strict Not Equal (!==):**  Compares two values for inequality without type conversion.
+```js copy
+let result = (5 !== '5'); 
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+**Greater Than (>):** Checks if the left value is greater than the right value.
+```js copy
+const result = (10 > 5);
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+**Less Than:** Checks if the left value is less than the right value.
+```js copy
+let result = (10 < 5); 
+ console.log(result)
+ //It will display false in the browser's console.
+ ```
+
+**Greater Than or Equal (>=):** Checks if the left value is greater than or equal to the right value.
+```js copy
+let result = (10 >= 10); 
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+**Less Than or Equal (`<=`):** Checks if the left value is less than or equal to the right value.
+```js copy
+let result = (10 <= 10); 
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+ **c. Logical Operators:** Logical operators are used to combine multiple boolean expressions.
+
+ **AND (&&):** Returns true if both operands are true.
+```js copy
+const result = (5 > 3 && 10 > 5); // true
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+ **OR (||):** Returns true if at least one of the operands is true.
+```js copy
+const result = (5 > 3 || 10 < 5); // true
+ console.log(result)
+ //It will display true in the browser's console.
+ ```
+
+ **NOT (!):** Returns true if the operand is false.
+```js copy
+let result = !(5 > 3);
+ console.log(result)
+ //It will display false in the browser's console.
+ ```
+ 
+**5. Control Structures:** 
+
+ **Conditional Statements:** Control the flow of your code using conditional statements.
+ ```js copy
+ let time = 20;
+
+if (time < 12) {
+  console.log('Good morning!');
+} else if (time < 18) {
+  console.log('Good afternoon!');
+} else {
+  console.log('Good evening!');
+}
+ ```
+
+
+**6. Functions:** 
+
+Functions are reusable blocks of code.
+
+```js copy
+// Function declaration
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+// Calling a function
+let greeting = greet('Alice');
+console.log(greeting); 
+//It will display Hello, Alice! in the browser's console.
+ ```
