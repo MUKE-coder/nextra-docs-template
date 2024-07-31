@@ -1,0 +1,69 @@
+import { Callout } from "nextra/components";
+
+## Css Variables
+
+CSS Variables, also known as CSS Custom Properties, allow you to store values in a reusable way within your CSS. They are useful for maintaining consistency across a website and making global changes to styles easy. CSS Variables are defined with a custom property name that starts with -- and are accessed using the var() function
+
+![variables](/variables.jpg)
+
+### Defining and Using CSS Variables
+
+#### 1) Defining Variables
+
+CSS Variables are defined within a CSS rule, typically within the :root selector to make them globally available throughout the document.
+
+```bash copy filename="Css"
+
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #f4f4f4;
+    --padding: 10px;
+    --font-size: 16px;
+}
+
+```
+
+#### 2) Using Variables
+
+To use a CSS variable, you use the var() function, passing the variable name as an argument.
+
+```bash copy filename="Css"
+
+body {
+    background-color: var(--secondary-color);
+    font-size: var(--font-size);
+}
+
+.header {
+    background-color: var(--primary-color);
+    padding: var(--padding);
+}
+
+
+```
+
+![variables](/variables2.jpg)
+
+**Explanation:**
+
+Defining Variables:
+
+In the :root selector, variables such as --primary-color, --secondary-color, --accent-color, --padding, and --font-size are defined.
+This makes these variables accessible throughout the CSS.
+Using Variables:
+
+The var() function is used to apply the variables in different CSS rules.
+For example, var(--primary-color) is used to set the background color of the .header.
+Hover State:
+
+A pseudo-class (:hover) is used for the button to change its background color on hover.
+The darken() function, often part of a CSS preprocessor like Sass, would be used to darken the color by 10%.
+
+<Callout type="info" emoji="ℹ️">
+  CSS Variables provide a powerful way to manage and maintain styles in a web
+  project. By using variables for common values like colors, spacing, and fonts,
+  you can ensure consistency, simplify maintenance, and create dynamic,
+  responsive designs. Integrating CSS Variables with JavaScript further enhances
+  their capabilities, allowing for real-time updates to the styling of your web
+  pages
+</Callout>

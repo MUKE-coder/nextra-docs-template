@@ -1,0 +1,244 @@
+import { Callout } from "nextra/components";
+
+## CSS Forms: Styling HTML Forms with CSS
+
+HTML forms are essential for collecting user input on web pages. Styling forms with CSS enhances their appearance and improves user experience by making them more visually appealing and easier to interact with
+
+![forms](/forms.jpg)
+
+### Basic Form Elements
+
+#### 1) Text Input
+
+Used for single-line text fields
+
+```bash copy filename="Html"
+
+<input type="text" placeholder="Enter your name">
+
+```
+
+#### 2) Password Input
+
+Used for password fields, hiding the input characters
+
+```bash copy filename="Html"
+
+<input type="password" placeholder="Enter your password">
+
+
+```
+
+![input](/input.jpg)
+
+#### 3) Text Area:
+
+Used for multi-line text input.
+
+```bash copy filename="Html"
+
+<textarea placeholder="Enter your message"></textarea>
+
+```
+
+```bash copy filename="Css"
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+```
+
+#### 4) Checkbox
+
+Used for selecting one or more options
+
+```bash copy filename="Html"
+
+<input type="checkbox" id="subscribe" name="subscribe">
+<label for="subscribe">Subscribe to newsletter</label>
+
+
+```
+
+#### 5) Radio Button
+
+Used for selecting one option from a set.
+
+```bash copy filename="Html"
+
+<input type="radio" id="male" name="gender" value="male">
+<label for="male">Male</label>
+<input type="radio" id="female" name="gender" value="female">
+<label for="female">Female</label>
+
+
+```
+
+#### 6) Select Dropdown
+
+Used for selecting one option from a dropdown list
+
+```bash copy filename="Html"
+
+<select>
+    <option value="volvo">Volvo</option>
+    <option value="saab">Saab</option>
+    <option value="mercedes">Mercedes</option>
+    <option value="audi">Audi</option>
+</select>
+
+```
+
+```bash copy filename="Css"
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+
+```
+
+#### 7) Button
+
+Used for submitting forms or triggering actions
+
+```bash copy filename="Html"
+
+<button type="submit">Submit</button>
+
+```
+
+```bash copy filename="Css"
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px 20px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+
+```
+
+** Form Example**
+
+```bash copy filename="Html"
+
+<!--
+  Heads up! 👋
+
+  Plugins:
+    - @tailwindcss/forms
+-->
+
+<div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-lg">
+
+    <form action="#" class="mb-0 mt-6 space-y-4 rounded-lg p-4 shadow-lg sm:p-6 lg:p-8">
+      <p class="text-center text-lg font-medium">Sign in to your account</p>
+
+      <div>
+        <label for="email" class="sr-only">Email</label>
+
+        <div class="relative">
+          <input
+            type="email"
+            class="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+            placeholder="Enter email"
+          />
+
+          <span class="absolute inset-y-0 end-0 grid place-content-center px-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="size-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="sr-only">Password</label>
+
+        <div class="relative">
+          <input
+            type="password"
+            class="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+            placeholder="Enter password"
+          />
+
+          <span class="absolute inset-y-0 end-0 grid place-content-center px-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="size-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="block w-full rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white"
+      >
+        Sign in
+      </button>
+
+      <p class="text-center text-sm text-gray-500">
+        No account?
+        <a class="underline" href="#">Sign up</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+```
+
+<Callout type="info" emoji="ℹ️">
+  Styling forms with CSS enhances the user experience by making forms more
+  visually appealing and easier to use. By understanding and applying various
+  CSS properties, you can create beautiful and responsive forms that fit
+  seamlessly into your web design
+</Callout>

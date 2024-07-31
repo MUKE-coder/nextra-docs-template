@@ -1,0 +1,92 @@
+import { Callout } from "nextra/components";
+
+## CSS Layout and Responsive Design
+
+CSS layout and responsive design are fundamental skills for creating modern web pages that are both visually appealing and functional across various devices and screen sizes. This involves using CSS to control the positioning, sizing, and responsiveness of elements on a webpage.
+
+**CSS Responsive Design**
+is an approach to web design that ensures web pages look good and function well on a variety of devices and screen sizes. By using CSS, you can create layouts that adapt to different screens, providing an optimal viewing experience for users, whether they're on a desktop, tablet, or mobile device
+
+![Responsive](/responsive.jpg)
+
+![Responsive](/responsive3.jpg)
+
+![Responsive](/responsive4.jpg)
+
+**Example 2)**
+
+```bash copy filename="Html"
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title> Responsive Design </title>
+  </head>
+
+  <body>
+    <div class="container">
+
+    <h2 class="heading"> Desishub Codding School </h2>
+
+    </div>
+  </body>
+</html>
+
+```
+
+```bash copy filename="Css"
+
+        * {
+            font-family: Arial, sans-serif;
+            padding:0;
+            margin:0;
+             box-sizing: border-box;
+        }
+        .container {
+            background: blue;
+            min-height: 100vh;
+            display:flex;
+            align-items:center;
+            justify-items:center;
+        }
+        .header {
+            padding: 20px;
+            font-size:4rem;
+            font-weight:800;
+        }
+
+        /* Responsive adjustments */
+
+        @media (max-width: 768px) {
+            .container {
+                background: red;
+            }
+            . header {
+            font-size:2rem;
+            font-weight:600;
+        }
+        }
+        @media (max-width: 380px) {
+            .container {
+                background: black;
+            }
+            . header {
+            font-size:1rem;
+            font-weight:400;
+        }
+        }
+
+```
+
+![Responsive](/responsive2.jpg)
+
+<Callout type="info" emoji="ℹ️">
+  Responsive design ensures that web pages look good and function well on all
+  devices. By using fluid grids, flexible images, and media queries, you can
+  create layouts that adapt to different screen sizes, providing an optimal
+  viewing experience for users. Mastering these techniques will enable you to
+  design websites that are both visually appealing and highly functional across
+  a wide range of devices
+</Callout>
