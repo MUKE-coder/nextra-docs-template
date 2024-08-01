@@ -1,13 +1,15 @@
 import { Callout } from "nextra/components";
-import { Steps } from 'nextra/components';
+import { Steps } from "nextra/components";
 
 # **WHAT IS HTML?**
 
 HTML (HyperText Markup Language) is a markup language that web developers use to structure and describe the content of a webpage (not a programming language). For example, content could be structured within a set of paragraphs, a list of bulleted points, or using images and data tables. Web browsers understand HTML and render HTML code as websites.
 
+![Fundamentals](/fundamentals.jpg)
+
 ## **HTML Document Layout**
 
-```HTML
+```HTML filename="Html"
 
 <!DOCTYPE html>
 <html>
@@ -43,21 +45,21 @@ HTML (HyperText Markup Language) is a markup language that web developers use to
  
 If you haven't already, download and install VS Code from the official website(link and procedures in the html and css tutorials introduction).
 
-####  Set Up Your Project Folder
- 
+#### Set Up Your Project Folder
+
 On your computer, create a new folder where you'll store your website files. Open the folder in Vs code.
 
-####  Create your first HTML file
- 
+#### Create your first HTML file
+
 In VS Code, go to the "File" menu again and select "New File" (or press Ctrl+N).
 Name your new file **index.html** ( this is a common naming convention for the main page of a website).
 
- 
 #### Add Basic HTML Structure
- 
+
 Open the **index.html** file.
 Type **!** and press **Tab** or **Enter**. This is a shortcut provided by Emmet, a plugin included in VS Code that helps you write HTML and CSS faster. It will generate a basic HTML structure for you, and it should look like this;
-```HTML5 copy
+
+```HTML5 copy filename="Html"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,11 +69,12 @@ Type **!** and press **Tab** or **Enter**. This is a shortcut provided by Emmet,
   <title>Document</title>
 </head>
 <body>
-  
+
 </body>
 </html>
 
 ```
+
 </Steps>
 
 ## HTML Elements
@@ -81,48 +84,67 @@ HTML elements are the building blocks of HTML documents and consist of an openin
 **Attributes**; are used to provide additional information about HTML elements. Attributes are always included in the opening tag of an element and consist of a name and a value. They modify the default behavior or appearance of the elements they are associated with.
 
 ### Examples include;
-`<p></p>` : Used to write  paragraphs in an HTML page.
+
+`<p></p>` : Used to write paragraphs in an HTML page.
+
 ```HTML5 copy
 <p>This is a paragraph tag/element</p>
 ```
+
 `<h1></h1>`-`<h6></h6>` : Represent six levels of section headings h1 being the biggest and h6 being the smallest.
+
 ```HTML5 copy
 <h1>This is a the biggest heading...</h1>
 <h6>This is a the smallest heading...</h6>
 ```
+
 `<span></span>`: Used for styling and grouping inline elements without affecting the flow of content.
+
 ```HTML5 copy
 <h1>This is a the <span>heading</span>...</h1>
 ```
+
 `<a></a>`: Defines a hyperlink, which is used to link internal pages or to external web pages. It has an **attribute** called **href** in which the actual link is placed.
+
 ```HTML5 copy
 <a href='www.who.com'>This is a the link...</a>
 ```
+
 `<from></from>`: Represents a form that can be submitted to a server.
+
 ```HTML5 copy
 <form action='/submit' method='post'>
 <...form elements...>
 </form>
 ```
+
 `<label></label>`: used to represent a caption for an item in a user interface. It has an **attribute** called **for** that acts the name of the label tag
+
 ```HTML5 copy
 <label for="username">Username</label>
 ```
-`<button></button>`:  used to create clickable buttons on a webpage.  It has an **attribute** which is known as **type** which determines the behavior of the the button types include; submit, button, reset, disabled and many more
-```HTML5 copy
+
+`<button></button>`: used to create clickable buttons on a webpage. It has an **attribute** which is known as **type** which determines the behavior of the the button types include; submit, button, reset, disabled and many more
+
+```HTML5 copy filename="Html"
 <button type="submit">Submit</button>
   <button type="reset">Reset</button>
 ```
-`<div></div>`:  It's like a box that you can use to group other HTML elements like the paragraphs  together. 
-```HTML5 copy
+
+`<div></div>`: It's like a box that you can use to group other HTML elements like the paragraphs together.
+
+```HTML5 copy filename="Html"
 <div>
     <p>Content inside a div.</p>
 </div>
 ```
+
 #### Lists
+
 These lists are essential for presenting content in a clear and organized manner.
 
 #### Types of lists
+
 There are two types of commonly used lists;
 
 <Steps>
@@ -139,57 +161,67 @@ Each list item is preceded by a bullet point.
 </ul>
 ```
 
-
- 
 ### Ordered lists
- 
+
 Used for lists where the order of items is important.
 They are created using the `<ol>` and `<li>` tags.
 Each list item is preceded by a number.
-```HTML5 copy
+
+```HTML5 copy filename="Html"
 <ol>
   <li>First item</li>
   <li>Second item</li>
   <li>Third item</li>
 </ol>
 ```
+
 </Steps>
 
-
 <Callout type="warning" emoji="⚠️">
-  There are some element that don't have a closing tag and are known as self closing elements
+  There are some element that don't have a closing tag and are known as self
+  closing elements
 </Callout>
 
-`<img/>`:  Embeds an image in the document.. It has **attributes** called **src** in which the actual link of the image is placed and **alt** where short notes about the image are placed.
+`<img/>`: Embeds an image in the document.. It has **attributes** called **src** in which the actual link of the image is placed and **alt** where short notes about the image are placed.
+
 ```HTML5 copy
 <img src='www.who.com' alt='loading'/>
 ```
-`<input/>`:  Represents a typed data field, such as a text field, checkbox, radio button, submit button, etc. It has **attributes** called **type** which shows the type of the input eg text, checkbox etc, **name** shows the name of the input, **placeholder**: shows an example of what is to be written in the input 
+
+`<input/>`: Represents a typed data field, such as a text field, checkbox, radio button, submit button, etc. It has **attributes** called **type** which shows the type of the input eg text, checkbox etc, **name** shows the name of the input, **placeholder**: shows an example of what is to be written in the input
+
 ```HTML5 copy
 <input type='text' name='name' placeholder='write your name here.'/>
 ```
-`<br/>`:   Inserts a line break.
+
+`<br/>`: Inserts a line break.
+
 ```HTML5 copy
 <p>First line<br>Second line</p>
 ```
-`<hr/>`:   Inserts a horizontal rule.
+
+`<hr/>`: Inserts a horizontal rule.
+
 ```HTML5 copy
 <hr/>
 ```
+
 ##### The class attribute
 
 A class attribute is an attribute that is used in targeting of a specific element in an HTML document.
 
-```HTML5 copy
+```HTML5 copy filename="Html"
 <div class="city">
   <h2>London</h2>
   <p>London is the capital of England.</p>
 </div>
 ```
-Where "city" is the class name which is used when applying styles to the `div` element 
+
+Where "city" is the class name which is used when applying styles to the `div` element
 
 ### Formatting Elements
-They are used to style the text content within a web page. 
+
+They are used to style the text content within a web page.
 
 **Examples include;**
 
@@ -205,7 +237,6 @@ They are used to style the text content within a web page.
 
 `<sup>`: Superscript text.
 
-`<sub>`: Subscript text. 
+`<sub>`: Subscript text.
 
 `<strong>`: Important text (often rendered bold).
-

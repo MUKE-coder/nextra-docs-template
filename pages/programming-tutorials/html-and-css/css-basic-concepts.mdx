@@ -9,7 +9,7 @@ CSS comments are used to annotate your CSS code, making it easier to understand 
 **Usage:**
 CSS comments are enclosed within /\* \*/. Anything between these symbols will be treated as a comment and not processed by the browser
 
-    ```bash copy
+    ```bash copy filename="Css"
 
 /_ This is a single-line comment _/
 p {
@@ -35,7 +35,7 @@ CSS selectors are patterns used to select and style HTML elements. They are a fu
 
 Description: Selects all elements on the page
 
-``` bash copy
+``` bash copy filename="Css"
 * {
     margin: 0;
     padding: 0;
@@ -49,7 +49,7 @@ Usage: Useful for applying a global style reset.
 
 Description: Selects all elements of a specific type
 
-```bad copy
+```bash copy filename="Css"
 p {
     color: blue;
 }
@@ -62,7 +62,7 @@ Usage: Targets all paragraphs (p) to set their text color to blue
 
 Description: Selects all elements with a specific class attribute
 
-```bash copy
+```bash copy filename="Css"
 .classname {
     font-size: 20px;
 }
@@ -74,7 +74,7 @@ Usage: Styles multiple elements with the class "classname"
 
 Description: Selects a single element with a specific ID attribute
 
-```bash copy
+```bash copy filename="Css"
 #uniqueid {
     background-color: yellow;
 }
@@ -87,7 +87,7 @@ Usage: Targets a unique element with the ID "uniqueid"
 
 Description: Selects elements with a specific attribute or attribute value
 
-```bash copy
+```bash copy filename="Html"
 a[href] {
     color: red;
 }
@@ -103,7 +103,7 @@ Usage: Styles all anchor (a) tags with an href attribute, and makes anchor tags 
 
 Description: Selects elements that are descendants of another element
 
-```bash copy
+```bash copy filename="Css"
 div p {
     color: green;
 }
@@ -114,7 +114,7 @@ div p {
 
 Description: Selects elements that are direct children of a specified element
 
-```bash copy
+```bash copy filename="Css"
 ul > li {
     list-style-type: none;
 }
@@ -126,7 +126,7 @@ Usage: Styles list items (li) that are direct children of an unordered list (ul)
 
 Description: Selects an element that is immediately preceded by another element
 
-```bash copy
+```bash copy filename="Css"
 h1 + p {
     margin-top: 0;
 }
@@ -138,7 +138,7 @@ Usage: Targets a paragraph (p) immediately following a heading (h1)
 
 Description: Selects all elements that are siblings of a specified element
 
-```bash copy
+```bash copy filename="Css"
 h1 ~ p {
     color: purple;
 }
@@ -151,7 +151,7 @@ Usage: Styles all paragraphs (p) that are siblings of a heading (h1)
 
 Description: Selects elements based on their state or position
 
-```bash copy
+```bash copy filename="Css"
 a:hover {
     color: orange;
 }
@@ -166,7 +166,7 @@ Usage: Changes the color of links when hovered (:hover) and makes the first chil
 
 Description: Selects and styles parts of an element
 
-```bash copy
+```bash copy filename="Css"
 
 p::first-line {
     font-variant: small-caps;
@@ -195,7 +195,7 @@ CSS colors are used to define the color properties of HTML elements, including t
 
 Description: CSS provides 140 predefined color names that can be used directly
 
-```bash copy
+```bash copy filename="Css"
 p {
     color: red;
 }
@@ -210,7 +210,7 @@ Description: Hex values represent colors using a combination of six hexadecimal 
 
 **Format:** #RRGGBB
 
-```bash copy
+```bash copy filename="Css"
 h1 {
     color: #ff6347; /* tomato */
 }
@@ -224,7 +224,8 @@ Description: Similar to RGB but with an additional alpha component for transpare
 
 **Format:** rgba(red, green, blue, alpha)
 
-```bash copy.overlay {
+```bash copy filename="Css"
+.overlay {
     background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
 }
 ```
@@ -237,7 +238,7 @@ Description: The HSL color model defines colors using hue, saturation, and light
 
 **Format:** hsl(hue, saturation%, lightness%)
 
-```bash copy
+```bash copy filename="Css"
 .box {
     border-color: hsl(9, 100%, 64%); /* tomato */
 }
@@ -251,7 +252,7 @@ Description: Similar to HSL but with an additional alpha component for transpare
 
 **Format:** hsla(hue, saturation%, lightness%, alpha)
 
-```bash copy
+```bash copy filename="Css"
 .highlight {
     background-color: hsla(9, 100%, 64%, 0.5); /* semi-transparent tomato */
 }
@@ -275,7 +276,7 @@ CSS colors can be applied to many different HTML tags to enhance the visual appe
 
 Tag: (p), (h1), (h2), (h3), (h4), (h5), (h6), (span),(a)
 
-```bash copy
+```bash copy filename="Html"
 Tag: <p>, <h1>, <h2>, <h3>, <h4>, <h5>, <h6>, <span>, <a>
 
 p {
@@ -294,7 +295,7 @@ a {
 
 Tag: (body), (div), (section), (article), (header), (footer), (nav), (aside)
 
-```bash copy
+```bash copy filename="Css"
 Tag: <body>, <div>, <section>, <article>, <header>, <footer>, <nav>, <aside>
 
 body {
@@ -314,7 +315,7 @@ header {
 
 Tag: (div), (img), (table), (th), (td), (input), (textarea)
 
-```bash copy
+```bash copy filename="Css"
 
 Tag: <div>, <img>, <table>, <th>, <td>, <input>, <textarea>
 
@@ -332,7 +333,7 @@ table {
 
 #### Color with Hover Effect:
 
-```bash copy
+```bash copy filename="Css"
 
 Tag: <a>, <button>, <div>
 
@@ -354,7 +355,7 @@ button:hover {
 
 #### Color with Transparency
 
-```bash copy
+```bash copy filename="Css"
 
 .overlay {
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background for an overlay */
@@ -372,7 +373,7 @@ button {
 
 Tag: (input), (textarea), (select), (button)
 
-```bash copy
+```bash copy filename="Css"
 
 Tag: <input>, <textarea>, <select>, <button>
 
@@ -418,7 +419,7 @@ Margins are the space outside the border of an element. They create space betwee
 
 **Negative values** (e.g., -10px, -0.5em): Allows elements to overlap or get closer
 
-```bash copy
+```bash copy filename="Css"
 
 .box {
     margin: 10px; /* Applies 10px margin on all sides */
@@ -447,7 +448,7 @@ Description: Padding is the space between the content of an element and its bord
 
 **Percentage values** (e.g., 5%, 10%): Specifies a padding relative to the width of the containing element.
 
-```bash copy
+```bash copy filename="Css"
 .content {
     padding: 20px; /* Applies 20px padding on all sides */
 }

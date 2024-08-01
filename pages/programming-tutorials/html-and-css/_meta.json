@@ -10,5 +10,10 @@
   "sass": "Sass - Css with Superpowers",
   "assignments": "Html and Css Assignment",
   "html-css-projects": "Building projects with Html and Css",
-  "html-css-advanced": "Css Advanced Concepts"
+  "css-variables": "Css variables",
+  "css-flex": "Css Flexbox",
+  "css-grid": "Css Grid",
+  "css-forms": "Css Forms",
+  "css-clippath": "Css Clip-path",
+  "css-animations": "Css Animations"
 }

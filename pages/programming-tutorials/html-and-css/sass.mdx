@@ -1,4 +1,6 @@
-import { Steps } from 'nextra/components'
+import { Steps } from 'nextra/components';
+import { FileTree } from 'nextra/components';
+import { Callout } from 'nextra/components';
 
 #### Introduction
 
@@ -21,9 +23,9 @@ Launch Visual Studio Code.
 #### Enabling Live Compilation
 
 **Open an SCSS File:** Create or open an SCSS file (.scss extension) in your project.
-Activate Live Sass:
 
-**On the status Bar:** Look for a button in the status bar at the bottom that might say "Click to Watch Sass" or a similar indication. Click it to enable live compilation.
+**Activate Live Sass:**
+On the status Bar, Look for a button in the status bar at the bottom that might say "Click to Watch Sass" or a similar indication. Click it to enable live compilation.
 
 
 #### **Why we use Sass?**
@@ -32,7 +34,30 @@ Activate Live Sass:
 
 **Enhanced Features:** Sass offers functionalities not available in vanilla CSS, including operations, functions for color manipulation, and control flow statements.
 
-### Key Features of Sass
+### **Key Features of Sass**
+
+##### An HTML example to use 
+
+```HTML5 copy filename="index.html"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<nav>
+<ul>
+<li>
+<a href='#'>Hello world</a>
+<li>
+</ul>
+</nav>
+</body>
+</html>
+```
 
 **Variables:** Variables in Sass make it easy to manage and reuse values eg colors, fonts etc throughout your stylesheet.
 ```SCSS copy
@@ -48,9 +73,9 @@ body {
 ```
 
 **Nesting:** Nesting in Sass allows you to write your CSS in a nested hierarchy that follows the same visual structure of your HTML. This makes it easier to read and maintain.
-```SCSS copy
+```SCSS copy filename="Html"
+//all other tags are placed inside a the nav tag
 nav {
-//all other tags are placed inside a 
   ul {
     margin: 0;
     padding: 0;
@@ -66,3 +91,29 @@ nav {
   }
 }
 ```
+
+**Partials:** Partials are Sass files that contain little code snippets of CSS that can be included in other Sass files. They are named with a leading underscore '(_)'. This helps in keeping your styles organized and maintainable, especially in large projects.  All these files can be inside one folder which is mostly named as **partials.** In that folder there are two files to always start and they include; 
+
+the one which includes all the variables for example variables for fonts, colors and many more and it usually name **_variables.scss.**
+
+the one which includes all the changes that afffect the whole websites eg fonts, colors and many more and it usually name **_globels.scss.**
+
+ The order is as follows.
+
+<FileTree>
+  <FileTree.Folder name="partials" defaultOpen>
+    <FileTree.File name="_globels.scss" />
+    <FileTree.File name="_variables.scss" />
+      </FileTree.Folder>
+</FileTree>
+
+**Importing Partials:** To use a partials in your main Sass file **(style.scss)**, use the **@import** directive. When you import a partial, you do not include the underscore or the file extension as shown below;
+
+```scss copy filename="style.scss"
+@import './partials/variables';
+@import './partials/globels';
+```
+ <Callout type="info" emoji="ℹ️">
+  Take caution that the variables files must always be the first when importing.
+</Callout>
+ 
