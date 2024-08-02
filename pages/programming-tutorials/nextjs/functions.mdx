@@ -1,0 +1,466 @@
+# Useful Reusable Functions, Server actions and Hooks
+
+import { Tabs } from 'nextra/components'
+ 
+<Tabs items={['utils', 'actions', 'hooks']}>
+  <Tabs.Tab>
+  ## Convert Date to Iso
+
+```ts copy
+export function convertDateToIso(dateStr: string): string {
+  // Ensure the input is in the correct format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error('Invalid date format. Expected "YYYY-MM-DD".');
+  }
+
+  // Append the time and timezone information to the date string
+  const prismaDateTime = `${dateStr}T00:00:00.000Z`;
+  return prismaDateTime;
+}
+```
+
+## Convert ISO Date to Date String
+
+```ts copy
+export function convertIsoToDateString(
+  prismaDate: Date | string | undefined
+): string {
+  if (prismaDate === undefined) {
+    throw new Error("Invalid input: date is undefined.");
+  }
+
+  // If the input is a string, convert it to a Date object
+  let dateObject: Date;
+  if (typeof prismaDate === "string") {
+    dateObject = new Date(prismaDate);
+    if (isNaN(dateObject.getTime())) {
+      throw new Error("Invalid input: date string is not valid.");
+    }
+  } else if (prismaDate instanceof Date) {
+    dateObject = prismaDate;
+  } else {
+    throw new Error(
+      "Invalid input: date must be a Date object or an ISO string."
+    );
+  }
+
+  // Convert the Date object to ISO string format and extract the date part
+  const isoString = dateObject.toISOString();
+  const dateString = isoString.split("T")[0];
+  return dateString;
+}
+```
+
+## Date Filters
+
+```ts copy
+// utils/dateFilters.ts
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
+
+export const filterByToday = (data: any[]): any[] => {
+  const today = dayjs().startOf("day");
+  return data.filter((item) => dayjs(item.createdAt).isSame(today, "day"));
+};
+
+export const filterByYesterday = (data: any[]): any[] => {
+  const yesterday = dayjs().subtract(1, "day").startOf("day");
+  return data.filter((item) => dayjs(item.createdAt).isSame(yesterday, "day"));
+};
+
+export const filterByLast7Days = (data: any[]): any[] => {
+  const last7Days = dayjs().subtract(7, "day").startOf("day");
+  return data.filter((item) => dayjs(item.createdAt).isAfter(last7Days));
+};
+
+export const filterByThisMonth = (data: any[]): any[] => {
+  const startOfMonth = dayjs().startOf("month");
+  return data.filter((item) => dayjs(item.createdAt).isAfter(startOfMonth));
+};
+
+export const filterByThisYear = (data: any[]): any[] => {
+  const startOfYear = dayjs().startOf("year");
+  return data.filter((item) => dayjs(item.createdAt).isAfter(startOfYear));
+};
+
+export const filterByDateRange = (
+  data: any[],
+  startDate: string,
+  endDate: string
+): any[] => {
+  const start = dayjs(startDate).startOf("day");
+  const end = dayjs(endDate).endOf("day");
+  return data.filter((item) =>
+    dayjs(item.createdAt).isBetween(start, end, null, "[]")
+  );
+};
+```
+
+## Prisma Global Instance with Transaction
+
+```ts copy
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+export const prisma =
+  globalThis.prisma ||
+  new PrismaClient({
+    transactionOptions: {
+      maxWait: 5000, // default: 2000
+      timeout: 10000, // default: 5000
+    },
+  });
+if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
+
+export default prisma;
+```
+
+## Export Data to Excel
+
+```ts copy
+import * as XLSX from "xlsx";
+
+export default function exportDataToExcel(data: any[], filename: string) {
+  // Create a new workbook
+  const workbook = XLSX.utils.book_new();
+
+  // Convert the array of objects to a worksheet
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+  // Write the workbook to a file
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
+}
+```
+
+## Format File Size in KB ,MB, GB
+
+```ts copy
+export function formatBytes(bytes: number): string {
+  const kilobyte = 1024;
+  const megabyte = kilobyte * 1024;
+  const gigabyte = megabyte * 1024;
+
+  if (bytes < kilobyte) {
+    return bytes + " B";
+  } else if (bytes < megabyte) {
+    return (bytes / kilobyte).toFixed(2) + " KB";
+  } else if (bytes < gigabyte) {
+    return (bytes / megabyte).toFixed(2) + " MB";
+  } else {
+    return (bytes / gigabyte).toFixed(2) + " GB";
+  }
+}
+```
+
+## Format Money Currency to have commas
+
+```ts copy
+export function formatMoney(amount: number): string {
+  return amount.toLocaleString("en-US");
+}
+```
+
+## Generate Initials from a name
+
+```ts copy
+export function getInitials(name: string | null | undefined): string {
+  if (name) {
+    // Split the name by spaces
+    const nameParts = name.split(" ");
+
+    // Map over the parts and take the first character of each
+    const initials = nameParts.map((part) => part.charAt(0).toUpperCase());
+
+    // Join the initials together
+    return initials.join("");
+  } else {
+    return "CN";
+  }
+}
+
+// Example usage
+const initials = getInitials("Muke John");
+console.log(initials); // Outputs: MJ
+```
+
+## Generate Order Numbers
+
+```ts copy
+export function generateOrderNumber(): string {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let orderNumber = "";
+  for (let i = 0; i < 8; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    orderNumber += characters[randomIndex];
+  }
+  return orderNumber;
+}
+```
+
+## Generate a Strong Password
+
+```ts copy
+export function generatePassword(): string {
+  const length = 8;
+  const charset =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
+  let password = "";
+  let hasUppercase = false;
+  let hasLowercase = false;
+  let hasDigit = false;
+  let hasSpecial = false;
+
+  while (
+    !hasUppercase ||
+    !hasLowercase ||
+    !hasDigit ||
+    !hasSpecial ||
+    password.length < length
+  ) {
+    const char = charset[Math.floor(Math.random() * charset.length)];
+    password += char;
+
+    if (/[A-Z]/.test(char)) hasUppercase = true;
+    if (/[a-z]/.test(char)) hasLowercase = true;
+    if (/[0-9]/.test(char)) hasDigit = true;
+    if (/[@$!%*?&]/.test(char)) hasSpecial = true;
+  }
+  // console.log(password);
+  return password;
+}
+```
+
+## Gnerate Slug
+
+```ts copy
+export function generateSlug(title: string): string {
+  // Convert title to lowercase and replace spaces with dashes
+  const slug = title.toLowerCase().replace(/\s+/g, "-");
+
+  // Remove special characters except for dashes
+  const cleanedSlug = slug.replace(/[^\w\-]/g, "");
+
+  return cleanedSlug;
+}
+```
+
+## Get Current Date and Time
+
+```ts copy
+export function getCurrentDateAndTime() {
+  // Create a new Date object
+  const now = new Date();
+
+  // Get the date components
+  const day = String(now.getDate()).padStart(2, "0"); // Get day and pad with leading zero if needed
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Get month (0-indexed) and pad with leading zero
+  const year = now.getFullYear(); // Get full year
+
+  // Get the time components
+  let hours = now.getHours(); // Get hours
+  const minutes = String(now.getMinutes()).padStart(2, "0"); // Get minutes and pad with leading zero
+  const ampm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
+
+  hours = hours % 12; // Convert to 12-hour format
+  hours = hours ? hours : 12; // If hour is 0, make it 12
+
+  // Format the date and time
+  const currentDate = `${day}-${month}-${year}`;
+  const currentTime = `${hours}:${minutes} ${ampm}`;
+
+  return { currentDate, currentTime };
+}
+```
+
+## Get Normal Date
+
+```ts copy
+export function getNormalDate(inputDate: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  };
+  const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
+    inputDate
+  );
+
+  // Add ordinal suffix to the day
+  const day = inputDate.getDate();
+  const suffix =
+    day === 1 || day === 21 || day === 31
+      ? "st"
+      : day === 2 || day === 22
+      ? "nd"
+      : day === 3 || day === 23
+      ? "rd"
+      : "th";
+  return formattedDate.replace(/\b(\d{1,2})\b/, `$1${suffix}`);
+}
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ## Server Actions in next js
+
+```ts copy
+"use server";
+
+import { CategoryProps, ExcelCategoryProps } from "@/types/types";
+import prisma from "@/lib/db";
+import { revalidatePath } from "next/cache";
+```
+
+## Create a New Category
+
+```ts copy
+export async function createCategory(data: CategoryProps) {
+  const slug = data.slug;
+  try {
+    const existingCategory = await prisma.category.findUnique({
+      where: {
+        slug,
+      },
+    });
+    if (existingCategory) {
+      return existingCategory;
+    }
+    const newCategory = await prisma.category.create({
+      data,
+    });
+    // console.log(newCategory);
+    revalidatePath("/dashboard/inventory/categories");
+    return newCategory;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+```
+
+## Get All Categories from the DB
+
+```ts copy
+export async function getAllCategories() {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        mainCategory: true,
+      },
+    });
+
+    return categories;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+```
+
+## Create Bulk Categories
+
+```ts copy
+export async function createBulkCategories(categories: CategoryProps[]) {
+  try {
+    for (const category of categories) {
+      await createCategory(category);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## Get a Category By id
+
+```ts copy
+export async function getCategoryById(id: string) {
+  try {
+    const category = await prisma.category.findUnique({
+      where: {
+        id,
+      },
+    });
+    return category;
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## Get a category by id
+
+```ts copy
+export async function updateCategoryById(id: string, data: CategoryProps) {
+  try {
+    const updatedCategory = await prisma.category.update({
+      where: {
+        id,
+      },
+      data,
+    });
+    revalidatePath("/dashboard/inventory/categories");
+    return updatedCategory;
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## Delete a Category By ID
+
+```ts copy
+export async function deleteCategory(id: string) {
+  try {
+    const deletedCategory = await prisma.category.delete({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      ok: true,
+      data: deletedCategory,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## Delete Many Categories
+
+```ts copy
+export async function deleteManyCategories() {
+  try {
+    await prisma.category.deleteMany();
+
+    return {
+      ok: true,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ## Hooks 
+  Coming Soon
+  </Tabs.Tab>
+</Tabs
+
+>
