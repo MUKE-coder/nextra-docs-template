@@ -456,6 +456,68 @@ export async function deleteManyCategories() {
 }
 ```
 
+## Create User
+
+```ts copy
+export async function createUser(data: UserProps) {
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    name,
+    phone,
+    profileImage,
+    roleId,
+    status,
+  } = data;
+  try {
+    // Hash the PAASWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (existingUser) {
+      return {
+        error: `User with this email(${email}) already exists`,
+        status: 409,
+        data: null,
+      };
+    }
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        plainPassword: password,
+        firstName,
+        lastName,
+        name,
+        phone,
+        profileImage,
+        roleId,
+        status,
+      },
+    });
+    revalidatePath("/dashboard/users");
+    // console.log(newUser);
+    return {
+      error: null,
+      status: 200,
+      data: newUser,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      error: `Something Went wrong, Please try again`,
+      status: 500,
+      data: null,
+    };
+  }
+}
+```
+
   </Tabs.Tab>
   <Tabs.Tab>
   ## Hooks 
