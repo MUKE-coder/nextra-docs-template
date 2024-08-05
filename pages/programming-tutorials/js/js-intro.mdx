@@ -1,3 +1,6 @@
+import Image from 'next/image';
+
+
 ### **What is JavaScript?**
 JavaScript is a programming language that is commonly used to add interactive features to websites. It is a client-side language, which means that it is executed by the user's web browser rather than on a server. This allows for the creation of dynamic and responsive web pages that can interact with users in real-time.
 ### **Key Features of JavaScript**
@@ -33,7 +36,44 @@ const country = 'USA';
 ```
 **3. Data Types:** JavaScript supports various data types:
      
-     **String:**  A sequence of characters, represented by enclosing the characters in quotes (single or double). Examples: "Hello", 'World', '20'.
+     **a. String:**  A sequence of characters, represented by enclosing the characters in quotes (single or double). Examples: "Hello", 'World', '20'.
+     To find the length of a string, use the built-in length property:
+     ```js copy
+     let alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+     let numberOfAlphabets = alphabets.length;
+    
+    console.log(numberOfAlphabets)
+    //it will display 26 on th browser console.
+     ```
+     **String Methods:** These are methods that allow you to perform operations such as searching, modifying, and analyzing strings.
+       
+    **String slice():** slice() extracts a part of a string and returns the extracted part in a new string. The method takes 2 parameters: start position, and end position (end not included).
+
+    slice(start, end): This method extracts a part of a string by specifying the start and end index of the substring to be extracted. The start index is inclusive and the end index is exclusive, meaning that the substring will include all characters from the start index up to, but not including, the end index. For example
+    ```js copy
+   // Declare a variable 'str' and assign it the string value "Hello World"
+let str = "Hello World";
+
+// Use the 'slice' method on the string 'str'.
+// The 'slice' method extracts a section of the string and returns it as a new string.
+// The 'slice' method takes two arguments: the start index and the end index (not inclusive).
+// In this case, slice(0, 5) means: start at index 0 (the first character) and end at index 5 (not including the character at index 5).
+console.log(str.slice(0, 5)); // This will output the substring "Hello"
+ ```
+ **How the it was done**
+ <Image src="/how.png" className='rounded-md' alt="Hello" width={337} height={135} />
+
+substring(start, end): This method works similarly to slice(), but it does not accept negative indexes. It also corrects the order of start and end if it's passed in reverse order, which means substring(end, start) will give you the same result as substring(start, end) 
+ 
+
+
+
+
+
+
+
+
+
 
      **Number:**  A numerical value. Examples: 123, 3.14.
 
@@ -243,7 +283,7 @@ if (time < 12) {
 
 **6. Functions:** 
 
-Functions are reusable blocks of code.
+In JavaScript, a function is a block of code that performs a specific task and can be reused throughout your code. Functions are an important aspect of JavaScript and are used to structure and organize your code in a logical and reusable way.
 
 ```js copy
 // Function declaration

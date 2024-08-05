@@ -1,5 +1,6 @@
 import { FileTree } from 'nextra/components';
 import { Callout } from 'nextra/components';
+import Image from 'next/image';
 
 ### Getting Started with JavaScript.
 **Where to write JavaScript**
@@ -253,7 +254,70 @@ for (let i = 0; i < 10; i++) {
 ```
 In this example, the loop will terminate when i is 5 and the break statement is encountered. The output will be the numbers 0 through 4.
 
+**continue:** The continue statement is used to skip the rest of the current iteration of a loop and move on to the next one. It can also be used in any type of loop. When the continue statement is encountered, the loop's counter is updated and the flow of control returns to the loop's condition.
+```js copy
+let i = 0;
+while (i < 10) {
+  i++;
+  if (i % 2 == 0) {
+    continue;
+  }
+  console.log(i);
+}
+```
+In this example, the continue statement will skip the rest of the current iteration when i is even and move on to the next iteration. The output will be the odd numbers 1 through 9
 
+### Javascript Functions
+
+**Javascript Function types**
+
+**Function declarations:** Function declarations are created using the function keyword, followed by the function name and a set of parentheses that may include parameters. The function body is placed between curly braces. Function declarations are hoisted, which means that they are available for use throughout your code, even before they are defined. Here is an example of a function declaration:
+```js copy 
+function sayHello(name) {
+  console.log("Hello, " + name + "!");
+}
+```
+**Function expressions:** Function expressions are created by assigning a function to a variable. They are not hoisted, which means that they are not available for use until after they are defined. Here is an example of a function expression:
+```js copy
+var sayHello = function(name) {
+  console.log("Hello, " + name + "!");
+}
+```
+**Arrow functions:** Arrow functions are a modern way to write functions in JavaScript. They are created using the => syntax and are concise and easy to read. Arrow functions do not have their own this value and cannot be used as constructors. Here is an example of an arrow function:
+```js copy
+const sayHello = (name) => {
+  console.log("Hello, " + name + "!");
+};
+```
+**Calling(Invoking Functions):** To call a function in JavaScript, you simply need to use its name followed by a set of parentheses that may include arguments. For example:
+```js copy
+function sayHello(name) {
+  console.log("Hello, " + name + "!");
+}
+
+//Calling the function
+
+sayHello("John");
+
+//It will display Hello John! on the browser console
+```
+**function parameters:** are the names listed in the function definition and are used to receive input values (arguments) when the function is called. The function can then use these parameters to perform its task. For example:
+```js copy
+function add(a, b) {
+  return a + b;
+}
+Sum = add(1, 2);
+
+console.log(sum); 
+//It will the result after adding 1 and 2 which 3.
+```
+In this example, the add function accepts two parameters, a and b, and returns their sum. When the function is called with the arguments 1 and 2, it returns the value 3.
+<Callout emoji="💡">
+A **'return statement'** is used within a function to specify the value that the function should output when it is called. The return statement ends the function's execution and specifies the value that should be returned to the caller. If a function does not have a return statement, it will return the special value undefined. 
+</Callout>
+
+**ANATOMY OF A FUNCTION:**
+<Image src="/fnanatomy.png" className='mt-[2rem] rounded-md' alt="Hello" width={986} height={488} />
 
 
 
