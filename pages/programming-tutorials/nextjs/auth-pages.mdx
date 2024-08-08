@@ -1,0 +1,342 @@
+import { Tabs } from "nextra/components";
+import { FileTree } from "nextra/components";
+
+# Authentication Pages with Logic
+
+Start by Creating a auth group and add all the auth Pages as shown below
+
+<FileTree>
+  <FileTree.Folder name="(auth)" defaultOpen>
+    <FileTree.Folder name="change-password">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="forgot-password">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="login">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="register">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="verify-account">
+      <FileTree.File name="page.tsx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+## Register Page
+
+<Tabs items={["page", "component"]}>
+  <Tabs.Tab>
+    ```tsx copy  
+import LoginForm from "@/components/frontend/LoginForm";
+import RegisterForm from "@/components/frontend/RegisterForm";
+import { Lock, Mail } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+
+export default function page() {
+  return (
+    <section>
+      <div className="md:container px-4 md:px-0">
+        <div className="border-gray-200 dark:border-gray-700 max-w-xl mx-auto border my-3 shadow rounded-md ">
+          <RegisterForm />
+        </div>
+      </div>
+    </section>
+  );
+}
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```tsx copy 
+import { Eye, EyeOff, Headset, Loader2, Lock, Mail, User } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { UserProps } from "@/types/types";
+import TextInput from "../global/FormInputs/TextInput";
+import PasswordInput from "../global/FormInputs/PasswordInput";
+import SubmitButton from "../global/FormInputs/SubmitButton";
+
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { createUser } from "@/actions/users";
+export default function RegisterForm() {
+  const [loading, setLoading] = useState(false);
+  const [emailErr, setEmailErr] = useState<string | null>(null);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    reset,
+  } = useForm<UserProps>();
+  const router = useRouter();
+  async function onSubmit(data: UserProps) {
+    setLoading(true);
+    data.name = `${data.firstName} ${data.lastName}`;
+    data.status = true;
+    data.profileImage =
+      "https://utfs.io/f/59b606d1-9148-4f50-ae1c-e9d02322e834-2558r.png";
+    data.roleId = "666679228a65b2eadc3fe771";
+    try {
+      const res = await createUser(data);
+      if (res.status === 409) {
+        setLoading(false);
+        setEmailErr(res.error);
+      } else if (res.status === 200) {
+        setLoading(false);
+        toast.success("Account Created successfully");
+        router.push("/login");
+      } else {
+        setLoading(false);
+        toast.error("Something went wrong");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Network Error:", error);
+      toast.error("Its seems something is wrong, try again");
+    }
+  }
+  return (
+    <div className="w-full py-5 lg:px-8 px-6">
+      <div className="">
+        <div className="py-4">
+          <h2 className=" text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-gray-100">
+            Create an account
+          </h2>
+          <p className="text-xs">Join Us, fill in details to login</p>
+        </div>
+      </div>
+      <div className="">
+        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextInput
+              register={register}
+              errors={errors}
+              label="First Name"
+              name="firstName"
+              icon={User}
+              placeholder="first Name"
+            />
+            <TextInput
+              register={register}
+              errors={errors}
+              label="Last Name"
+              name="lastName"
+              icon={User}
+              placeholder="last Name"
+            />
+          </div>
+          <TextInput
+            register={register}
+            errors={errors}
+            label="Phone"
+            name="phone"
+            icon={Headset}
+            placeholder="phone"
+          />
+          <TextInput
+            type="email"
+            register={register}
+            errors={errors}
+            label="Email Address"
+            name="email"
+            icon={Mail}
+            placeholder="email"
+          />
+          {emailErr && <p className="text-red-500 text-xs -mt-2">{emailErr}</p>}
+          <PasswordInput
+            register={register}
+            errors={errors}
+            label="Password"
+            name="password"
+            icon={Lock}
+            placeholder="password"
+            type="password"
+          />
+          <div>
+            <SubmitButton
+              title="Sign Up"
+              loadingTitle="Creating Please wait.."
+              loading={loading}
+              className="w-full"
+              loaderIcon={Loader2}
+              showIcon={false}
+            />
+          </div>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Alrealy Registered ?{" "}
+          <Link
+            href="/login"
+            className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+          >
+            Login
+          </Link>
+        </p>
+      </div>
+    </div>
+
+);
+}
+
+````
+
+</Tabs.Tab>
+
+</Tabs>
+
+## Login Page
+
+<Tabs items={["page", "component"]}>
+  <Tabs.Tab>
+    ```ts copy
+import LoginForm from "@/components/frontend/LoginForm";
+import { authOptions } from "@/config/authOptions";
+import { Lock, Mail } from "lucide-react";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import React from "react";
+
+export default async function page() {
+  const session = await getServerSession(authOptions);
+  if (session) {
+    redirect("/dashboard");
+  }
+  return (
+    <section>
+      <div className="md:container px-4 md:px-0">
+        <div className="border-gray-200 dark:border-gray-700 max-w-md mx-auto border my-3 shadow rounded-md ">
+          <LoginForm />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+````
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+   ```tsx copy 
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import TextInput from "../global/FormInputs/TextInput";
+import PasswordInput from "../global/FormInputs/PasswordInput";
+import SubmitButton from "../global/FormInputs/SubmitButton";
+import { LoginProps } from "@/types/types";
+import toast from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+export default function LoginForm() {
+  const [loading, setLoading] = useState(false);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    reset,
+  } = useForm<LoginProps>();
+  const params = useSearchParams();
+  const returnUrl = params.get("returnUrl") || "/dashboard";
+  const [passErr, setPassErr] = useState("");
+  const router = useRouter();
+  async function onSubmit(data: LoginProps) {
+    try {
+      setLoading(true);
+      setPassErr("");
+      console.log("Attempting to sign in with credentials:", data);
+      const loginData = await signIn("credentials", {
+        ...data,
+        redirect: false,
+      });
+      console.log("SignIn response:", loginData);
+      if (loginData?.error) {
+        setLoading(false);
+        toast.error("Sign-in error: Check your credentials");
+        setPassErr("Wrong Credentials, Check again");
+        // setShowNotification(true);
+      } else {
+        // Sign-in was successful
+        // setShowNotification(false);
+        reset();
+        setLoading(false);
+        toast.success("Login Successful");
+        setPassErr("");
+        router.push(returnUrl);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Network Error:", error);
+      // toast.error("Its seems something is wrong with your Network");
+    }
+  }
+  return (
+    <div className="w-full py-5 lg:px-8 px-6">
+      <div className="">
+        <div className="py-4">
+          <h2 className=" text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-gray-100">
+            Login in to your account
+          </h2>
+          <p className="text-xs">Welcome Back, fill in details to login</p>
+        </div>
+      </div>
+      <div className="">
+        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
+          <TextInput
+            register={register}
+            errors={errors}
+            label="Email Address"
+            name="email"
+            icon={Mail}
+            placeholder="email"
+          />
+          <PasswordInput
+            register={register}
+            errors={errors}
+            label="Password"
+            name="password"
+            icon={Lock}
+            placeholder="password"
+            forgotPasswordLink="/forgot-password"
+          />
+          {passErr && <p className="text-red-500 text-xs">{passErr}</p>}
+          <div>
+            <SubmitButton
+              title="Sign In"
+              loadingTitle="Loading Please wait.."
+              loading={loading}
+              className="w-full"
+              loaderIcon={Loader2}
+              showIcon={false}
+            />
+          </div>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Not a Registered ?{" "}
+          <Link
+            href="/register"
+            className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+          >
+            Create Account
+          </Link>
+        </p>
+      </div>
+    </div>
+
+);
+}
+
+```
+
+</Tabs.Tab>
+
+</Tabs>
+
+```
