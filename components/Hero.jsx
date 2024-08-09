@@ -21,19 +21,17 @@ export default function Hero() {
         <div className="container px-5 py-6 pb-14 text-left transition-opacity duration-300 sm:px-0 sm:py-20 sm:text-center">
           <p className="-mt-4 sm:-mt-10 mb-7">
             <Link
-              href="https://www.youtube.com/@JBWEBDEVELOPER"
+              href="https://coding-school-typescript.vercel.app/courses/next"
               className="rounded-md border border-dashed border-purple-700 px-3 py-1.5 text-purple-400 transition-colors hover:border-gray-700 hover:text-white"
             >
-              <span className="relative -top-[0.5px] mr-1 text-xs font-semibold uppercase text-white">
-                Welcome
+              <span className="relative -top-[0.5px] mr-1 text-xs font-semibold text-white">
+                Introducing
               </span>
               <span className="hidden sm:inline">
-                to Our new Desishub Docs
-                <span className="font-semibold ms-2">By JB Web Developer</span>
+                Next Js
+                <span className="font-semibold ms-2"> Fullstack Course</span>
               </span>
-              <span className="inline sm:hidden">
-                Welcome to Our new Desishub Docs by JB
-              </span>
+              <span className="inline sm:hidden">Next Js Fullstack Course</span>
             </Link>
           </p>
           <h className="mb-2 bg-gradient-to-b from-amber-50 to-purple-500 bg-clip-text text-2xl font-bold text-transparent sm:mb-4 sm:text-5xl">
