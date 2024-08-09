@@ -1,0 +1,247 @@
+import { Callout } from "nextra/components";
+
+import Link from "next/link";
+
+## Css Videos
+
+Styling videos with CSS allows you to control their appearance and layout on your web page. You can set dimensions, apply borders, shadows, and control the display of video elements to create a more engaging and polished user experience.
+
+![Css-Videos](/Css-videos.jpg)
+
+### Basic Video Styling
+
+##### Setting Dimensions:
+
+```bash copy filename="Css"
+
+video {
+    width: 100%;
+    height: auto;
+}
+
+```
+
+**You can set the width and height of the video element using CSS.**
+
+##### Adding Borders and Shadows:
+
+```bash copy filename="Css"
+
+video {
+    border: 5px solid #4CAF50;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+```
+
+**Borders and shadows can enhance the appearance of your videos.**
+
+##### Rounding Corners:
+
+```bash copy filename="Css"
+
+video {
+    border-radius: 10px;
+}
+
+```
+
+**Applying a border-radius can give your videos rounded corners.**
+
+### Css Video Examples
+
+#### 1. Video Tag
+
+The video tag is used to embed video content directly into your HTML. It supports various attributes for control, such as autoplay, loop, and controls
+
+```bash copy filename="Html"
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Css Videos</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="video-section">
+      <h2>Videos</h2>
+      <video src="/video.MP4" controls></video>
+    </section>
+  </body>
+</html>
+
+
+```
+
+```bash copy filename="Css"
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+section {
+  background: aliceblue;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+.video-section video {
+  width: 100%;
+}
+
+
+```
+
+#### 2. Background Video
+
+A background video is used to create a dynamic and visually appealing background for a section of a webpage. This involves setting a video as the background of a container using CSS.
+
+```bash copy filename="Html"
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Css Videos</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="video-section">
+      <h2>Videos</h2>
+      <video src="/video.MP4" autoplay loop muted></video>
+      <div class="content">
+        <p>
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Qui alias
+          minus quis aliquid! Sit dolor aliquid numquam reiciendis expedita.
+          Repellat aliquam, rem numquam totam ex cupiditate amet non earum
+          doloremque.
+        </p>
+        <button>Learn More</button>
+      </div>
+    </section>
+  </body>
+</html>
+
+```
+
+```bash copy filename="Css"
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+section {
+  background: aliceblue;
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+.video-section video {
+  width: 100%;
+}
+
+.content {
+  position: absolute;
+  top: 50%;
+  max-width: 40%;
+  padding: 1rem;
+}
+p {
+  font-weight: 600;
+  font-size: 2rem;
+  color: aliceblue;
+}
+
+button {
+  padding: 0.5rem 2rem;
+  border-radius: 5px;
+  background: aqua;
+  cursor: pointer;
+  border: none;
+}
+
+```
+
+#### 3. Iframe Embed
+
+The iframe tag is used to embed videos hosted on platforms like YouTube and Vimeo. This method allows you to display external video content within your webpage.
+
+```bash copy filename="Html"
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Css Videos</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="yt-videos">
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/ZAnFM_F-6uc?si=JIFHWTZTMDss2ZCc"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </section>
+  </body>
+</html>
+
+```
+
+```bash copy filename="Css"
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+section {
+  background: aliceblue;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.yt-videos iframe {
+  width: 100%;
+  height: 100vh;
+}
+
+```
+
+<Callout type="info" emoji="ℹ️">
+  Styling videos with CSS allows you to create visually appealing and responsive
+  media elements. By using basic styling techniques, you can control the
+  dimensions, borders, and shadows of video elements. Advanced techniques, such
+  as responsive design and overlay text, enhance the user experience and make
+  your web pages more engaging. Mastering these CSS techniques will enable you
+  to effectively integrate and style videos within your web projects
+</Callout>
