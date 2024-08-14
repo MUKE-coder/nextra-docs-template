@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Callout } from 'nextra/components';
 
 
 ### **What is JavaScript?**
@@ -63,8 +64,96 @@ console.log(str.slice(0, 5)); // This will output the substring "Hello"
  **How the it was done**
  <Image src="/how.png" className='rounded-md' alt="Hello" width={337} height={135} />
 
-substring(start, end): This method works similarly to slice(), but it does not accept negative indexes. It also corrects the order of start and end if it's passed in reverse order, which means substring(end, start) will give you the same result as substring(start, end) 
+**substring(start, end)**: This method works similarly to slice(), but it does not accept negative indexes. It also corrects the order of start and end if it's passed in reverse order, which means substring(end, start) will give you the same result as substring(start, end). mc 
  
+**replace():** method is used to replace all occurrences of a specified value in a string with a new value. The method takes two arguments: the first argument is the value to be replaced, and the second argument is the new value that will replace the old value. The method returns a new string with the replaced values, and the original string remains unchanged, for example;
+```js copy
+let str = “Welcome to Microsoft";
+let newStr = str.replace(“Microsoft", “Desishub");
+console.log(newStr); // “Welcome to Desishub"
+
+```
+<Callout emoji="💡">
+The replace() method by default it replaces only the first match. If you want to replace all matches, use a regular expression with the /g flag set. See examples below.
+</Callout>
+```js copy
+let str = "Hello World, today the World is growing fast";
+let newStr = str.replace(/World/g, "JavaScript");
+console.log(newStr); // "Hello JavaScript, today the JavaScript is growing fast"
+```
+In this example, the regular expression /World/g is used to match the substring "World". The "g" flag is used to specify that the replacement should happen globally, which means all occurrences of the substring in the string will be replaced. 
+
+**Converting to Upper and Lower Case:** In JavaScript, you can convert a string to uppercase by using the toUpperCase() method and to lowercase by using the toLowerCase() method.
+```js copy
+let str = "Hello World";
+let upperStr = str.toUpperCase(); // "HELLO WORLD"
+let lowerStr = str.toLowerCase(); // "hello world"
+```
+
+**Joining strings Using concat():** The concat() method in JavaScript is used to join two or more strings together. The method can take any number of arguments and it returns a new string that is the concatenation of all the given strings.
+```js copy
+let str1 = "Hello";
+let str2 = "World";
+let newStr = str1.concat(" ", str2); // "Hello World"
+```
+You can also use the + operator to concatenate strings in JavaScript. The + operator is more commonly used for string concatenation.
+```js copy
+let str1 = "Hello";
+let str2 = "World";
+let newStr = str1 + " " + str2; // "Hello World"
+```
+
+**trim():** The trim() method removes whitespace from both sides of a string
+```js copy
+let text1 = "      Hello World!      ";
+let text2 = text1.trim();
+```
+<Callout emoji="💡">
+Note: ECMAScript 2019 added the String methods trimStart() and trimStart()  to JavaScript.
+The trimStart() method works like trim(), but removes whitespace only from the start of a string.
+The trimEnd() method works like trim(), but removes whitespace only from the end of a string.
+</Callout>
+
+**charAt(position):**  This method returns the character at the specified index (position) in a string. The first character has an index of 0, the second has an index of 1, and so on. If the specified index is out of range, the method returns an empty string.
+```js copy
+let str = "Hello World";
+let char = str.charAt(0); // "H"
+```
+
+**charCodeAt(position):** This method returns the Unicode of the character at the specified index in a string. The Unicode code is a unique number that represents each character in a string. 
+The method returns a UTF-16 code (an integer between 0 and 65535).
+```js copy
+let str = "Hello World";
+let code = str.charCodeAt(0); // 72
+```
+
+**Property access [ ]:** This is an alternative way of accessing individual characters in a string. You can use square brackets [] to access a character at a specific index.
+```js copy
+let str = "Hello World";
+let char = str[0]; // "H"
+```
+
+**split() method:** The split() method is used to split a string into an array of substrings based on a specified separator. By default, it splits the string into an array of characters if no separator is provided.
+```js copy
+let str = "Hello World";
+let charArray = str.split(""); // ["H", "e", "l", "l", "o", " ", "W", "o", "r", "l", "d"]
+
+//Using Space as a separator 
+let str = "Hello World";
+let words = str.split(" "); // ["Hello", "World"]
+
+ //Using Comma as a separator 
+let str = "apple,banana,orange";
+let fruits = str.split(","); // ["apple", "banana", "orange"]
+ 
+ //Using limit as a separator 
+let str = "apple,banana,orange,mango";
+let fruits = str.split(",",3); // ["apple", "banana", "orange,mango"]
+```
+<Callout emoji="💡">
+As you can see, the split() method takes a separator as its argument, and it can be a string, regular expression, or any other value that is used to split the string into an array of substrings. The separator is not included in the returned array, and if no separator is provided, it splits the string into an array of characters.
+You can also specify a limit to the number of times the separator can be used to split the string, if the limit is reached, the rest of the string will be considered as a single element of the array.
+</Callout>
 
 
 
@@ -75,15 +164,39 @@ substring(start, end): This method works similarly to slice(), but it does not a
 
 
 
-     **Number:**  A numerical value. Examples: 123, 3.14.
+     **b. Number:**  A numerical value. Examples: 123, 3.14.
 
-     **Boolean:** A value that can be either true or false. Used for taking Decisions.
+     **Number Methods:**
 
-     **Undefined:**  : A value that is assigned to a variable that has not been given a value yet.
+     **toString():**	Returns a number as a string
 
-     **Null:**  A special value that represents an absence of value.
+     **toExponential():**	Returns a number written in exponential notation
 
-     **Array:** Arrays store multiple values in a single variable.
+     **toFixed():**	Returns a number written with a number of decimals
+
+     **toPrecision():**	Returns a number written with a specified length
+
+     **ValueOf():**	Returns a number as a number
+
+     
+
+
+
+
+
+
+
+
+
+
+     **c. Boolean:** A value that can be either true or false. Used for taking Decisions.
+
+     **d. Undefined:**  : A value that is assigned to a variable that has not been given a value yet.
+
+     **e. Null:**  A special value that represents an absence of value.
+
+     **f. Array:** In JavaScript, arrays can be a collection of elements of any type. This means that you can create an array with elements of type String, Boolean, Number, Objects, and even other Arrays. A pair of square brackets [] represents an array in JavaScript. All the elements in the array are comma(,) separated. The position of an element in the array is known as its index. In JavaScript, the array index starts with 0, and it increases by one with each element.
+
 
      **Object:** Objects store data in key-value pairs.
      ```js copy
@@ -106,6 +219,13 @@ let person = {
   age: 40
 };
 ````
+
+
+
+
+
+
+
 
 **4. Operetors:**  operators allow you to manipulate data, make comparisons, and control the flow of your code. Here is a more detailed look at the various types of operators in JavaScript.
 
