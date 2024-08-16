@@ -1,0 +1,142 @@
+# MVC
+
+Developers follow various design patterns and practices to build their software systems.
+
+Most software development teams use the Model-View-Controller (MVC) software design pattern to improve maintainability and codebase quality.
+
+The MVC pattern motivates developers to divide the entire project into three interconnected layers to separate internal business logic from the application interface by creating an intermediate layer.
+
+We can use the MVC pattern in large-scale, production-level Node.js web apps to improve overall codebase quality.
+
+## What is Model-View-Controller (MVC)?
+
+MVC is simply a design or architectural pattern used in software engineering. Its main goal is to split large applications into specific sections that each have their own purpose.
+
+MVC also allows developers to logically structure applications in a secure way, which we will demonstrate in this tutorial. But first, let’s break down what each layer of the pattern provides.
+
+### Model
+
+As the name implies, a model is a design or structure that typically bounds with an OOP entity of a specific software system.
+
+In the case of MVC, the model determines how a database is structured, defining a section of the application that interacts with the database. The model layer holds the database connection/manipulation logic and exposes methods that only use model objects by putting an abstraction layer over raw data formats used by the database. The ORM libraries help us define models without worrying about database-to-model mapping.
+
+### View
+
+The view is where end users interact within the application. Simply put, this is where all the HTML template files go in MVC-architectured web apps. The view layer never communicates directly with the model — it communicates with the model layer strictly through the controller. In our case since we are building the API, our View can be Next JS or React Native
+
+### Controller
+
+The controller interacts with the model and serves the response and functionality to the view. When an end user makes a request, it’s sent to the controller, which interacts with the database.
+
+You can think of the controller as a waiter in a restaurant that handles customers’ orders, which in this case is the view. The waiter then goes to the kitchen, which is the model/database and gets food to serve the customers, which is the controller handling the request.
+
+Now, let’s Implement It
+
+## Versioning
+
+There are many ways of implemneting Versioning in a node js application eg header-based routing or route-based routing but for us we will user router based versioning
+
+### Route-Based Versioning
+
+Route-Based Versioning is a technique used in API development to manage different versions of your API. This method involves specifying the API version directly in the URL path.
+
+It allows developers to make changes or add new features to an API without affecting existing clients that rely on older versions.
+
+### Why Use Route-Based Versioning?
+
+- Backward Compatibility: Clients using older versions of the API won't be affected by changes in newer versions.
+- Gradual Upgrades: Allows clients to migrate to a newer version at their own pace.
+- Clear Organization: Helps in organizing and maintaining the codebase as different versions can have different implementations.
+
+Example of Route-Based Versioning
+Suppose you have an API that manages products. You might start with version 1 (v1) and later release version 2 (v2) with additional features or changes.
+
+Version 1: /api/v1/products - This version might return a list of products with basic details.
+
+Version 2: /api/v2/products - This version might return a list of products with more detailed information or different formatting.
+
+## Express Router
+
+Express Router is a feature of the Express framework that allows you to organize your routes into smaller, modular pieces.
+
+Instead of defining all routes directly in the main application file, you can create separate router files for different parts of your application (e.g., products, customers).
+
+This makes your codebase more organized and easier to manage, especially as your application grows.
+
+## How to Use Express Router with Route-Based Versioning
+
+- Create a Router File: Define your routes in a separate file using express.Router().
+- Use the Router in the Main App: Import the router into your main application file and use it with the desired version path.
+- Example Implementation
+  Step 1: Create a Router for Products
+  Create a new file productRouter.js (or productRouter.ts if using TypeScript):
+
+  ```ts copy
+  import express from "express";
+  const productRouter = express.Router();
+  // Define a route for getting all products
+  productRouter.get("/products", (req, res) => {
+    const products = [
+      { id: 1, name: "Laptop", price: 1000 },
+      { id: 2, name: "Phone", price: 500 },
+    ];
+    res.status(200).json(products); // Return the list of products with a 200 status
+  });
+  // Define a route for getting a single product by ID
+  productRouter.get("/products/:id", (req, res) => {
+    const productId = req.params.id;
+    const product = { id: productId, name: "Laptop", price: 1000 };
+    res.status(200).json(product); // Return the product with the specified ID
+  });
+  export default productRouter;
+  ```
+
+### Step 2: Use the Router in the Main Application
+
+In your main application file (e.g., app.js or index.js), import the router and use it with route-based versioning:
+
+```ts copy
+import express from "express";
+import productRouter from "./productRouter"; // Import the product router
+
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+app.use(express.json());
+
+// Use the product router with versioning
+app.use("/api/v1", productRouter); // Routes will be available under /api/v1
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+```
+
+### How It Works:
+
+Versioned API Endpoint: By using app.use('/api/v1', productRouter);, all routes defined in productRouter will be prefixed with /api/v1. This means that the /products route in the router will be accessible at /api/v1/products.
+
+Router Organization: Using express.Router() helps in organizing your routes into separate modules. For example, if you have routes for customers, you could create a customerRouter and use it like app.use('/api/v1', customerRouter);.
+
+Maintainability: This structure makes your API more maintainable and scalable as you can easily add more versions or route groups without cluttering your main application file.
+
+## Summary
+
+Route-Based Versioning: Helps you manage different versions of your API by including the version number in the URL path (e.g., /api/v1/products).
+
+Express Router: Allows you to organize your routes into modular pieces, making your codebase easier to manage. You can combine this with route-based versioning to clearly separate different versions of your API.
+
+## Working with Prisma
+
+Lets Create a folder called db in the src and the create db.ts file where our Prisma instance will live
+
+```ts copy
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+export const db = globalThis.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
+```
