@@ -1,4 +1,5 @@
 {
   "setup": "Node Set up with Typescript ",
-  "mvc": "MVC-Versioning and Routing "
+  "mvc": "MVC-Versioning and Routing ",
+  "jwt": "Implementing JWT "
 }

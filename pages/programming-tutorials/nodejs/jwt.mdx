@@ -1,0 +1,96 @@
+import { Steps } from "nextra/components";
+
+# How to create and implement Json Web Token (JWT) in node.js with express.js
+
+<Steps>
+
+### Step 1 : Install Required Packages
+
+```bash copy
+  npm i jsonwebtoken
+  npm install --save @types/jsonwebtoken
+```
+
+### Step 2 : Create a Token Generation Function
+
+```ts copy
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+interface SignOption {
+  expiresIn?: string | number;
+}
+const DEFAULT_SIGN_OPTION: SignOption = {
+  expiresIn: "1h",
+};
+export function generateAccessToken(
+  payload: JwtPayload,
+  options: SignOption = DEFAULT_SIGN_OPTION
+) {
+  const secret = process.env.SECRET_KEY;
+  // Use this command to generate SECRET_KEY: openssl rand -base64 32
+  const token = jwt.sign(payload, secret!, options);
+  return token;
+}
+```
+
+In this code:
+
+`jwt.sign(payload, secretKey, options)`: This function generates a new JWT token using the provided payload, secret key, and options.
+Important Note:
+
+- Secret Key: Make sure to replace 'yourSecretKey' with a strong and secure secret key in a production environment. It's essential to keep the secret key confidential to prevent token manipulation and unauthorized access to your application.
+  Contents for step 2.
+
+### Step 3: Add the token to the Logged in User
+
+- Crate Login Api and Implement JWT Authentication
+  api = '/auth/login'
+
+- Get The User Data From Body .
+- destructure the information from user.
+- Check the (email/user) exist in database or not .
+- if there is not any user with the email we send user not found.
+- if the (user) exist in database we will check the password is valid or not .
+- compare the password in database and the password in the request body.
+- if not matched send response that wrong password.
+- if the email and password is valid create a token .
+- To create a token JsonWebToken (JWT) receive's 3 parameter
+
+- Payload - This contains the claims or data you want to include in the token.
+- Secret Key - A secure key known only to the server used for signing the token.
+- expiration - Additional settings like token expiration or algorithm selection.
+- Don't Provide the secret openly, This secret is very sensitive for the server . keep it in the .env file. I am Keeping it Open just for demonstration.
+
+- After creating the token send the response.
+
+```ts copy
+if (isPasswordCorrect) {
+  const { password, ...userWithoutPass } = existingUser;
+  const accessToken = generateAccessToken(userWithoutPass);
+  const result = {
+    ...userWithoutPass,
+    accessToken,
+  };
+  return res.json(result).status(200);
+} else {
+  return res.status(403).json({
+    user: null,
+    error: "Wrong Credentials",
+  });
+}
+```
+
+</Steps>
+
+```ts copy
+export function convertDateToIso(dateStr: string): string {
+  // Ensure the input is in the correct format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error('Invalid date format. Expected "YYYY-MM-DD".');
+  }
+
+  // Append the time and timezone information to the date string
+  const prismaDateTime = `${dateStr}T00:00:00.000Z`;
+  return prismaDateTime;
+}
+```
