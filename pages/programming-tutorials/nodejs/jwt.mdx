@@ -82,17 +82,82 @@ if (isPasswordCorrect) {
 
 Now if we copy the token that we got after the login and go to https://jwt.io/ and past the token and press decode
 
-</Steps>
+### Step 4 : Verify the JWT
 
 ```ts copy
-export function convertDateToIso(dateStr: string): string {
-  // Ensure the input is in the correct format
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    throw new Error('Invalid date format. Expected "YYYY-MM-DD".');
+import express, { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+const app = express();
+
+// Secret key for signing the JWT (in a real app, store this securely)
+const secretKey = "your-secret-key";
+
+// Define a custom type for the request that includes the user property
+interface AuthenticatedRequest extends Request {
+  user?: string | JwtPayload;
+}
+
+// Middleware to verify JWT
+function verifyToken(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
+  const token = req.headers["authorization"];
+
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
   }
 
-  // Append the time and timezone information to the date string
-  const prismaDateTime = `${dateStr}T00:00:00.000Z`;
-  return prismaDateTime;
+  // Remove "Bearer " if the token is provided in "Bearer <token>" format
+  const tokenWithoutBearer = token.replace("Bearer ", "");
+
+  jwt.verify(tokenWithoutBearer, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Failed to authenticate token" });
+    }
+    // If the token is valid, save the decoded information to request for use in other routes
+    req.user = decoded;
+    next();
+  });
 }
+
+// Example protected route
+app.get(
+  "/protected",
+  verifyToken,
+  (req: AuthenticatedRequest, res: Response) => {
+    // If JWT is valid, return the protected content
+    res
+      .status(200)
+      .json({ message: "Welcome to the protected page!", user: req.user });
+  }
+);
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 ```
+
+### Protect the Route when a user makes a request
+
+```ts copy
+// Example protected route
+app.get("/protected", verifyToken, (req, res) => {
+  // If JWT is valid, return the protected content
+  res
+    .status(200)
+    .json({ message: "Welcome to the protected page!", user: req.user });
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+</Steps>
