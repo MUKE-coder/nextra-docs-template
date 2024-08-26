@@ -1,0 +1,140 @@
+import { Steps } from "nextra/components";
+import { FileTree } from "nextra/components";
+
+# Implementing Rate Limiting in Node.js with Express and TypeScript
+
+## Introduction
+
+Rate limiting is a fundamental mechanism for controlling the number of requests a client can make to a server in a given time frame. In a world where more than 30% of web traffic comes from malicious bots, that proactive strategy is critical to protect servers from abuse.
+
+## What Is Rate Limiting?
+
+- Rate limiting is a strategy for limiting network traffic by placing a cap on how often an actor can call the same API in a given time frame. That's essential for controlling the volume of requests a client can make to a server in a certain amount of time.
+
+- To better understand how this mechanism works, consider a scenario where you have a Node.js backend that exposes some public endpoints. Suppose a malicious user targets your server and writes a simple script to overload it with automated requests. The performance of your server will downgrade as a result, hindering the experience of all other users. In an extreme situation, your server may even go offline. By limiting the number of requests the same IP can make in a given time frame, you can avoid all that!
+
+Specifically, there are two approaches to rate limiting:
+
+- Blocking incoming requests: When a client exceeds the defined limits, deny its additional requests.
+- Slowing down requests: Introduce a delay for requests beyond the limits, making the caller wait longer and longer for a response.
+
+  ## Why You Need API Rate Limiting in Node.js
+
+- Implementing API rate limiting is crucial for maintaining stability, security, and fair usage of your Node.js application. In particular, controlling the rate at which requests are processed helps enforce usage limits, prevents server overloads, and safeguards against malicious attacks.
+
+Here's a closer look at scenarios where limiting requests in Node.js is especially useful:
+
+- Anti-bot and anti-scraping measures: Limiting the frequency of requests from a single source helps mitigate bot activity. Automated scripts might overload your public endpoints with a high volume of traffic, but rate limiting the incoming requests is an effective defense against that malicious behavior.
+- DoS attack prevention: Rate limiting is a key strategy to protect your backend against DoS (Denial of Service) attacks. By restricting the rate at which requests are accepted, you can reduce the impact of large-scale, coordinated attacks that attempt to overwhelm your server infrastructure.
+- Implementing limitations for paid plans: For applications offering different subscription tiers, rate limiting enables you to enforce usage limits based on a user's plan. This ensures that users can access resources only as frequently as determined by their plan
+
+In the following two sections, you'll learn how to integrate rate limiting behavior into a Node.js application using the following libraries:
+
+- express-rate-limit: To block requests that exceed specified limits.
+- express-slow-down: To slow down similar requests coming from the same actor.
+  Let's dive in!
+
+Blocking Requests With express-rate-limit in Node.js
+Follow the steps below to block excess requests in your Node.js backend using express-rate-limit.
+
+### Getting Started
+
+express-rate-limit is an npm library that provides a rate limiting middleware for Express, so it's easier to limit repeated requests to all APIs or only to specific endpoints. The middleware allows you to control how many requests the same user can make to the same endpoints before an application starts returning 429 Too Many Requests errors.
+
+<Steps>
+### Add the express-rate-limit npm package to your project's dependencies with:
+
+```bash copy
+   npm install express-rate-limit
+```
+
+### Implement the Rate Limiting Blocking Logic in Node.js
+
+```ts copy
+import { rateLimit } from "express-rate-limit";
+```
+
+Create a middlware
+
+```ts copy
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  limit: 10, // each IP can make up to 10 requests per `windowsMs` (5 minutes)
+  standardHeaders: true, // add the `RateLimit-*` headers to the response
+  legacyHeaders: false, // remove the `X-RateLimit-*` headers from the response
+});
+```
+
+Note that rateLimit accepts an options object and returns the rate limiting middleware. The options used in the example above are:
+
+- windowMs: The time frame where requests are checked for rate limiting. The default value is 60000 (1 minute).
+- limit: The maximum number of connections to allow during the windowMs time span. By default, it's 5.
+- standardHeaders: To enable support for the RateLimit headers recommended by the IETF. The default value is false.
+- legacyHeaders: To send the legacy rate limit X-RateLimit-\* headers in the error responses. The value is true by default.
+  Other useful parameters are:
+
+- message: The response body to return when a request is rate limited. The default message is “Too many requests, please try again later.”
+- statusCode: The HTTP status code to set in the rate limiting error responses. The default value is 429.
+- skipFailedRequests: To avoid counting failed requests in limit. Set to false by default.
+- skipSuccessfulRequests: To avoid counting successful requests in limit. The value is false by default.
+- keyGenerator: The function that contains the logic used to uniquely identify users. By default, it checks the IP address of incoming requests.
+  Check out the Express documentation for a complete list of all options available.
+
+You now know what express-rate-limit has to offer. What's left is to add its rate limiting capabilities to your application. Register the limiter middleware to all endpoints with:
+
+### Step 3 :Add its rate limiting capabilities to your application.
+
+```ts copy
+app.use(limiter);
+```
+
+If you instead want to rate limit APIs under a specific path, use the limiter middleware as below:
+
+```ts copy
+app.use("/public", limiter);
+```
+
+To protect only a certain endpoint, pass limiter as a parameter in the endpoint definition:
+
+```ts copy
+app.get("/hello-world", limiter, (req, res) => {
+  // ...
+});
+```
+
+### Slowing Down Requests With express-slow-down
+
+```bash copy
+npm install express-slow-down
+```
+
+### Step 5 : Implement the Node.js Rate Limiting Slowing Down Logic
+
+```ts copy
+import { rateLimit } from "express-slow-down";
+```
+
+Use it to set up your slowing down rate limiting middleware:
+
+```ts copy
+const limiter = slowDown({
+  windowMs: 15 * 60 * 1000, // 5 minutes
+  delayAfter: 10, // allow 10 requests per `windowMs` (5 minutes) without slowing them down
+  delayMs: (hits) => hits * 200, // add 200 ms of delay to every request after the 10th
+  maxDelayMs: 5000, // max global delay of 5 seconds
+});
+```
+
+The rateLimit function provided by express-slow-down works just like that of express-rate-limit. The main difference is that it supports the following additional options:
+
+- delayAfter: The maximum number of incoming requests allowed during windowMs before the middleware starts delaying their processing. The default value is 1.
+- delayMs: The requests-to-rate-limit delay. It can be the delay itself in milliseconds or a function that defines custom - behavior. By default, it increases the delay by 1 second for every request over the limit.
+- maxDelayMs: The absolute maximum value that delayMs can reach. It defaults to Infinity.
+
+### Step 6 : Apply the limiter middleware to all endpoints or only to some APIs.
+
+```ts copy
+app.use(limiter);
+```
+
+</Steps>
