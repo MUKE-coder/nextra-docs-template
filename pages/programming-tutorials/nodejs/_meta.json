@@ -3,5 +3,6 @@
   "mvc": "MVC-Versioning and Routing ",
   "jwt": "Implementing JWT ",
   "rate": "Implementing Rate Limiting ",
-  "api": "Using API Key to protect the API"
+  "api": "Using API Key to protect the API",
+  "transaction": "Prisma Transactions"
 }
