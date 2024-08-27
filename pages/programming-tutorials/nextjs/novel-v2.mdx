@@ -1,0 +1,1176 @@
+import { FileTree } from "nextra/components";
+
+# Novel Editor v2 Setup
+
+[Novel](https://github.com/steven-tey/novel) is a Notion-style WYSIWYG editor with AI-powered autocompletion. Built with [Tiptap](https://tiptap.dev/) + [Vercel AI SDK](https://sdk.vercel.ai/docs).
+
+### Installation
+
+Novel has been updated to newer versions but to follow along install the "novel": "^0.2.13", version:
+Checkout the documentation for the latest version :
+[Novel docs](https://novel.sh/docs/introduction)
+
+```bash copy
+npm i novel@0.2.13,
+```
+
+### Basic Usage
+
+```ts copy
+import { Editor } from "novel";
+
+export default function App() {
+  const [content, setContent] = useState<any>(
+    formData.description || defaultValue
+  );
+  // note if you want to make the editor not editable add the isEditable prop={flase}
+  return <Editor initialValue={content} onChange={setContent} />;
+}
+```
+
+### Inside the Editor Component
+
+```ts copy
+"use client";
+import React, { useState } from "react";
+import {
+  EditorRoot,
+  EditorCommand,
+  EditorCommandItem,
+  EditorCommandEmpty,
+  EditorContent,
+  EditorCommandList,
+  EditorBubble,
+} from "novel";
+import { ImageResizer, handleCommandNavigation } from "novel/extensions";
+import { NodeSelector } from "./selectors/node-selector";
+import { LinkSelector } from "./selectors/link-selector";
+import { ColorSelector } from "./selectors/color-selector";
+import { TextButtons } from "./selectors/text-buttons";
+import { slashCommand, suggestionItems } from "./slash-command";
+import { handleImageDrop, handleImagePaste } from "novel/plugins";
+import { Separator } from "../ui/separator";
+import { defaultExtensions } from "./extensions";
+import { uploadFn } from "./image-upload";
+import { cn } from "@/lib/utils";
+
+const extensions = [...defaultExtensions, slashCommand];
+
+interface EditorProp {
+  initialValue?: any;
+  isEditable?: boolean;
+  onChange: (value: any) => void;
+}
+
+const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
+  const [openNode, setOpenNode] = useState(false);
+  const [openColor, setOpenColor] = useState(false);
+  const [openLink, setOpenLink] = useState(false);
+
+  return (
+    <EditorRoot>
+      <EditorContent
+        className={cn({
+          "border p-4 rounded-xl": isEditable,
+          "w-full ": !isEditable,
+        })}
+        {...(initialValue && { initialContent: initialValue })}
+        extensions={extensions}
+        editorProps={{
+          handleDOMEvents: {
+            keydown: (_view, event) => handleCommandNavigation(event),
+          },
+          handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
+          handleDrop: (view, event, _slice, moved) =>
+            handleImageDrop(view, event, moved, uploadFn),
+          attributes: {
+            class:
+              "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
+          },
+        }}
+        editable={isEditable}
+        onUpdate={({ editor }) => {
+          onChange(editor.getJSON());
+        }}
+        slotAfter={<ImageResizer />}
+      >
+        <EditorCommand className='z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all'>
+          <EditorCommandEmpty className='px-2 text-muted-foreground'>
+            No results
+          </EditorCommandEmpty>
+          <EditorCommandList>
+            {suggestionItems.map((item: any) => (
+              <EditorCommandItem
+                value={item.title}
+                onCommand={(val) => item.command?.(val)}
+                className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm hover:bg-accent aria-selected:bg-accent `}
+                key={item.title}
+              >
+                <div className='flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background'>
+                  {React.isValidElement(item.icon) ? item.icon : null}
+                </div>
+                <div>
+                  <p className='font-medium'>{item.title}</p>
+                  <p className='text-xs text-muted-foreground'>
+                    {item.description}
+                  </p>
+                </div>
+              </EditorCommandItem>
+            ))}
+          </EditorCommandList>
+        </EditorCommand>
+
+        <EditorBubble
+          tippyOptions={{
+            placement: "top",
+          }}
+          className='flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl'
+        >
+          <Separator orientation='vertical' />
+          <NodeSelector open={openNode} onOpenChange={setOpenNode} />
+          <Separator orientation='vertical' />
+          <LinkSelector open={openLink} onOpenChange={setOpenLink} />
+          <Separator orientation='vertical' />
+          <TextButtons />
+          <Separator orientation='vertical' />
+          <ColorSelector open={openColor} onOpenChange={setOpenColor} />
+        </EditorBubble>
+      </EditorContent>
+    </EditorRoot>
+  );
+};
+
+export default Editor;
+```
+
+#### Create a folder in your components directory holding the following files.
+
+<FileTree>
+  <FileTree.Folder name='components' defaultOpen>
+    <FileTree.Folder name='selectors'>
+      <FileTree.File name='color-selector.tsx' />
+      <FileTree.File name='link-selector.tsx' />
+      <FileTree.File name='node-selector.tsx' />
+      <FileTree.File name='text-buttons.tsx' />
+    </FileTree.Folder>
+    <FileTree.File name='slash-command.tsx' />
+    <FileTree.File name='image-upload.tsx' />
+    <FileTree.File name='extensions.tsx' />
+    <FileTree.File name='advanced-editor.tsx' />
+  </FileTree.Folder>
+</FileTree>
+
+```ts copy filename="slash-comand.tsx"
+import {
+  CheckSquare,
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  ImageIcon,
+  List,
+  ListOrdered,
+  MessageSquarePlus,
+  Text,
+  TextQuote,
+} from "lucide-react";
+import { createSuggestionItems } from "novel/extensions";
+import { Command, renderItems } from "novel/extensions";
+import { uploadFn } from "./image-upload";
+
+export const suggestionItems = createSuggestionItems([
+  {
+    title: "Send Feedback",
+    description: "Let us know how we can improve.",
+    icon: <MessageSquarePlus size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.open("/feedback", "_blank");
+    },
+  },
+  {
+    title: "Text",
+    description: "Just start typing with plain text.",
+    searchTerms: ["p", "paragraph"],
+    icon: <Text size={18} />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .toggleNode("paragraph", "paragraph")
+        .run();
+    },
+  },
+  {
+    title: "To-do List",
+    description: "Track tasks with a to-do list.",
+    searchTerms: ["todo", "task", "list", "check", "checkbox"],
+    icon: <CheckSquare size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
+    title: "Heading 1",
+    description: "Big section heading.",
+    searchTerms: ["title", "big", "large"],
+    icon: <Heading1 size={18} />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 1 })
+        .run();
+    },
+  },
+  {
+    title: "Heading 2",
+    description: "Medium section heading.",
+    searchTerms: ["subtitle", "medium"],
+    icon: <Heading2 size={18} />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 2 })
+        .run();
+    },
+  },
+  {
+    title: "Heading 3",
+    description: "Small section heading.",
+    searchTerms: ["subtitle", "small"],
+    icon: <Heading3 size={18} />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 3 })
+        .run();
+    },
+  },
+  {
+    title: "Bullet List",
+    description: "Create a simple bullet list.",
+    searchTerms: ["unordered", "point"],
+    icon: <List size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleBulletList().run();
+    },
+  },
+  {
+    title: "Numbered List",
+    description: "Create a list with numbering.",
+    searchTerms: ["ordered"],
+    icon: <ListOrdered size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleOrderedList().run();
+    },
+  },
+  {
+    title: "Quote",
+    description: "Capture a quote.",
+    searchTerms: ["blockquote"],
+    icon: <TextQuote size={18} />,
+    command: ({ editor, range }) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .toggleNode("paragraph", "paragraph")
+        .toggleBlockquote()
+        .run(),
+  },
+  {
+    title: "Code",
+    description: "Capture a code snippet.",
+    searchTerms: ["codeblock"],
+    icon: <Code size={18} />,
+    command: ({ editor, range }) =>
+      editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+  },
+  {
+    title: "Image",
+    description: "Upload an image from your computer.",
+    searchTerms: ["photo", "picture", "media"],
+    icon: <ImageIcon size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      // upload image
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = async () => {
+        if (input.files?.length) {
+          const file = input.files[0];
+          const pos = editor.view.state.selection.from;
+          uploadFn(file, editor.view, pos);
+        }
+      };
+      input.click();
+    },
+  },
+]);
+
+export const slashCommand = Command.configure({
+  suggestion: {
+    items: () => suggestionItems,
+    render: renderItems,
+  },
+});
+```
+
+```ts copy filename="image-comand.tsx"
+import { createImageUpload } from "novel/plugins";
+import { toast } from "sonner";
+
+const onUpload = (file: File) => {
+  const promise = fetch("/api/upload", {
+    method: "POST",
+    headers: {
+      "content-type": file?.type || "application/octet-stream",
+      "x-vercel-filename": file?.name || "image.png",
+    },
+    body: file,
+  });
+
+  return new Promise((resolve) => {
+    toast.promise(
+      promise.then(async (res) => {
+        // Successfully uploaded image
+        if (res.status === 200) {
+          const { url } = (await res.json()) as any;
+          // preload the image
+          let image = new Image();
+          image.src = url;
+          image.onload = () => {
+            resolve(url);
+          };
+          // No blob store configured
+        } else if (res.status === 401) {
+          resolve(file);
+          throw new Error(
+            "`BLOB_READ_WRITE_TOKEN` environment variable not found, reading image locally instead."
+          );
+          // Unknown error
+        } else {
+          throw new Error(`Error uploading image. Please try again.`);
+        }
+      }),
+      {
+        loading: "Uploading image...",
+        success: "Image uploaded successfully.",
+        error: (e: any) => e.message,
+      }
+    );
+  });
+};
+
+export const uploadFn = createImageUpload({
+  onUpload,
+  validateFn: (file) => {
+    if (!file.type.includes("image/")) {
+      toast.error("File type not supported.");
+      return false;
+    } else if (file.size / 1024 / 1024 > 20) {
+      toast.error("File size too big (max 20MB).");
+      return false;
+    }
+    return true;
+  },
+});
+```
+
+```ts copy filename="extensions.tsx"
+import {
+  TiptapImage,
+  TiptapLink,
+  UpdatedImage,
+  TaskList,
+  TaskItem,
+  HorizontalRule,
+  StarterKit,
+  Placeholder,
+  AIHighlight,
+} from "novel/extensions";
+import { UploadImagesPlugin } from "novel/plugins";
+
+import { cx } from "class-variance-authority";
+
+const aiHighlight = AIHighlight;
+const placeholder = Placeholder.configure({
+  placeholder: "Type / for commands and start making changes...",
+});
+
+const tiptapLink = TiptapLink.configure({
+  HTMLAttributes: {
+    class: cx(
+      "text-muted-foreground underline underline-offset-[3px] hover:text-primary transition-colors cursor-pointer"
+    ),
+  },
+});
+
+const tiptapImage = TiptapImage.extend({
+  addProseMirrorPlugins() {
+    return [
+      UploadImagesPlugin({
+        imageClass: cx("opacity-40 rounded-lg border border-stone-200"),
+      }),
+    ];
+  },
+}).configure({
+  allowBase64: true,
+  HTMLAttributes: {
+    class: cx("rounded-lg border border-muted"),
+  },
+});
+
+const updatedImage = UpdatedImage.configure({
+  HTMLAttributes: {
+    class: cx("rounded-lg border border-muted"),
+  },
+});
+
+const taskList = TaskList.configure({
+  HTMLAttributes: {
+    class: cx("not-prose pl-2 "),
+  },
+});
+const taskItem = TaskItem.configure({
+  HTMLAttributes: {
+    class: cx("flex gap-2 items-start my-4"),
+  },
+  nested: true,
+});
+
+const horizontalRule = HorizontalRule.configure({
+  HTMLAttributes: {
+    class: cx("mt-4 mb-6 border-t border-muted-foreground"),
+  },
+});
+
+const starterKit = StarterKit.configure({
+  bulletList: {
+    HTMLAttributes: {
+      class: cx("list-disc list-outside leading-3 -mt-2"),
+    },
+  },
+  orderedList: {
+    HTMLAttributes: {
+      class: cx("list-decimal list-outside leading-3 -mt-2"),
+    },
+  },
+  listItem: {
+    HTMLAttributes: {
+      class: cx("leading-normal -mb-2"),
+    },
+  },
+  blockquote: {
+    HTMLAttributes: {
+      class: cx("border-l-4 border-primary"),
+    },
+  },
+  codeBlock: {
+    HTMLAttributes: {
+      class: cx(
+        "rounded-md bg-muted text-muted-foreground border p-5 font-mono font-medium"
+      ),
+    },
+  },
+  code: {
+    HTMLAttributes: {
+      class: cx("rounded-md bg-muted  px-1.5 py-1 font-mono font-medium"),
+      spellcheck: "false",
+    },
+  },
+  horizontalRule: false,
+  dropcursor: {
+    color: "#DBEAFE",
+    width: 4,
+  },
+  gapcursor: false,
+});
+
+export const defaultExtensions = [
+  starterKit,
+  placeholder,
+  tiptapLink,
+  tiptapImage,
+  updatedImage,
+  taskList,
+  taskItem,
+  horizontalRule,
+  aiHighlight,
+];
+```
+
+```ts copy filename="advanced-editor.tsx"
+"use client";
+import React, { useState } from "react";
+import {
+  EditorRoot,
+  EditorCommand,
+  EditorCommandItem,
+  EditorCommandEmpty,
+  EditorContent,
+  EditorCommandList,
+  EditorBubble,
+} from "novel";
+import { ImageResizer, handleCommandNavigation } from "novel/extensions";
+import { NodeSelector } from "./selectors/node-selector";
+import { LinkSelector } from "./selectors/link-selector";
+import { ColorSelector } from "./selectors/color-selector";
+import { TextButtons } from "./selectors/text-buttons";
+import { slashCommand, suggestionItems } from "./slash-command";
+import { handleImageDrop, handleImagePaste } from "novel/plugins";
+import { Separator } from "../ui/separator";
+import { defaultExtensions } from "./extensions";
+import { uploadFn } from "./image-upload";
+import { cn } from "@/lib/utils";
+
+const extensions = [...defaultExtensions, slashCommand];
+
+interface EditorProp {
+  initialValue?: any;
+  isEditable?: boolean;
+  onChange: (value: any) => void;
+}
+
+const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
+  const [openNode, setOpenNode] = useState(false);
+  const [openColor, setOpenColor] = useState(false);
+  const [openLink, setOpenLink] = useState(false);
+
+  return (
+    <EditorRoot>
+      <EditorContent
+        className={cn({
+          "border p-4 rounded-xl": isEditable,
+          "w-full ": !isEditable,
+        })}
+        {...(initialValue && { initialContent: initialValue })}
+        extensions={extensions}
+        editorProps={{
+          handleDOMEvents: {
+            keydown: (_view, event) => handleCommandNavigation(event),
+          },
+          handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
+          handleDrop: (view, event, _slice, moved) =>
+            handleImageDrop(view, event, moved, uploadFn),
+          attributes: {
+            class:
+              "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
+          },
+        }}
+        editable={isEditable}
+        onUpdate={({ editor }) => {
+          onChange(editor.getJSON());
+        }}
+        slotAfter={<ImageResizer />}
+      >
+        <EditorCommand className='z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all'>
+          <EditorCommandEmpty className='px-2 text-muted-foreground'>
+            No results
+          </EditorCommandEmpty>
+          <EditorCommandList>
+            {suggestionItems.map((item: any) => (
+              <EditorCommandItem
+                value={item.title}
+                onCommand={(val) => item.command?.(val)}
+                className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm hover:bg-accent aria-selected:bg-accent `}
+                key={item.title}
+              >
+                <div className='flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background'>
+                  {React.isValidElement(item.icon) ? item.icon : null}
+                </div>
+                <div>
+                  <p className='font-medium'>{item.title}</p>
+                  <p className='text-xs text-muted-foreground'>
+                    {item.description}
+                  </p>
+                </div>
+              </EditorCommandItem>
+            ))}
+          </EditorCommandList>
+        </EditorCommand>
+
+        <EditorBubble
+          tippyOptions={{
+            placement: "top",
+          }}
+          className='flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl'
+        >
+          <Separator orientation='vertical' />
+          <NodeSelector open={openNode} onOpenChange={setOpenNode} />
+          <Separator orientation='vertical' />
+          <LinkSelector open={openLink} onOpenChange={setOpenLink} />
+          <Separator orientation='vertical' />
+          <TextButtons />
+          <Separator orientation='vertical' />
+          <ColorSelector open={openColor} onOpenChange={setOpenColor} />
+        </EditorBubble>
+      </EditorContent>
+    </EditorRoot>
+  );
+};
+
+export default Editor;
+```
+
+#### Inside the selectors sub-folder
+
+```ts copy filename="text-buttons.tsx
+import { cn } from "@/lib/utils";
+import { EditorBubbleItem, useEditor } from "novel";
+import {
+  BoldIcon,
+  ItalicIcon,
+  UnderlineIcon,
+  StrikethroughIcon,
+  CodeIcon,
+} from "lucide-react";
+import type { SelectorItem } from "./node-selector";
+import { Button } from "@/components/ui/button";
+
+export const TextButtons = () => {
+  const { editor } = useEditor();
+  if (!editor) return null;
+
+  const items: SelectorItem[] = [
+    {
+      name: "bold",
+      isActive: (editor) => editor.isActive("bold"),
+      command: (editor) => editor.chain().focus().toggleBold().run(),
+      icon: BoldIcon,
+    },
+    {
+      name: "italic",
+      isActive: (editor) => editor.isActive("italic"),
+      command: (editor) => editor.chain().focus().toggleItalic().run(),
+      icon: ItalicIcon,
+    },
+    {
+      name: "underline",
+      isActive: (editor) => editor.isActive("underline"),
+      command: (editor) => editor.chain().focus().toggleUnderline().run(),
+      icon: UnderlineIcon,
+    },
+    {
+      name: "strike",
+      isActive: (editor) => editor.isActive("strike"),
+      command: (editor) => editor.chain().focus().toggleStrike().run(),
+      icon: StrikethroughIcon,
+    },
+    {
+      name: "code",
+      isActive: (editor) => editor.isActive("code"),
+      command: (editor) => editor.chain().focus().toggleCode().run(),
+      icon: CodeIcon,
+    },
+  ];
+
+  return (
+    <div className='flex'>
+      {items.map((item, index) => (
+        <EditorBubbleItem
+          key={index}
+          onSelect={(editor) => {
+            item.command(editor);
+          }}
+        >
+          <Button
+            type='button'
+            size='sm'
+            className='rounded-none'
+            variant='ghost'
+          >
+            <item.icon
+              className={cn("h-4 w-4", {
+                "text-blue-500": item.isActive(editor),
+              })}
+            />
+          </Button>
+        </EditorBubbleItem>
+      ))}
+    </div>
+  );
+};
+```
+
+```ts copy filename="node-selector.tsx"
+import {
+  Check,
+  ChevronDown,
+  Heading1,
+  Heading2,
+  Heading3,
+  TextQuote,
+  ListOrdered,
+  TextIcon,
+  Code,
+  CheckSquare,
+  type LucideIcon,
+} from "lucide-react";
+import { EditorBubbleItem, EditorInstance, useEditor } from "novel";
+
+import { Popover } from "@radix-ui/react-popover";
+import { PopoverContent, PopoverTrigger } from "@/components//ui/popover";
+import { Button } from "@/components//ui/button";
+
+export type SelectorItem = {
+  name: string;
+  icon: LucideIcon;
+  command: (editor: EditorInstance) => void;
+  isActive: (editor: EditorInstance) => boolean;
+};
+
+const items: SelectorItem[] = [
+  {
+    name: "Text",
+    icon: TextIcon,
+    command: (editor) => editor.chain().focus().clearNodes().run(),
+    // I feel like there has to be a more efficient way to do this – feel free to PR if you know how!
+    isActive: (editor) =>
+      editor.isActive("paragraph") &&
+      !editor.isActive("bulletList") &&
+      !editor.isActive("orderedList"),
+  },
+  {
+    name: "Heading 1",
+    icon: Heading1,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleHeading({ level: 1 }).run(),
+    isActive: (editor) => editor.isActive("heading", { level: 1 }),
+  },
+  {
+    name: "Heading 2",
+    icon: Heading2,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleHeading({ level: 2 }).run(),
+    isActive: (editor) => editor.isActive("heading", { level: 2 }),
+  },
+  {
+    name: "Heading 3",
+    icon: Heading3,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleHeading({ level: 3 }).run(),
+    isActive: (editor) => editor.isActive("heading", { level: 3 }),
+  },
+  {
+    name: "To-do List",
+    icon: CheckSquare,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleTaskList().run(),
+    isActive: (editor) => editor.isActive("taskItem"),
+  },
+  {
+    name: "Bullet List",
+    icon: ListOrdered,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleBulletList().run(),
+    isActive: (editor) => editor.isActive("bulletList"),
+  },
+  {
+    name: "Numbered List",
+    icon: ListOrdered,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleOrderedList().run(),
+    isActive: (editor) => editor.isActive("orderedList"),
+  },
+  {
+    name: "Quote",
+    icon: TextQuote,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleBlockquote().run(),
+    isActive: (editor) => editor.isActive("blockquote"),
+  },
+  {
+    name: "Code",
+    icon: Code,
+    command: (editor) =>
+      editor.chain().focus().clearNodes().toggleCodeBlock().run(),
+    isActive: (editor) => editor.isActive("codeBlock"),
+  },
+];
+interface NodeSelectorProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const NodeSelector = ({ open, onOpenChange }: NodeSelectorProps) => {
+  const { editor } = useEditor();
+  if (!editor) return null;
+
+  const activeItem = items.filter((item) => item.isActive(editor)).pop() ?? {
+    name: "Multiple",
+  };
+
+  return (
+    <Popover modal={true} open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger
+        asChild
+        className='gap-2 rounded-none border-none hover:bg-accent focus:ring-0'
+      >
+        <Button size='sm' variant='ghost' className='gap-2'>
+          <span className='whitespace-nowrap text-sm'>{activeItem.name}</span>
+          <ChevronDown className='h-4 w-4' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={5} align='start' className='w-48 p-1'>
+        {items.map((item, index) => (
+          <EditorBubbleItem
+            key={index}
+            onSelect={(editor) => {
+              item.command(editor);
+              onOpenChange(false);
+            }}
+            className='flex cursor-pointer items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-accent'
+          >
+            <div className='flex items-center space-x-2'>
+              <div className='rounded-sm border p-1'>
+                <item.icon className='h-3 w-3' />
+              </div>
+              <span>{item.name}</span>
+            </div>
+            {activeItem.name === item.name && <Check className='h-4 w-4' />}
+          </EditorBubbleItem>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+};
+```
+
+```ts copy filename="link-selector.tsx"
+import { cn } from "@/lib/utils";
+import { useEditor } from "novel";
+import { Check, Trash } from "lucide-react";
+import {
+  type Dispatch,
+  type FC,
+  type SetStateAction,
+  useEffect,
+  useRef,
+} from "react";
+import { Button } from "@/components/ui/button";
+import {
+  PopoverContent,
+  Popover,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+export function isValidUrl(url: string) {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+export function getUrlFromString(str: string) {
+  if (isValidUrl(str)) return str;
+  try {
+    if (str.includes(".") && !str.includes(" ")) {
+      return new URL(`https://${str}`).toString();
+    }
+  } catch (e) {
+    return null;
+  }
+}
+interface LinkSelectorProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { editor } = useEditor();
+
+  // Autofocus on input by default
+  useEffect(() => {
+    inputRef.current && inputRef.current?.focus();
+  });
+  if (!editor) return null;
+
+  return (
+    <Popover modal={true} open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          size='sm'
+          variant='ghost'
+          className='gap-2 rounded-none border-none'
+        >
+          <p className='text-base'>↗</p>
+          <p
+            className={cn("underline decoration-stone-400 underline-offset-4", {
+              "text-blue-500": editor.isActive("link"),
+            })}
+          >
+            Link
+          </p>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align='start' className='w-60 p-0' sideOffset={10}>
+        <form
+          onSubmit={(e) => {
+            const target = e.currentTarget as HTMLFormElement;
+            e.preventDefault();
+            const input = target[0] as HTMLInputElement;
+            const url = getUrlFromString(input.value);
+            url && editor.chain().focus().setLink({ href: url }).run();
+          }}
+          className='flex  p-1 '
+        >
+          <input
+            ref={inputRef}
+            type='text'
+            placeholder='Paste a link'
+            className='flex-1 bg-background p-1 text-sm outline-none'
+            defaultValue={editor.getAttributes("link").href || ""}
+          />
+          {editor.getAttributes("link").href ? (
+            <Button
+              size='icon'
+              variant='outline'
+              type='button'
+              className='flex h-8 items-center rounded-sm p-1 text-red-600 transition-all hover:bg-red-100 dark:hover:bg-red-800'
+              onClick={() => {
+                editor.chain().focus().unsetLink().run();
+              }}
+            >
+              <Trash className='h-4 w-4' />
+            </Button>
+          ) : (
+            <Button size='icon' className='h-8'>
+              <Check className='h-4 w-4' />
+            </Button>
+          )}
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+};
+```
+
+```ts copy filename="color-selector.tsx"
+import { Check, ChevronDown } from "lucide-react";
+import { EditorBubbleItem, useEditor } from "novel";
+
+import {
+  PopoverTrigger,
+  Popover,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+
+export interface BubbleColorMenuItem {
+  name: string;
+  color: string;
+}
+
+const TEXT_COLORS: BubbleColorMenuItem[] = [
+  {
+    name: "Default",
+    color: "var(--novel-black)",
+  },
+  {
+    name: "Purple",
+    color: "#9333EA",
+  },
+  {
+    name: "Red",
+    color: "#E00000",
+  },
+  {
+    name: "Yellow",
+    color: "#EAB308",
+  },
+  {
+    name: "Blue",
+    color: "#2563EB",
+  },
+  {
+    name: "Green",
+    color: "#008A00",
+  },
+  {
+    name: "Orange",
+    color: "#FFA500",
+  },
+  {
+    name: "Pink",
+    color: "#BA4081",
+  },
+  {
+    name: "Gray",
+    color: "#A8A29E",
+  },
+];
+
+const HIGHLIGHT_COLORS: BubbleColorMenuItem[] = [
+  {
+    name: "Default",
+    color: "var(--novel-highlight-default)",
+  },
+  {
+    name: "Purple",
+    color: "var(--novel-highlight-purple)",
+  },
+  {
+    name: "Red",
+    color: "var(--novel-highlight-red)",
+  },
+  {
+    name: "Yellow",
+    color: "var(--novel-highlight-yellow)",
+  },
+  {
+    name: "Blue",
+    color: "var(--novel-highlight-blue)",
+  },
+  {
+    name: "Green",
+    color: "var(--novel-highlight-green)",
+  },
+  {
+    name: "Orange",
+    color: "var(--novel-highlight-orange)",
+  },
+  {
+    name: "Pink",
+    color: "var(--novel-highlight-pink)",
+  },
+  {
+    name: "Gray",
+    color: "var(--novel-highlight-gray)",
+  },
+];
+
+interface ColorSelectorProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
+  const { editor } = useEditor();
+
+  if (!editor) return null;
+  const activeColorItem = TEXT_COLORS.find(({ color }) =>
+    editor.isActive("textStyle", { color })
+  );
+
+  const activeHighlightItem = HIGHLIGHT_COLORS.find(({ color }) =>
+    editor.isActive("highlight", { color })
+  );
+
+  return (
+    <Popover modal={true} open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button size='sm' className='gap-2 rounded-none' variant='ghost'>
+          <span
+            className='rounded-sm px-1'
+            style={{
+              color: activeColorItem?.color,
+              backgroundColor: activeHighlightItem?.color,
+            }}
+          >
+            A
+          </span>
+          <ChevronDown className='h-4 w-4' />
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        sideOffset={5}
+        className='my-1 flex max-h-80 w-48 flex-col overflow-hidden overflow-y-auto rounded border p-1 shadow-xl '
+        align='start'
+      >
+        <div className='flex flex-col'>
+          <div className='my-1 px-2 text-sm font-semibold text-muted-foreground'>
+            Color
+          </div>
+          {TEXT_COLORS.map(({ name, color }, index) => (
+            <EditorBubbleItem
+              key={index}
+              onSelect={() => {
+                editor.commands.unsetColor();
+                name !== "Default" &&
+                  editor
+                    .chain()
+                    .focus()
+                    .setColor(color || "")
+                    .run();
+              }}
+              className='flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent'
+            >
+              <div className='flex items-center gap-2'>
+                <div
+                  className='rounded-sm border px-2 py-px font-medium'
+                  style={{ color }}
+                >
+                  A
+                </div>
+                <span>{name}</span>
+              </div>
+            </EditorBubbleItem>
+          ))}
+        </div>
+        <div>
+          <div className='my-1 px-2 text-sm font-semibold text-muted-foreground'>
+            Background
+          </div>
+          {HIGHLIGHT_COLORS.map(({ name, color }, index) => (
+            <EditorBubbleItem
+              key={index}
+              onSelect={() => {
+                editor.commands.unsetHighlight();
+                name !== "Default" && editor.commands.setHighlight({ color });
+              }}
+              className='flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent'
+            >
+              <div className='flex items-center gap-2'>
+                <div
+                  className='rounded-sm border px-2 py-px font-medium'
+                  style={{ backgroundColor: color }}
+                >
+                  A
+                </div>
+                <span>{name}</span>
+              </div>
+              {editor.isActive("highlight", { color }) && (
+                <Check className='h-4 w-4' />
+              )}
+            </EditorBubbleItem>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+```
+
+## .Env file for Images and AI Configurations
+
+```js filename=".env"
+# This file will be committed to version control, so make sure not to have any
+# secrets in it. If you are cloning this repo, create a copy of this file named
+# ".env" and populate it with your secrets.
+
+# Get your OpenAI API key here: https://platform.openai.com/account/api-keys
+OPENAI_API_KEY=
+# OPTIONAL: OpenAI Base URL (default to https://api.openai.com/v1)
+OPENAI_BASE_URL=
+
+# OPTIONAL: Vercel Blob (for uploading images)
+# Get your Vercel Blob credentials here: https://vercel.com/docs/storage/vercel-blob/quickstart#quickstart
+BLOB_READ_WRITE_TOKEN=
+
+# OPTIONAL: Vercel KV (for ratelimiting)
+# Get your Vercel KV credentials here: https://vercel.com/docs/storage/vercel-kv/quickstart#quickstart
+KV_REST_API_URL=
+KV_REST_API_TOKEN=
+```
