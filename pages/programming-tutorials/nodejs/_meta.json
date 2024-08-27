@@ -4,5 +4,6 @@
   "jwt": "Implementing JWT ",
   "rate": "Implementing Rate Limiting ",
   "api": "Using API Key to protect the API",
-  "transaction": "Prisma Transactions"
+  "transaction": "Prisma Transactions",
+  "mail": "Sending Email in Node js"
 }
