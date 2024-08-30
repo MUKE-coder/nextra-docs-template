@@ -405,21 +405,85 @@ MIT
 
 If successful, your package will be available on npm for others to install and use.
 
-## Suggestions for Improvement
+## Using the CLI Tool
 
-1. **Add more template options**: Consider adding more template choices, such as Express.js, Fastify, or different database setups.
+After publishing your CLI tool, users can install and run it in different ways. Let's explore how npm and npx work with our `create-nodext-app` tool.
 
-2. **Implement configuration files**: Allow users to save their preferences in a configuration file for future use.
+### Understanding npm and npx
 
-3. **Add linting and formatting**: Integrate ESLint and Prettier into the generated projects for code quality.
+#### npm (Node Package Manager)
 
-4. **Create test templates**: Include basic test setups (e.g., Jest) in the generated projects.
+npm is the default package manager for Node.js. It allows you to install, share, and manage dependencies in your projects. When you install a package globally using npm, it becomes available as a command-line tool across your entire system.
 
-5. **Implement update checking**: Add a feature to check for updates to the CLI tool and prompt users to update.
+To install our CLI tool globally:
 
-6. **Add post-installation scripts**: Implement custom scripts that run after project creation, such as opening the project in the user's preferred editor.
+```bash copy
+npm install -g create-nodext-app
+```
 
-7. **Implement plugin system**: Create a plugin system to allow users to extend the functionality of your CLI tool.
+After global installation, users can run the tool directly:
+
+```bash copy
+create-nodext-app my-new-project
+```
+
+#### npx (Node Package Execute)
+
+npx is a package runner tool that comes with npm (version 5.2+). It allows you to execute npm package binaries without installing them globally. This is particularly useful for running one-off commands or ensuring you're always using the latest version of a package.
+
+To run our CLI tool using npx (without installing it globally):
+
+```bash copy
+npx create-nodext-app my-new-project
+```
+
+When you use npx:
+
+1. It first checks if the package is installed globally.
+2. If not, it temporarily downloads the latest version of the package.
+3. It then runs the specified command.
+4. After execution, the temporarily downloaded package is removed.
+
+### Benefits of Using npx
+
+1. **No Global Installation**: Users don't need to clutter their global npm space with packages they might use infrequently.
+2. **Always Latest Version**: npx always uses the latest version of the package, ensuring users have the most up-to-date features and bug fixes.
+3. **One-Time Use**: It's perfect for tools that you might only use occasionally or for trying out different packages without committing to an installation.
+
+### Configuring Your Package for npm and npx
+
+To ensure your CLI tool works with both npm (global installation) and npx, you need to properly configure the `bin` field in your `package.json`:
+
+```json copy
+{
+  "name": "create-nodext-app",
+  "version": "1.0.0",
+  "bin": {
+    "create-nodext-app": "./index.js"
+  }
+  // ... other fields
+}
+```
+
+This configuration tells npm and npx that when someone runs `create-nodext-app`, it should execute the `index.js` file in your package.
+
+### Recommendation for Users
+
+In your documentation, it's a good practice to provide instructions for both methods:
+
+1. Global Installation:
+
+   ```bash copy
+   npm install -g create-nodext-app
+   create-nodext-app my-new-project
+   ```
+
+2. Using npx (no installation required):
+   ```bash copy
+   npx create-nodext-app my-new-project
+   ```
+
+By providing both options, you give users the flexibility to choose the method that best suits their workflow. Some may prefer global installation for frequent use, while others might prefer using npx to always get the latest version without managing global packages.
 
 ## Conclusion
 
