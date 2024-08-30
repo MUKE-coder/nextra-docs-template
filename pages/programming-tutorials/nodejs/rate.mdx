@@ -102,6 +102,68 @@ app.get("/hello-world", limiter, (req, res) => {
 });
 ```
 
+### Implementing it in Our App
+
+```ts copy
+import express from "express";
+import rateLimit from "express-rate-limit";
+// ... other imports
+
+const app = express();
+
+// Configure general rate limiter
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply general rate limiter to all requests
+app.use(generalLimiter);
+
+// Configure stricter rate limiter for sensitive operations
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply stricter rate limit to sensitive routes
+app.use("/api/v1/sale", strictLimiter);
+app.use("/api/v1/user", strictLimiter);
+app.use("/api/v1/expense", strictLimiter);
+
+// ... rest of your route configurations
+
+app.use("/api/v1", customerRouter);
+app.use("/api/v1", userRouter);
+app.use("/api/v1", shopRouter);
+// ... other routes
+
+// Custom error handler for rate limiting
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (err instanceof rateLimit.RateLimitExceeded) {
+      return res.status(429).json({
+        error: "Too many requests, please try again later.",
+      });
+    }
+    next(err);
+  }
+);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+```
+
 ### Slowing Down Requests With express-slow-down
 
 ```bash copy
