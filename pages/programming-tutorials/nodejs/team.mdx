@@ -1,0 +1,83 @@
+# Project Team Guidelines
+
+## Table of Contents
+
+1. [General Guidelines](#general-guidelines)
+2. [Naming Conventions](#naming-conventions)
+3. [Environment Variables](#environment-variables)
+4. [Next.js Best Practices](#nextjs-best-practices)
+5. [Node.js Best Practices](#nodejs-best-practices)
+6. [React Native (with Expo) Best Practices](#react-native-best-practices)
+7. [TypeScript Best Practices](#typescript-best-practices)
+8. [Code Review Process](#code-review-process)
+
+## General Guidelines
+
+- Use version control (Git) for all projects.
+- Write clean, readable, and well-documented code.
+- Follow the DRY (Don't Repeat Yourself) principle.
+- Implement proper error handling and logging.
+- Regularly update dependencies and address security vulnerabilities.
+- Use linters and formatters (e.g., ESLint, Prettier) to maintain code quality and consistency.
+
+## Naming Conventions
+
+- Use camelCase for variable and function names (e.g., `getUserData`, `isValid`).
+- Use PascalCase for class and component names (e.g., `UserProfile`, `Button`).
+- Use UPPER_SNAKE_CASE for constants (e.g., `MAX_RETRY_COUNT`, `API_BASE_URL`).
+- Use kebab-case for file names (e.g., `user-profile.tsx`, `api-utils.ts`).
+- Prefix interface names with "I" (e.g., `IUserData`).
+- Use descriptive and meaningful names for all identifiers.
+
+## Environment Variables
+
+- Store sensitive information (API keys, database credentials) in environment variables.
+- Use a `.env` file for local development and ensure it's included in `.gitignore`.
+- Reference environment variables using `process.env.VARIABLE_NAME` in Node.js and Next.js.
+- For React Native, use a package like `react-native-dotenv` to manage environment variables.
+- Never hardcode sensitive values directly in the source code.
+
+## Next.js Best Practices
+
+- Use Static Generation (SSG) whenever possible for better performance.
+- Implement dynamic imports and lazy loading for better code splitting.
+- Utilize Next.js Image component for optimized image loading.
+- Implement proper SEO practices using Next.js Head component.
+- Use getServerSideProps for server-side rendering when necessary.
+- Implement proper error handling and custom error pages.
+
+## Node.js Best Practices
+
+- Use async/await for asynchronous operations instead of callbacks.
+- Implement proper error handling using try/catch blocks.
+- Use middleware for common functionalities (e.g., authentication, logging).
+- Implement input validation and sanitization to prevent security vulnerabilities.
+- Use a process manager like PM2 for production deployments.
+- Implement proper logging using a library like Winston or Pino.
+
+## React Native (with Expo) Best Practices
+
+- Use functional components and hooks instead of class components.
+- Implement proper navigation using React Navigation.
+- Use Expo SDK features and APIs when available.
+- Optimize performance by minimizing re-renders and using memoization.
+- Implement proper error boundaries to catch and handle errors gracefully.
+- Use responsive design practices to ensure compatibility across different device sizes.
+
+## TypeScript Best Practices
+
+- Define proper types and interfaces for all data structures.
+- Use type inference when possible to reduce verbosity.
+- Utilize union types and intersection types for more precise type definitions.
+- Use `unknown` instead of `any` when the type is truly unknown.
+- Leverage TypeScript's strict mode for enhanced type checking.
+- Use generics to create reusable components and functions.
+
+## Code Review Process
+
+- All code changes must go through a pull request process.
+- At least one team member must review and approve the changes before merging.
+- Use a consistent PR template to ensure all necessary information is provided.
+- Reviewers should check for code quality, adherence to guidelines, and potential bugs.
+- Address all comments and suggestions before merging the PR.
+- Squash commits before merging to maintain a clean Git history.

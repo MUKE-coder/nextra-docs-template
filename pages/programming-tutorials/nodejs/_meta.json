@@ -6,6 +6,7 @@
   "swagger": "Implementing API Documentation using Swagger ",
   "api": "Using API Key to protect the API",
   "transaction": "Prisma Transactions",
+  "team": "Team Project Guidelines",
   "mail": "Sending Email in Node js",
   "cli-npm-package-tutorial": "Building and Publishing a CLI as an npm Package"
 }
