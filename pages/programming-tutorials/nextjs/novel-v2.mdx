@@ -11,7 +11,7 @@ Checkout the documentation for the latest version :
 [Novel docs](https://novel.sh/docs/introduction)
 
 ```bash copy
-npm i novel@0.2.13,
+npm i novel@0.2.13 emblor@1.3.5
 ```
 
 ### Basic Usage
@@ -94,8 +94,8 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
         }}
         slotAfter={<ImageResizer />}
       >
-        <EditorCommand className='z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all'>
-          <EditorCommandEmpty className='px-2 text-muted-foreground'>
+        <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
+          <EditorCommandEmpty className="px-2 text-muted-foreground">
             No results
           </EditorCommandEmpty>
           <EditorCommandList>
@@ -106,12 +106,12 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
                 className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm hover:bg-accent aria-selected:bg-accent `}
                 key={item.title}
               >
-                <div className='flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background'>
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background">
                   {React.isValidElement(item.icon) ? item.icon : null}
                 </div>
                 <div>
-                  <p className='font-medium'>{item.title}</p>
-                  <p className='text-xs text-muted-foreground'>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">
                     {item.description}
                   </p>
                 </div>
@@ -124,15 +124,15 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
           tippyOptions={{
             placement: "top",
           }}
-          className='flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl'
+          className="flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl"
         >
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <NodeSelector open={openNode} onOpenChange={setOpenNode} />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <LinkSelector open={openLink} onOpenChange={setOpenLink} />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <TextButtons />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <ColorSelector open={openColor} onOpenChange={setOpenColor} />
         </EditorBubble>
       </EditorContent>
@@ -146,17 +146,17 @@ export default Editor;
 #### Create a folder in your components directory holding the following files.
 
 <FileTree>
-  <FileTree.Folder name='components' defaultOpen>
-    <FileTree.Folder name='selectors'>
-      <FileTree.File name='color-selector.tsx' />
-      <FileTree.File name='link-selector.tsx' />
-      <FileTree.File name='node-selector.tsx' />
-      <FileTree.File name='text-buttons.tsx' />
+  <FileTree.Folder name="components" defaultOpen>
+    <FileTree.Folder name="selectors">
+      <FileTree.File name="color-selector.tsx" />
+      <FileTree.File name="link-selector.tsx" />
+      <FileTree.File name="node-selector.tsx" />
+      <FileTree.File name="text-buttons.tsx" />
     </FileTree.Folder>
-    <FileTree.File name='slash-command.tsx' />
-    <FileTree.File name='image-upload.tsx' />
-    <FileTree.File name='extensions.tsx' />
-    <FileTree.File name='advanced-editor.tsx' />
+    <FileTree.File name="slash-command.tsx" />
+    <FileTree.File name="image-upload.tsx" />
+    <FileTree.File name="extensions.tsx" />
+    <FileTree.File name="advanced-editor.tsx" />
   </FileTree.Folder>
 </FileTree>
 
@@ -572,8 +572,8 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
         }}
         slotAfter={<ImageResizer />}
       >
-        <EditorCommand className='z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all'>
-          <EditorCommandEmpty className='px-2 text-muted-foreground'>
+        <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
+          <EditorCommandEmpty className="px-2 text-muted-foreground">
             No results
           </EditorCommandEmpty>
           <EditorCommandList>
@@ -584,12 +584,12 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
                 className={`flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm hover:bg-accent aria-selected:bg-accent `}
                 key={item.title}
               >
-                <div className='flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background'>
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-muted bg-background">
                   {React.isValidElement(item.icon) ? item.icon : null}
                 </div>
                 <div>
-                  <p className='font-medium'>{item.title}</p>
-                  <p className='text-xs text-muted-foreground'>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">
                     {item.description}
                   </p>
                 </div>
@@ -602,15 +602,15 @@ const Editor = ({ initialValue, onChange, isEditable = true }: EditorProp) => {
           tippyOptions={{
             placement: "top",
           }}
-          className='flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl'
+          className="flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl"
         >
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <NodeSelector open={openNode} onOpenChange={setOpenNode} />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <LinkSelector open={openLink} onOpenChange={setOpenLink} />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <TextButtons />
-          <Separator orientation='vertical' />
+          <Separator orientation="vertical" />
           <ColorSelector open={openColor} onOpenChange={setOpenColor} />
         </EditorBubble>
       </EditorContent>
@@ -674,7 +674,7 @@ export const TextButtons = () => {
   ];
 
   return (
-    <div className='flex'>
+    <div className="flex">
       {items.map((item, index) => (
         <EditorBubbleItem
           key={index}
@@ -683,10 +683,10 @@ export const TextButtons = () => {
           }}
         >
           <Button
-            type='button'
-            size='sm'
-            className='rounded-none'
-            variant='ghost'
+            type="button"
+            size="sm"
+            className="rounded-none"
+            variant="ghost"
           >
             <item.icon
               className={cn("h-4 w-4", {
@@ -813,14 +813,14 @@ export const NodeSelector = ({ open, onOpenChange }: NodeSelectorProps) => {
     <Popover modal={true} open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         asChild
-        className='gap-2 rounded-none border-none hover:bg-accent focus:ring-0'
+        className="gap-2 rounded-none border-none hover:bg-accent focus:ring-0"
       >
-        <Button size='sm' variant='ghost' className='gap-2'>
-          <span className='whitespace-nowrap text-sm'>{activeItem.name}</span>
-          <ChevronDown className='h-4 w-4' />
+        <Button size="sm" variant="ghost" className="gap-2">
+          <span className="whitespace-nowrap text-sm">{activeItem.name}</span>
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent sideOffset={5} align='start' className='w-48 p-1'>
+      <PopoverContent sideOffset={5} align="start" className="w-48 p-1">
         {items.map((item, index) => (
           <EditorBubbleItem
             key={index}
@@ -828,15 +828,15 @@ export const NodeSelector = ({ open, onOpenChange }: NodeSelectorProps) => {
               item.command(editor);
               onOpenChange(false);
             }}
-            className='flex cursor-pointer items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-accent'
+            className="flex cursor-pointer items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-accent"
           >
-            <div className='flex items-center space-x-2'>
-              <div className='rounded-sm border p-1'>
-                <item.icon className='h-3 w-3' />
+            <div className="flex items-center space-x-2">
+              <div className="rounded-sm border p-1">
+                <item.icon className="h-3 w-3" />
               </div>
               <span>{item.name}</span>
             </div>
-            {activeItem.name === item.name && <Check className='h-4 w-4' />}
+            {activeItem.name === item.name && <Check className="h-4 w-4" />}
           </EditorBubbleItem>
         ))}
       </PopoverContent>
@@ -900,11 +900,11 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
     <Popover modal={true} open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
-          size='sm'
-          variant='ghost'
-          className='gap-2 rounded-none border-none'
+          size="sm"
+          variant="ghost"
+          className="gap-2 rounded-none border-none"
         >
-          <p className='text-base'>↗</p>
+          <p className="text-base">↗</p>
           <p
             className={cn("underline decoration-stone-400 underline-offset-4", {
               "text-blue-500": editor.isActive("link"),
@@ -914,7 +914,7 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
           </p>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align='start' className='w-60 p-0' sideOffset={10}>
+      <PopoverContent align="start" className="w-60 p-0" sideOffset={10}>
         <form
           onSubmit={(e) => {
             const target = e.currentTarget as HTMLFormElement;
@@ -923,30 +923,30 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
             const url = getUrlFromString(input.value);
             url && editor.chain().focus().setLink({ href: url }).run();
           }}
-          className='flex  p-1 '
+          className="flex  p-1 "
         >
           <input
             ref={inputRef}
-            type='text'
-            placeholder='Paste a link'
-            className='flex-1 bg-background p-1 text-sm outline-none'
+            type="text"
+            placeholder="Paste a link"
+            className="flex-1 bg-background p-1 text-sm outline-none"
             defaultValue={editor.getAttributes("link").href || ""}
           />
           {editor.getAttributes("link").href ? (
             <Button
-              size='icon'
-              variant='outline'
-              type='button'
-              className='flex h-8 items-center rounded-sm p-1 text-red-600 transition-all hover:bg-red-100 dark:hover:bg-red-800'
+              size="icon"
+              variant="outline"
+              type="button"
+              className="flex h-8 items-center rounded-sm p-1 text-red-600 transition-all hover:bg-red-100 dark:hover:bg-red-800"
               onClick={() => {
                 editor.chain().focus().unsetLink().run();
               }}
             >
-              <Trash className='h-4 w-4' />
+              <Trash className="h-4 w-4" />
             </Button>
           ) : (
-            <Button size='icon' className='h-8'>
-              <Check className='h-4 w-4' />
+            <Button size="icon" className="h-8">
+              <Check className="h-4 w-4" />
             </Button>
           )}
         </form>
@@ -1070,9 +1070,9 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
   return (
     <Popover modal={true} open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <Button size='sm' className='gap-2 rounded-none' variant='ghost'>
+        <Button size="sm" className="gap-2 rounded-none" variant="ghost">
           <span
-            className='rounded-sm px-1'
+            className="rounded-sm px-1"
             style={{
               color: activeColorItem?.color,
               backgroundColor: activeHighlightItem?.color,
@@ -1080,17 +1080,17 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
           >
             A
           </span>
-          <ChevronDown className='h-4 w-4' />
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent
         sideOffset={5}
-        className='my-1 flex max-h-80 w-48 flex-col overflow-hidden overflow-y-auto rounded border p-1 shadow-xl '
-        align='start'
+        className="my-1 flex max-h-80 w-48 flex-col overflow-hidden overflow-y-auto rounded border p-1 shadow-xl "
+        align="start"
       >
-        <div className='flex flex-col'>
-          <div className='my-1 px-2 text-sm font-semibold text-muted-foreground'>
+        <div className="flex flex-col">
+          <div className="my-1 px-2 text-sm font-semibold text-muted-foreground">
             Color
           </div>
           {TEXT_COLORS.map(({ name, color }, index) => (
@@ -1105,11 +1105,11 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
                     .setColor(color || "")
                     .run();
               }}
-              className='flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent'
+              className="flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent"
             >
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <div
-                  className='rounded-sm border px-2 py-px font-medium'
+                  className="rounded-sm border px-2 py-px font-medium"
                   style={{ color }}
                 >
                   A
@@ -1120,7 +1120,7 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
           ))}
         </div>
         <div>
-          <div className='my-1 px-2 text-sm font-semibold text-muted-foreground'>
+          <div className="my-1 px-2 text-sm font-semibold text-muted-foreground">
             Background
           </div>
           {HIGHLIGHT_COLORS.map(({ name, color }, index) => (
@@ -1130,11 +1130,11 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
                 editor.commands.unsetHighlight();
                 name !== "Default" && editor.commands.setHighlight({ color });
               }}
-              className='flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent'
+              className="flex cursor-pointer items-center justify-between px-2 py-1 text-sm hover:bg-accent"
             >
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <div
-                  className='rounded-sm border px-2 py-px font-medium'
+                  className="rounded-sm border px-2 py-px font-medium"
                   style={{ backgroundColor: color }}
                 >
                   A
@@ -1142,7 +1142,7 @@ export const ColorSelector = ({ open, onOpenChange }: ColorSelectorProps) => {
                 <span>{name}</span>
               </div>
               {editor.isActive("highlight", { color }) && (
-                <Check className='h-4 w-4' />
+                <Check className="h-4 w-4" />
               )}
             </EditorBubbleItem>
           ))}
