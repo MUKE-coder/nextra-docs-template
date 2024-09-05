@@ -1,0 +1,351 @@
+# Sending Email in Node js Using Resend
+
+```ts copy
+import express, {
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
+import { PrismaClient } from "@prisma/client";
+import { Resend } from "resend";
+import { addMinutes } from "date-fns";
+
+const prismaClient = new PrismaClient();
+const resend = new Resend("your-resend-api-key-here");
+
+// Utility functions
+const generateSlug = (name: string) => {
+  return name.toLowerCase().replace(/ /g, "-");
+};
+
+const generateToken = () => {
+  const min = 100000;
+  const max = 999999;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+const generateEmailHTML = ({
+  firstName,
+  token,
+  linkText,
+  message,
+  resetLink,
+}: any) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #24292e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .container {
+      width: 480px;
+      margin: 0 auto;
+      padding: 20px 0 48px;
+    }
+    .title {
+      font-size: 24px;
+      line-height: 1.25;
+    }
+    .section {
+      padding: 24px;
+      border: solid 1px #dedede;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .text {
+      margin: 0 0 10px 0;
+      text-align: left;
+    }
+    .button {
+      font-size: 24px;
+      background-color: #28a745;
+      color: #fff;
+      line-height: 1.5;
+      border-radius: 0.5em;
+      padding: 0.75em 1.5em;
+    }
+    .links {
+      text-align: center;
+    }
+    .link {
+      color: #0366d6;
+      font-size: 12px;
+    }
+    .footer {
+      color: #6a737d;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="${process.env.NEXT_PUBLIC_BASE_URL}/static/logo.png" width="32" height="32" alt="Claridy" />
+    <div class="title">
+      <strong>@${firstName}</strong>, thank you for Joining Us
+    </div>
+    <div class="section">
+      <p class="text">
+        Hey <strong>${firstName}</strong>!
+      </p>
+      <p class="text">${message}</p>
+      <a href="${resetLink}" class="button">${token}</a>
+   
+    </div>
+    <div class="links">
+      <a href="#" class="link">Your security audit log</a> ・
+      <a href="#" class="link">Contact support</a>
+    </div>
+    <div class="footer">
+      GitHub, Inc. ・88 Colin P Kelly Jr Street ・San Francisco, CA 94107
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+export const forgotPassword: RequestHandler = async (req, res, next) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prismaClient.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ data: null, error: "User not found" });
+    }
+
+    const token = generateToken().toString();
+    const tokenExpiry = addMinutes(new Date(), 30);
+
+    const newUpdatedUser = await prismaClient.user.update({
+      where: { email },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: tokenExpiry,
+        passwordReset: true,
+      },
+    });
+
+    const resetLink = `https://app-admin-dashboard-henna.vercel.app/${token}`;
+    const firstName = user.name.split(" ")[0];
+    const message = "This is the verification link thank you:";
+    const linkText = "Reset Password";
+
+    const emailHTML = generateEmailHTML({
+      firstName,
+      token,
+      linkText,
+      message,
+      resetLink,
+    });
+
+    const sendEmail = await resend.emails.send({
+      from: "Rwoma <info@rwoma.com>",
+      to: email,
+      subject: "Password Reset Request",
+      html: emailHTML,
+    });
+    //  console.log(sendEmail)
+    res.status(200).json({
+      message: `Password reset email sent to ${email}`,
+      data: { userId: newUpdatedUser.id },
+      error: null,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+```
+
+## Modified User Model to cater for reset token
+
+```ts copy
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  email          String    @unique
+  username       String    @unique
+  password       String
+  firstName      String
+  lastName       String
+  phone          String    @unique
+  dob            DateTime?
+  gender         Gender
+  image          String?
+  role           Role      @default(ATTENDANT)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Fields for password reset
+  resetToken     String?   // Token used for password reset
+  resetTokenExpiry DateTime? // Expiration time of the reset token
+
+  // Relation to shops
+  shops          Shop[]
+}
+
+```
+
+## Reset Password Flow
+
+Explanation:
+`resetToken`: This field will store the token generated when a user requests a password reset. It’s optional (String?) because it will only be present when the user requests a password reset.
+
+`resetTokenExpiry`: This field will store the expiration time of the resetToken. It's also optional because it will only have a value when a reset token is generated.
+
+### Implementation Steps:
+
+Forgot-Password Route:
+
+Generate a secure token and store it in the resetToken field.
+Set the resetTokenExpiry to a future date, e.g., 1 hour from the time of the request.
+Send an email to the user with the reset token.
+Verify-Token Route:
+
+Check if the token exists and is valid.
+Verify that the token has not expired by comparing the current date with resetTokenExpiry.
+Change-Password Route:
+
+Validate the token again.
+Allow the user to change their password if the token is valid and not expired.
+Clear the resetToken and resetTokenExpiry fields after the password is changed.
+
+## Controllers
+
+1. Forgot Password Controller
+   This controller will generate a reset token, save it to the database with an expiration time, and send it to the user's email.
+
+```ts copy
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import crypto from "crypto";
+import { sendEmail } from "../utils/sendEmail"; // You'll need to implement this utility
+
+const prisma = new PrismaClient();
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Set token expiry time (e.g., 1 hour from now)
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    // Update user with reset token and expiry
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken,
+        resetTokenExpiry,
+      },
+    });
+
+    // Send reset token via email (implement the sendEmail utility)
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/auth/reset-password/${resetToken}`;
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `You requested a password reset. Please make a PUT request to: ${resetUrl}`,
+    });
+
+    res.status(200).json({ message: "Reset token sent to email" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+```
+
+2. Verify Token Controller
+   This controller verifies the reset token and checks if it is still valid (i.e., not expired).
+
+   ```ts copy
+   import { Request, Response } from "express";
+   import { PrismaClient } from "@prisma/client";
+
+   const prisma = new PrismaClient();
+
+   export const verifyToken = async (req, res) => {
+     const { token } = req.params;
+
+     try {
+       const user = await prisma.user.findFirst({
+         where: {
+           resetToken: token,
+           resetTokenExpiry: { gte: new Date() },
+         },
+       });
+
+       if (!user) {
+         return res.status(400).json({ message: "Invalid or expired token" });
+       }
+
+       res.status(200).json({ message: "Token is valid" });
+     } catch (error) {
+       res.status(500).json({ message: "Server error", error: error.message });
+     }
+   };
+   ```
+
+3. Change Password Controller
+   This controller allows the user to change their password if the token is valid and hasn't expired.
+
+   ```ts copy
+   import { Request, Response } from "express";
+   import { PrismaClient } from "@prisma/client";
+   import bcrypt from "bcryptjs";
+
+   const prisma = new PrismaClient();
+
+   export const changePassword = async (req: Request, res: Response) => {
+     const { token } = req.params;
+     const { newPassword } = req.body;
+
+     try {
+       const user = await prisma.user.findFirst({
+         where: {
+           resetToken: token,
+           resetTokenExpiry: { gte: new Date() },
+         },
+       });
+
+       if (!user) {
+         return res.status(400).json({ message: "Invalid or expired token" });
+       }
+
+       // Hash the new password
+       const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+       // Update the user's password and clear the reset token and expiry
+       await prisma.user.update({
+         where: { id: user.id },
+         data: {
+           password: hashedPassword,
+           resetToken: null,
+           resetTokenExpiry: null,
+         },
+       });
+
+       res.status(200).json({ message: "Password changed successfully" });
+     } catch (error) {
+       res.status(500).json({ message: "Server error", error: error.message });
+     }
+   };
+   ```

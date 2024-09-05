@@ -1,0 +1,490 @@
+# Building and Publishing a CLI as an npm Package
+
+## Introduction
+
+Creating a Command Line Interface (CLI) tool and publishing it as an npm package is an excellent way to share your work with the developer community. In this tutorial, we'll walk through the process of building a CLI that helps users scaffold Node.js projects, and then we'll publish it as an npm package.
+
+## Prerequisites
+
+Before we begin, make sure you have the following installed:
+
+- Node.js (version 12 or higher)
+- npm (usually comes with Node.js)
+- A code editor of your choice
+
+## Building the CLI
+
+### Step 1: Set up the project
+
+First, let's create a new directory for our project and initialize it:
+
+```bash copy
+mkdir my-awesome-cli
+cd my-awesome-cli
+npm init -y
+```
+
+### Step 2: Install dependencies
+
+We'll need several packages to build our CLI. Let's install them:
+
+```bash copy
+npm install commander chalk fs-extra inquirer simple-git ora
+```
+
+Here's what each package does:
+
+- `commander`: For parsing command-line arguments
+- `chalk`: For adding colors to console output
+- `fs-extra`: An extension of the `fs` module with additional functionality
+- `inquirer`: For creating interactive command-line prompts
+- `simple-git`: For Git operations
+- `ora`: For creating beautiful terminal spinners
+
+### Step 3: Create the main CLI file
+
+Let's break down the process of creating the main CLI file into several smaller steps:
+
+#### Step 3-1: Create an index.js file
+
+Create a new file called `index.js` in the root of your project. This will be the main entry point for your CLI application.
+
+#### Step 3-2: Make the file executable
+
+At the very top of your `index.js` file, add the following line:
+
+```js copy
+#!/usr/bin/env node
+```
+
+This line is called a shebang or hashbang. It tells the system to execute this file using Node.js when the CLI command is run.
+
+#### Step 3-3: Import necessary packages
+
+Next, import all the required packages at the top of your file:
+
+```javascript
+import { Command } from "commander";
+import chalk from "chalk";
+import fs from "fs-extra";
+import path from "path";
+import { simpleGit } from "simple-git";
+import ora from "ora";
+import inquirer from "inquirer";
+import { execSync } from "child_process";
+```
+
+These imports bring in the functionality we need from our installed packages:
+
+- `commander` for parsing command-line arguments
+- `chalk` for adding colors to console output
+- `fs-extra` for enhanced file system operations
+- `path` for working with file and directory paths
+- `simple-git` for Git operations
+- `ora` for creating terminal spinners
+- `inquirer` for interactive command-line prompts
+- `execSync` from Node.js child_process module for running shell commands
+
+#### Step 3-4: Initialize the command-line program
+
+Initialize the command-line program using Commander:
+
+```js copy
+const program = new Command();
+```
+
+This creates a new Command object, which we'll use to define our CLI's behavior.
+
+#### Step 3-5: Define the CLI command
+
+Set up the basic structure of your CLI command:
+
+```js copy
+program
+  .version("1.0.0")
+  .argument("<project-name>", "name of the project")
+  .action(async (projectName) => {
+    // The main logic of your CLI will go here
+  });
+```
+
+This code:
+
+- Sets the version of your CLI
+- Defines an argument for the project name
+- Sets up an async action function that will run when the command is executed
+
+#### Step 3-6: Implement the main logic
+
+Inside the `.action()` function, implement the main logic of your CLI:
+
+```js copy
+.action(async (projectName) => {
+  const projectPath = path.join(process.cwd(), projectName);
+
+  // Check if the project directory already exists
+  if (fs.existsSync(projectPath)) {
+    console.error(
+      chalk.red(`Error: Directory ${projectName} already exists.`)
+    );
+    process.exit(1);
+  }
+
+  // Prompt the user to select the template type
+  const answers = await inquirer.prompt([
+    {
+      type: "list",
+      name: "template",
+      message: "Which template would you like to use?",
+      choices: [
+        { name: "TypeScript", value: "ts" },
+        { name: "JavaScript", value: "js" },
+      ],
+      default: "ts",
+    },
+  ]);
+
+  // Determine the repository URL based on the user's selection
+  const repoUrl =
+    answers.template === "js"
+      ? "https://github.com/MUKE-coder/nodejs-javascript-starter.git"
+      : "https://github.com/MUKE-coder/nodejs-typescript-starter-template.git";
+
+  // Create the project directory
+  fs.mkdirSync(projectPath);
+
+  // Set up the spinner for visual feedback
+  const spinner = ora(
+    `Downloading ${
+      answers.template === "js" ? "JavaScript" : "TypeScript"
+    } template...`
+  ).start();
+
+  const git = simpleGit();
+
+  try {
+    // Clone the selected template
+    await git.clone(repoUrl, projectPath);
+    spinner.succeed(
+      `${
+        answers.template === "js" ? "JavaScript" : "TypeScript"
+      } template downloaded successfully!`
+    );
+
+    // Navigate into the project directory
+    process.chdir(projectPath);
+
+    // Install dependencies
+    spinner.start("Installing dependencies...");
+    execSync("npm install", { stdio: "inherit" });
+    spinner.succeed("Dependencies installed successfully!");
+
+    console.log(chalk.green(`Project ${projectName} is ready!`));
+    console.log(chalk.green(`cd ${projectName} and run npm run dev`));
+  } catch (error) {
+    spinner.fail("Failed to set up the project.");
+    console.error(chalk.red(error.message));
+    process.exit(1);
+  }
+});
+```
+
+This code:
+
+- Checks if the project directory already exists
+- Prompts the user to choose a template
+- Clones the selected template repository
+- Installs dependencies
+- Provides feedback throughout the process
+
+#### Step 3-7: Parse command-line arguments
+
+At the end of your `index.js` file, add:
+
+```js copy
+program.parse(process.argv);
+```
+
+This line tells Commander to parse the command-line arguments and execute the appropriate command.
+
+#### Step 3-8: Final index.js file
+
+After completing all the steps above, your `index.js` file should look like this:
+
+```javascript
+#!/usr/bin/env node
+
+import { Command } from "commander";
+import chalk from "chalk";
+import fs from "fs-extra";
+import path from "path";
+import { simpleGit } from "simple-git";
+import ora from "ora";
+import inquirer from "inquirer";
+import { execSync } from "child_process";
+
+const program = new Command();
+
+program
+  .version("1.0.0")
+  .argument("<project-name>", "name of the project")
+  .action(async (projectName) => {
+    const projectPath = path.join(process.cwd(), projectName);
+
+    if (fs.existsSync(projectPath)) {
+      console.error(
+        chalk.red(`Error: Directory ${projectName} already exists.`)
+      );
+      process.exit(1);
+    }
+
+    const answers = await inquirer.prompt([
+      {
+        type: "list",
+        name: "template",
+        message: "Which template would you like to use?",
+        choices: [
+          { name: "TypeScript", value: "ts" },
+          { name: "JavaScript", value: "js" },
+        ],
+        default: "ts",
+      },
+    ]);
+
+    const repoUrl =
+      answers.template === "js"
+        ? "https://github.com/MUKE-coder/nodejs-javascript-starter.git"
+        : "https://github.com/MUKE-coder/nodejs-typescript-starter-template.git";
+
+    fs.mkdirSync(projectPath);
+
+    const spinner = ora(
+      `Downloading ${
+        answers.template === "js" ? "JavaScript" : "TypeScript"
+      } template...`
+    ).start();
+
+    const git = simpleGit();
+
+    try {
+      await git.clone(repoUrl, projectPath);
+      spinner.succeed(
+        `${
+          answers.template === "js" ? "JavaScript" : "TypeScript"
+        } template downloaded successfully!`
+      );
+
+      process.chdir(projectPath);
+
+      spinner.start("Installing dependencies...");
+      execSync("npm install", { stdio: "inherit" });
+      spinner.succeed("Dependencies installed successfully!");
+
+      console.log(chalk.green(`Project ${projectName} is ready!`));
+      console.log(chalk.green(`cd ${projectName} and run npm run dev`));
+    } catch (error) {
+      spinner.fail("Failed to set up the project.");
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program.parse(process.argv);
+```
+
+This completes the creation of your main CLI file. The `index.js` file now contains all the necessary code to run your CLI application, including argument parsing, user prompts, Git operations, and dependency installation.
+
+### Step 4: Modify package.json
+
+Update your `package.json` file to include the following:
+
+```json
+{
+  "name": "create-desishub-app-nodejs",
+  "version": "1.0.1",
+  "description": "A CLI tool to scaffold Node.js projects",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "create-desishub-app": "./index.js"
+  },
+  "keywords": ["cli", "nodejs", "scaffold", "template"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^10.1.8",
+    "ora": "^8.0.1",
+    "simple-git": "^3.25.0",
+    "fs-extra": "^11.1.0"
+  }
+}
+```
+
+Make sure to replace "Your Name" with your actual name or username.
+
+## Publishing the CLI as an npm Package
+
+### Requirements for Publishing
+
+To publish a package on npm, you need:
+
+1. An npm account (create one at [npmjs.com](https://www.npmjs.com/))
+2. A unique package name (check availability on npm)
+3. A `package.json` file with correct metadata
+4. A README file explaining how to use your package
+
+### Modifying package.json for Publication
+
+Ensure your `package.json` file includes the following fields:
+
+- `name`: A unique name for your package
+- `version`: Follow semantic versioning (e.g., "1.0.0")
+- `description`: A brief description of your package
+- `main`: The entry point of your package (usually "index.js")
+- `bin`: Specifies the command to run your CLI
+- `keywords`: Relevant terms to help users find your package
+- `author`: Your name or username
+- `license`: The license type (e.g., "MIT")
+
+### Creating a README File
+
+Create a `README.md` file in the root of your project with the following content:
+
+```markdown
+# create-desishub-app-nodejs
+
+`create-desishub-app-nodejs` is a CLI tool to quickly scaffold a new Node.js application with a customizable setup.
+
+## Features
+
+- Interactive prompts for creating a new Node.js project
+- Supports JavaScript and TypeScript templates
+- Initializes a Git repository and installs dependencies
+
+## Installation
+
+Install `create-desishub-app-nodejs` globally using npm:
+
+\`\`\`bash
+npm install -g create-desishub-app-nodejs
+\`\`\`
+
+## Usage
+
+After installation, run the CLI command to create a new Node.js application:
+
+\`\`\`bash
+create-desishub-app app-name
+\`\`\`
+
+Follow the prompts to select your preferred template and options.
+
+## License
+
+MIT
+```
+
+### Publishing to npm
+
+1. Log in to your npm account in the terminal:
+
+   ```bash
+   npm login
+   ```
+
+2. Publish your package:
+
+   ```bash
+   npm publish
+   ```
+
+If successful, your package will be available on npm for others to install and use.
+
+## Using the CLI Tool
+
+After publishing your CLI tool, users can install and run it in different ways. Let's explore how npm and npx work with our `create-nodext-app` tool.
+
+### Understanding npm and npx
+
+#### npm (Node Package Manager)
+
+npm is the default package manager for Node.js. It allows you to install, share, and manage dependencies in your projects. When you install a package globally using npm, it becomes available as a command-line tool across your entire system.
+
+To install our CLI tool globally:
+
+```bash copy
+npm install -g create-nodext-app
+```
+
+After global installation, users can run the tool directly:
+
+```bash copy
+create-nodext-app my-new-project
+```
+
+#### npx (Node Package Execute)
+
+npx is a package runner tool that comes with npm (version 5.2+). It allows you to execute npm package binaries without installing them globally. This is particularly useful for running one-off commands or ensuring you're always using the latest version of a package.
+
+To run our CLI tool using npx (without installing it globally):
+
+```bash copy
+npx create-nodext-app my-new-project
+```
+
+When you use npx:
+
+1. It first checks if the package is installed globally.
+2. If not, it temporarily downloads the latest version of the package.
+3. It then runs the specified command.
+4. After execution, the temporarily downloaded package is removed.
+
+### Benefits of Using npx
+
+1. **No Global Installation**: Users don't need to clutter their global npm space with packages they might use infrequently.
+2. **Always Latest Version**: npx always uses the latest version of the package, ensuring users have the most up-to-date features and bug fixes.
+3. **One-Time Use**: It's perfect for tools that you might only use occasionally or for trying out different packages without committing to an installation.
+
+### Configuring Your Package for npm and npx
+
+To ensure your CLI tool works with both npm (global installation) and npx, you need to properly configure the `bin` field in your `package.json`:
+
+```json copy
+{
+  "name": "create-nodext-app",
+  "version": "1.0.0",
+  "bin": {
+    "create-nodext-app": "./index.js"
+  }
+  // ... other fields
+}
+```
+
+This configuration tells npm and npx that when someone runs `create-nodext-app`, it should execute the `index.js` file in your package.
+
+### Recommendation for Users
+
+In your documentation, it's a good practice to provide instructions for both methods:
+
+1. Global Installation:
+
+   ```bash copy
+   npm install -g create-nodext-app
+   create-nodext-app my-new-project
+   ```
+
+2. Using npx (no installation required):
+   ```bash copy
+   npx create-nodext-app my-new-project
+   ```
+
+By providing both options, you give users the flexibility to choose the method that best suits their workflow. Some may prefer global installation for frequent use, while others might prefer using npx to always get the latest version without managing global packages.
+
+## Conclusion
+
+Building and publishing a CLI tool as an npm package is a rewarding experience that can help many developers streamline their workflow. By following this guide, you've learned how to create a basic CLI tool, structure your project, and publish it to npm. Continue to iterate on your tool, gather feedback from users, and make improvements to create an even more valuable resource for the community.
