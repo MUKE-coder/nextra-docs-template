@@ -13,52 +13,9 @@ Nextra is a framework on top of Next.js, that lets you build content focused web
 7. [Built-in Components](#built-in-components)
 8. [Advanced Concepts](#advanced-concepts)
 
-## 1. Installation and Getting Started
+## 1. Getting Started
 
-To start creating documentation with Nextra, follow these steps:
-
-1. Create a new Next.js project:
-
-   ```bash
-   npx create-next-app my-docs
-   cd my-docs
-   ```
-
-2. Install Nextra and the docs theme:
-
-   ```bash
-   npm install nextra nextra-theme-docs
-   ```
-
-3. Create a `next.config.js` file in your project root:
-
-   ```javascript
-   const withNextra = require("nextra")({
-     theme: "nextra-theme-docs",
-     themeConfig: "./theme.config.js",
-   });
-   module.exports = withNextra();
-   ```
-
-4. Create a `theme.config.js` file in your project root:
-
-   ```javascript
-   export default {
-     logo: <span>My Project</span>,
-     project: {
-       link: "https://github.com/yourusername/your-repo",
-     },
-   };
-   ```
-
-5. Update your `package.json` scripts:
-   ```json
-   "scripts": {
-     "dev": "next",
-     "build": "next build",
-     "start": "next start"
-   }
-   ```
+To start creating documentation with Nextra,You can use a single click vercel deploy or You can also manually fork the [template repository](https://github.com/shuding/nextra-docs-template).
 
 Now you're ready to start creating your documentation!
 
@@ -406,6 +363,7 @@ export default function Page({ data }) {
 ```
 
 ### TypeScript
+
 1. Rename files to `.ts` or `.tsx`
 2. Create a `tsconfig.json` file
 3. Use TypeScript for type-safe development
