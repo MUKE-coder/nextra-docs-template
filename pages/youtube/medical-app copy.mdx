@@ -17,7 +17,7 @@ Thank you for purchasing our Medical App source code! This guide will walk you t
 
 1. Open a terminal or command prompt.
 2. Navigate to the directory where you unzipped the source code:
-   ```bash copy
+   ```
    cd path/to/medical-app
    ```
 3. Run the following command to install all required dependencies:
@@ -31,16 +31,18 @@ Thank you for purchasing our Medical App source code! This guide will walk you t
    ```bash copy
    npm run setup
    ```
-2. This will open the broweser and Follow the prompts in the wizard to input all required environment variables.
+2. This will open abrowser window, Follow the prompts in the wizard to input all required environment variables.
 3. This process will create a `.env` file in your project root with the necessary configuration.
 
-## Step 4: Synchronize Database Schema
+## Step 4: Restart the Server
 
-1. Stop the server with `Ctr + C` , Run the following command on the terminal to sync your Prisma schema with the database:
+If you had the development server running, restart it to apply the new environment variables:
+
+1. Stop the current server process (usually by pressing Ctrl+C in the terminal).
+2. Start the server again with:
    ```bash copy
-   npx prisma db push
+    npm run dev
    ```
-2. This will create the necessary tables in your database based on the Prisma schema.
 
 ## Step 5: Seed the Database
 
@@ -52,41 +54,24 @@ npm run seed
 
 This will create dummy data, including user accounts for testing.
 
-## Step 6: Restart the Server
-
-If you had the development server running, restart it to apply the new environment variables:
-
-1. Stop the current server process (usually by pressing Ctrl+C in the terminal).
-2. Start the server again with:
-   ```bash copy
-   npm run dev
-   ```
-
-## Step 7: Access the Application
+## Step 6: Access the Application
 
 1. Open your web browser and navigate to `http://localhost:3000` (or the port specified in your environment setup).
 2. You should now see the login page of your Medical App.
 
 ## Default User Accounts
 
-The seeding process creates several default user accounts for testing:
+The seeding process creates three default user accounts for testing:
 
 1. **Admin**
 
    - Email: admin@admin.com
    - Password: admin
 
-2. **Doctors**
+2. **Doctor**
 
-   - Doctor 1:
-     - Email: doctor@doctor.com
-     - Password: doctor
-   - Doctor 2:
-     - Email: jane.smith@doctor.com
-     - Password: doctor
-   - Doctor 3:
-     - Email: mike.johnson@doctor.com
-     - Password: doctor
+   - Email: doctor@doctor.com
+   - Password: doctor
 
 3. **Patient**
    - Email: patient@patient.com
@@ -102,7 +87,6 @@ If you encounter any issues during the setup process:
 2. Double-check that all environment variables are properly set (Step 3).
 3. Make sure your database is running and accessible.
 4. Check the console output for any error messages.
-5. If you encounter database-related issues, try running `npx prisma db push` again.
 
 If problems persist, please refer to our documentation or contact our support team.
 
