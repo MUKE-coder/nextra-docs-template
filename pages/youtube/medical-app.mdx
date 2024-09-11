@@ -1,0 +1,93 @@
+# Medical App Setup Guide
+
+Thank you for purchasing our Medical App source code! This guide will walk you through the process of setting up and running the application on your local machine.
+
+## Prerequisites
+
+- Node.js (v14 or later) installed on your computer
+- npm (usually comes with Node.js)
+- A code editor of your choice (e.g., Visual Studio Code, Sublime Text)
+
+## Step 1: Unzip the Source Code
+
+1. Locate the zipped file containing the source code that you received after your purchase.
+2. Unzip the file to a directory of your choice on your computer.
+
+## Step 2: Install Dependencies
+
+1. Open a terminal or command prompt.
+2. Navigate to the directory where you unzipped the source code:
+   ```
+   cd path/to/medical-app
+   ```
+3. Run the following command to install all required dependencies:
+   ```bash copy
+   npm install
+   ```
+
+## Step 3: Set Up Environment Variables
+
+1. In the terminal, run the setup wizard:
+   ```bash copy
+   npm run setup
+   ```
+2. This will open abrowser window, Follow the prompts in the wizard to input all required environment variables.
+3. This process will create a `.env` file in your project root with the necessary configuration.
+
+## Step 4: Restart the Server
+
+If you had the development server running, restart it to apply the new environment variables:
+
+1. Stop the current server process (usually by pressing Ctrl+C in the terminal).
+2. Start the server again with:
+   ```bash copy
+    npm run dev
+   ```
+
+## Step 5: Seed the Database
+
+To populate your database with initial data, run the seed script:
+
+```bash copy
+npm run seed
+```
+
+This will create dummy data, including user accounts for testing.
+
+## Step 6: Access the Application
+
+1. Open your web browser and navigate to `http://localhost:3000` (or the port specified in your environment setup).
+2. You should now see the login page of your Medical App.
+
+## Default User Accounts
+
+The seeding process creates three default user accounts for testing:
+
+1. **Admin**
+
+   - Email: admin@admin.com
+   - Password: admin
+
+2. **Doctor**
+
+   - Email: doctor@doctor.com
+   - Password: doctor
+
+3. **Patient**
+   - Email: patient@patient.com
+   - Password: patient
+
+You can use these credentials to log in and explore different user roles within the application.
+
+## Troubleshooting
+
+If you encounter any issues during the setup process:
+
+1. Ensure all dependencies are correctly installed (Step 2).
+2. Double-check that all environment variables are properly set (Step 3).
+3. Make sure your database is running and accessible.
+4. Check the console output for any error messages.
+
+If problems persist, please refer to our documentation or contact our support team.
+
+Happy coding, and enjoy your new Medical App!
