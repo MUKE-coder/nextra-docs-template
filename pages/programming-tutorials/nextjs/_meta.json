@@ -10,6 +10,7 @@
   "excel": "Import Data from Excel",
   "datatable": "Data Table",
   "drag-n-drop": "Drag and Drop",
+  "kanban": "Kanban Drag and Drop",
   "stripe-checkout": "Stripe Checkout",
   "stripe-subscription": "Stripe Subscriptions",
   "next-routing": "Routing in Next.js",
