@@ -1,0 +1,113 @@
+# Creating an API with JWT and API Key Protection in Node.js
+
+In this guide, we will create a Node.js API that uses both JWT (JSON Web Tokens) and API keys to secure endpoints. We'll protect the API key generation endpoint with a JWT access token and then use the generated API key to protect other API endpoints.
+
+## Project Setup
+
+First, install the necessary dependencies:
+
+```bash copy
+npm install express jsonwebtoken crypto
+```
+
+## Basic Project Structure
+
+Below is the complete code for the project:
+
+```ts copy
+import express, { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import crypto from "crypto";
+
+const app = express();
+app.use(express.json());
+
+// Secret key for signing the JWT (in a real app, store this securely)
+const jwtSecretKey = "your-jwt-secret-key";
+// Storage for API keys (in a real app, use a database)
+const apiKeyStore: Set<string> = new Set();
+
+// Middleware to verify JWT (used for protecting the API key creation endpoint)
+function verifyAccessToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void {
+  const token = req.headers["authorization"];
+
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
+  }
+
+  // Remove "Bearer " if the token is provided in "Bearer <token>" format
+  const tokenWithoutBearer = token.replace("Bearer ", "");
+
+  jwt.verify(tokenWithoutBearer, jwtSecretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Failed to authenticate token" });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+// Middleware to verify API Key
+function verifyApiKey(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void {
+  const apiKey = req.headers["x-api-key"];
+
+  if (!apiKey) {
+    return res.status(403).json({ message: "No API key provided" });
+  }
+
+  if (!apiKeyStore.has(apiKey)) {
+    return res.status(401).json({ message: "Invalid API key" });
+  }
+
+  next();
+}
+
+// Endpoint to create a new API key (Protected by Access Token)
+app.post(
+  "/api/create-api-key",
+  verifyAccessToken,
+  (req: Request, res: Response) => {
+    // Generate a random API key
+    const apiKey = crypto.randomBytes(32).toString("hex");
+
+    // Store the API key
+    apiKeyStore.add(apiKey);
+
+    // Return the new API key
+    res.status(201).json({ apiKey });
+  }
+);
+
+// Protected endpoint example
+app.get(
+  "/api/protected-resource",
+  verifyApiKey,
+  (req: Request, res: Response) => {
+    res.status(200).json({ message: "Access granted to protected resource" });
+  }
+);
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+Explanation
+Access Token Protection (verifyAccessToken)
+This middleware verifies the JWT access token, ensuring that only authenticated users can create API keys. The token is expected to be passed in the Authorization header as a Bearer token.
+API Key Creation Endpoint
+This endpoint is protected by the verifyAccessToken middleware. When accessed, it generates a random API key using crypto.randomBytes, stores it in a Set (apiKeyStore), and returns it to the client.
+API Key Verification (verifyApiKey)
+This middleware verifies that the request includes a valid API key in the x-api-key header. If the key is valid, the request proceeds; otherwise, an error is returned.
+Protected Resource Endpoint
+This endpoint ` (/api/protected-resource)` is an example of how you can protect your API endpoints with the generated API key. The verifyApiKey middleware ensures that only requests with a valid API key can access this endpoint.

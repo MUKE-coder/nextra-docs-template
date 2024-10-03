@@ -1261,6 +1261,154 @@ export default function TextArea({
   </Tabs.Tab>
 </Tabs>
 
+## Password Input
+
+<Tabs items={["installation", "code", "usage"]}>
+  <Tabs.Tab>Install tailwind forms plugin</Tabs.Tab>
+  <Tabs.Tab>
+    ```ts copy 
+       "use client";
+import { cn } from "@/lib/utils";
+import React, { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import { CircleHelp, Eye, EyeOff, Mail } from "lucide-react";
+import Link from "next/link";
+type TextInputProps = {
+  register: any,
+  errors: any,
+  label: string,
+  type?: string,
+  name: string,
+  toolTipText?: string,
+  placeholder?: string,
+  forgotPasswordLink?: string,
+  icon?: any,
+};
+export default function PasswordInput({
+  register,
+  errors,
+  label,
+  type = "text",
+  name,
+  toolTipText,
+  icon,
+  placeholder,
+  forgotPasswordLink,
+}: TextInputProps) {
+  const Icon = icon;
+  const [passType, setPassType] = useState(type);
+  return (
+    <div>
+      <div className="flex space-x-2 items-center">
+        <div className="flex items-center justify-between w-full">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium leading-6 "
+          >
+            {label}
+          </label>
+          {forgotPasswordLink && (
+            <div className="text-sm">
+              <Link
+                href={forgotPasswordLink}
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          )}
+        </div>
+        {toolTipText && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button>
+                  <CircleHelp className="w-4 h-4 text-slate-500" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{toolTipText}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="relative rounded-md ">
+          {icon && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Icon className="text-slate-300 w-4 h-4" />
+            </div>
+          )}
+          <input
+            id={name}
+            type={passType}
+            {...register(name, {
+              required: true,
+              minLength: {
+                value: 8,
+                message: "Password must be at least 8 characters",
+              },
+              pattern: {
+                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+                message:
+                  "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+              },
+              // setValueAs: (value: string) =>
+              //   value === "" ? generatedPassword : value,
+            })}
+            className={cn(
+              "block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-sm",
+              (errors[name] && "focus:ring-red-500 pl-8") || (icon && "pl-8")
+            )}
+            placeholder={placeholder || label}
+          />
+          <button
+            type="button"
+            onClick={() =>
+              setPassType((prev) => (prev === "password" ? "text" : "password"))
+            }
+            className="bg-white py-2 px-3 rounded-tr-md rounded-br-md absolute inset-y-0 right-1 my-[2px] flex items-center"
+          >
+            {passType === "password" ? (
+              <Eye className="w-4 h-4 text-slate-600" />
+            ) : (
+              <EyeOff className="w-4 h-4 text-slate-600" />
+            )}
+          </button>
+        </div>
+        {errors[name] && (
+          <span className="text-xs text-red-600">{errors[name].message}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ts copy 
+   <PasswordInput
+      register={register}
+      errors={errors}
+      label="Password"
+      name="password"
+      icon={Lock}
+      placeholder="password"
+      forgotPasswordLink="/forgot-password"
+    />
+  ```
+  </Tabs.Tab>
+</Tabs>
+
 ## Submit Button and Close Button
 
 <Tabs items={["submit-btn", "close-btn", "usage"]}>
@@ -1686,3 +1834,572 @@ return (
 
   </Tabs.Tab>
 </Tabs>
+
+## Multiple File Upload (Both Images and PDFS)
+
+<Tabs items={['installation', 'code', 'usage']}>
+  <Tabs.Tab>
+  Follow steps in the docs of [Uploathing] (https://docs.uploadthing.com/getting-started/appdir)
+
+```bash copy
+npm install uploadthing @uploadthing/react
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  Create MultipleFileUpload.tsx
+```ts copy 
+      import { UploadDropzone } from "@/utils/uploadthing";
+      import { File, Pencil, XCircle } from "lucide-react";
+      import Image from "next/image";
+      import React from "react";
+      import toast from "react-hot-toast";
+      import { FaFilePdf, FaImage } from "react-icons/fa";
+      type MultipleImageInputProps = {
+        label: string;
+        files: FileProps[];
+        setFiles: any;
+        className?: string;
+        endpoint?: any;
+      };
+      export type FileProps = {
+        title: string;
+        size: number;
+        url: string;
+      };
+      export default function MultipleFileUpload({
+        label,
+        files,
+        setFiles,
+        className = "col-span-full",
+        endpoint = "",
+      }: MultipleImageInputProps) {
+        function handleImageRemove(fileIndex: any) {
+          const updatedFiles = files.filter((file, index) => index !== fileIndex);
+          setFiles(updatedFiles);
+        }
+        return (
+          <div className={className}>
+            <div className="flex justify-between items-center mb-4">
+              <label
+                htmlFor="course-image"
+                className="block text-sm font-medium leading-6 text-gray-900 dark:text-slate-50 mb-2"
+              >
+                {label}
+              </label>
+              {files && (
+                <button
+                  onClick={() => setFiles([])}
+                  type="button"
+                  className="flex space-x-2  bg-slate-900 rounded-md shadow text-slate-50  py-2 px-4"
+                >
+                  <Pencil className="w-5 h-5" />
+                  <span>Change Files</span>
+                </button>
+              )}
+            </div>
+            {files.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2  gap-4">
+                {files.map((file, i) => {
+                  const extension = file.title.split(".")[1];
+                  return (
+                    <div key={i} className="relative mb-6">
+                      <button
+                        type="button"
+                        onClick={() => handleImageRemove(i)}
+                        className="absolute -top-4 -right-2 bg-slate-100 text-red-600 rounded-full "
+                      >
+                        <XCircle className="" />
+                      </button>
+                      <div className="py-2 rounded-md px-6 bg-white dark:bg-slate-800 text-slate-800 flex items-center dark:text-slate-200 border border-slate-200">
+                        {extension === "pdf" ? (
+                          <FaFilePdf className="w-6 h-6 flex-shrink-0 mr-2 text-red-500" />
+                        ) : (
+                          <FaImage className="w-6 h-6 flex-shrink-0 mr-2 text-gray-600" />
+                        )}
+                        <div className="flex flex-col">
+                          <span className="line-clamp-1">{file.title}</span>
+                          {file.size > 0 && (
+                            <span className="text-xs">
+                              {(file.size / 1000).toFixed(2)}kb
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <UploadDropzone
+                endpoint={endpoint}
+                onClientUploadComplete={(res) => {
+                  console.log(res);
+                  const urls = res.map((item) => {
+                    return {
+                      url: item.url,
+                      title: item.name,
+                      size: item.size,
+                    };
+                  });
+                  setFiles(urls);
+                  console.log(urls);
+                  console.log("Upload Completed");
+                }}
+                onUploadError={(error) => {
+                  toast.error("Image Upload Failed, Try Again");
+                  // Do something with the error.
+                  console.log(`ERROR! ${error.message}`, error);
+                }}
+              />
+            )}
+          </div>
+        );
+      }
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    
+```ts copy
+    "use client";
+import { useForm } from "react-hook-form";
+import TextInput from "../FormInputs/TextInput";
+import SubmitButton from "../FormInputs/SubmitButton";
+import { useState } from "react";
+
+import toast from "react-hot-toast";
+
+import { useRouter } from "next/navigation";
+
+import { Button } from "../ui/button";
+import Link from "next/link";
+import { File, Paperclip, X, XCircle } from "lucide-react";
+import dynamic from "next/dynamic";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { sendEmail } from "@/actions/mails";
+import MultipleFileUpload, {
+  FileProps,
+} from "../FormInputs/MultipleFileUpload";
+import { FaFilePdf, FaImage } from "react-icons/fa";
+const QuillEditor = dynamic(
+  () => import("@/components/FormInputs/QuillEditor"),
+  {
+    ssr: false,
+  }
+);
+export type MailProps = {
+  to: string;
+  subject: string;
+  html: string;
+  attachments: FileProps[];
+};
+
+export default function ComposeMailForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [content, setContent] = useState("");
+  const [bodyErr, setBodyErr] = useState("");
+  const [files, setFiles] = useState<FileProps[]>([]);
+  function handleImageRemove(fileIndex: any) {
+    const updatedFiles = files.filter((file, index) => index !== fileIndex);
+    setFiles(updatedFiles);
+  }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<MailProps>();
+  const router = useRouter();
+  async function onSubmit(data: MailProps) {
+    setBodyErr("");
+    if (!content || content === "<p><br></p>") {
+      setBodyErr("Please Write something in the body");
+      return;
+    }
+    data.html = content;
+    data.attachments = files;
+    console.log(data);
+    try {
+      setIsLoading(true);
+      const res = await sendEmail(data);
+      if (res.status === 200) {
+        setIsLoading(false);
+        toast.success("Email Sent Successfully");
+        reset();
+        setContent("");
+        setFiles([]);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    }
+  }
+
+return (
+<div className="w-full max-w-2xl shadow-sm rounded-md m-3 border border-gray-200 mx-auto">
+<div className="text-center border-b border-gray-200 py-4 dark:border-slate-600">
+<div className="flex items-center justify-between px-6">
+<h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight  ">
+New Message
+</h1>
+<Button type="button" asChild variant={"outline"}>
+<Link href="/dashboard">
+<X className="w-4 h-4" />
+</Link>
+</Button>
+</div>
+</div>
+<form className=" py-4 px-4  mx-auto " onSubmit={handleSubmit(onSubmit)}>
+
+        <div className="pt-4">
+          <h2 className="pb-2 ">Attachments</h2>
+          {files && files.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4">
+              {files.map((file, i) => {
+                const extension = file.title.split(".")[1];
+                return (
+                  <div key={i} className="relative mb-6">
+                    <button
+                      type="button"
+                      onClick={() => handleImageRemove(i)}
+                      className="absolute -top-4 -right-2 bg-slate-100 text-red-600 rounded-full "
+                    >
+                      <XCircle className="" />
+                    </button>
+                    <div className="py-2 rounded-md px-6 bg-white dark:bg-slate-800 text-slate-800 flex items-center dark:text-slate-200 border border-slate-200">
+                      {extension === "pdf" ? (
+                        <FaFilePdf className="w-6 h-6 flex-shrink-0 mr-2 text-red-500" />
+                      ) : (
+                        <FaImage className="w-6 h-6 flex-shrink-0 mr-2 text-gray-600" />
+                      )}
+
+                      <div className="flex flex-col">
+                        <span className="line-clamp-1">{file.title}</span>
+                        {file.size > 0 && (
+                          <span className="text-xs">
+                            {(file.size / 1000).toFixed(2)}kb
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="mt-8 flex justify-between gap-4 items-center">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button type="button" variant={"outline"}>
+                <Paperclip className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload your Files</DialogTitle>
+              </DialogHeader>
+              <MultipleFileUpload
+                label="Add attachments"
+                files={files}
+                setFiles={setFiles}
+                endpoint="mailAttachments"
+              />
+            </DialogContent>
+          </Dialog>
+
+          <SubmitButton
+            title={"Send Mail"}
+            isLoading={isLoading}
+            loadingTitle={"Saving please wait..."}
+          />
+        </div>
+      </form>
+    </div>
+
+);
+}
+
+````
+
+
+  </Tabs.Tab>
+</Tabs>
+
+## Custome Code Snippet Component
+
+<Tabs items={["install", "custom-code-block", "usage"]}>
+  <Tabs.Tab>
+  ** Install React Code block Package **
+
+```bash copy
+npm i react-code-blocks
+````
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```tsx copy  filename="CustomCodeBlock.tsx"
+"use client";
+import { CopyBlock, dracula, github, atomOneLight } from "react-code-blocks";
+
+import React from "react";
+import Link from "next/link";
+type CustomCodeBlock = {
+  codeString: string,
+  language: string,
+  showLineNumbers: boolean,
+  href?: string,
+};
+export default function CustomCodeBlock({
+  codeString,
+  language,
+  showLineNumbers,
+  href = "",
+}: CustomCodeBlock) {
+  return (
+    <div className="border-gray-500 max-w-4xl mx-auto dark:bg-gray-800 font-jet h-full max-h-[400px] overflow-y-scroll">
+      {href ? (
+        <Link href={href}>
+          <CopyBlock
+            text={codeString}
+            language={language}
+            showLineNumbers={showLineNumbers}
+            theme={atomOneLight}
+            codeBlock
+          />
+        </Link>
+      ) : (
+        <CopyBlock
+          text={codeString}
+          language={language}
+          showLineNumbers={showLineNumbers}
+          theme={atomOneLight}
+          codeBlock
+        />
+      )}
+    </div>
+  );
+}
+
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```tsx copy 
+import React from "react";
+import CustomCodeBlock from "./CustomCodeBlock";
+import { Button } from "@/components/ui/button";
+import { getAllProducts } from "@/actions/products";
+import { getProductsCount } from "@/actions/analytics";
+
+export default async function ProductEndpoints() {
+  const productsCount = await getProductsCount();
+  const allProductsCodeString = `
+  {
+    "success":true,
+    "error":null
+    "data":[
+    {
+      "id": "667ce87f0c413652ea95cd31",
+      "name": "5ft Office Table With 3ft Extension",
+      "slug": "5ft-office-table-with-3ft-extension",
+      "productCode": "147642834",
+      "stockQty": 98,
+      "productCost": 100,
+      "productPrice": 200,
+      "alertQty": 10,
+      "productTax": 5,
+      "taxMethod": "inclusive",
+      "productImages": [
+        "https://utfs.io/f/ea7f2510-97a3-4eee-b4ff-f64dad0a9e4a-p0mwdf.jpg",
+        "https://utfs.io/f/77deeb48-ceb8-4702-b9ad-b2b03881aaec-n83ahj.jpg"
+      ],
+      "status": true,
+      "productThumbnail": "https://utfs.io/f/ea7f2510-97a3-4eee-b4ff-f64dad0a9e4a-p0mwdf.jpg",
+      "productDetails": " 5 feet desk and 3 feet extension suitable for middle managers/Supervisors",
+      "content": "<h3>Product Details</h3><p>This is the best table i have ever used , it really nice</p><ul class=\"novel-list-disc novel-list-outside novel-leading-3 novel--mt-2 tight\" data-tight=\"true\"><li class=\"novel-leading-normal novel--mb-2\"><p>Portable</p></li><li class=\"novel-leading-normal novel--mb-2\"><p>Cost effective</p></li><li class=\"novel-leading-normal novel--mb-2\"><p>Versatile and durable</p></li></ul>",
+      "batchNumber": "929",
+      "expiryDate": "2024-06-27T00:00:00.000Z",
+      "isFeatured": true,
+      "createdAt": "2024-06-27T04:20:15.669Z",
+      "updatedAt": "2024-07-08T04:22:33.235Z",
+      "subCategoryId": "6670057f9c0ce14ce01842df",
+      "brandId": "66457757076904eae2e8ffa0",
+      "unitId": "6646e2e392c89096283cb593",
+      "supplierId": "6646d95d92c89096283cb58b",
+      "subCategory": {
+        "id": "6670057f9c0ce14ce01842df",
+        "title": "Office and Business ",
+        "slug": "office-and-business-",
+        "categoryId": "66700548a6eeb3b691452f6d",
+        "createdAt": "2024-06-17T09:44:31.786Z",
+        "updatedAt": "2024-06-17T09:44:31.786Z"
+      }
+    },
+    //
+    ],
+    
+  }
+  `;
+  const singleProductCodeString = `
+  {
+  "data": {
+    "id": "6672eef51bcced65d52dc85f",
+    "name": "Apple iPhone 15 Pro 512GB Blue Titanium",
+    "slug": "apple-iphone-15-pro-512gb-blue-titanium",
+    "productCode": "527079499",
+    "stockQty": 93,
+    "productCost": 100,
+    "productPrice": 200,
+    "alertQty": 10,
+    "productTax": 10,
+    "taxMethod": "inclusive",
+    "productImages": [
+      "https://utfs.io/f/b8cb738b-e5f9-42f7-a576-884f8ac74729-w8nlx7.jpg"
+    ],
+    "status": true,
+    "productThumbnail": "https://utfs.io/f/b8cb738b-e5f9-42f7-a576-884f8ac74729-w8nlx7.jpg",
+    "productDetails": "Dimensions 147.6 x 71.6 x 7.8 mm (5.81 x 2.82 x 0.31 in)\nWeight 171 g (6.03 oz)\nBuild Glass front (Corning-made glass), glass back (Corning-made glass), aluminum frame\n\n",
+    "content": null,
+    "batchNumber": "643",
+    "expiryDate": "2024-06-19T00:00:00.000Z",
+    "isFeatured": true,
+    "createdAt": "2024-06-19T14:45:09.021Z",
+    "updatedAt": "2024-07-08T04:22:33.235Z",
+    "subCategoryId": "6672edd4046b0c9f08e3e62c",
+    "brandId": "66664c9db1b9c7267fde0419",
+    "unitId": "6646e2e392c89096283cb593",
+    "supplierId": "6646d95d92c89096283cb58c",
+    "subCategory": {
+      "id": "6672edd4046b0c9f08e3e62c",
+      "title": "Smart Phones",
+      "slug": "smart-phones",
+      "categoryId": "66725a42a23c0e0d0389c68f",
+      "createdAt": "2024-06-19T14:40:20.154Z",
+      "updatedAt": "2024-06-19T14:40:20.154Z",
+      "category": {
+        "id": "66725a42a23c0e0d0389c68f",
+        "title": "Mobile Phones",
+        "slug": "mobile-phones",
+        "description": "These are Mobile Phones",
+        "imageUrl": "https://utfs.io/f/ba478c80-007d-4340-9b14-c24eb927d4db-jlo1ag.jpg",
+        "status": true,
+        "mainCategoryId": "666d1c6b17664964a677d398",
+        "createdAt": "2024-06-19T04:10:42.556Z",
+        "updatedAt": "2024-06-19T04:10:42.556Z",
+        "mainCategory": {
+          "id": "666d1c6b17664964a677d398",
+          "title": "Phone and Tablets",
+          "slug": "phone-and-tablets",
+          "createdAt": "2024-06-15T04:45:31.512Z",
+          "updatedAt": "2024-06-15T04:45:31.512Z"
+        }
+      }
+    },
+    "brand": {
+      "id": "66664c9db1b9c7267fde0419",
+      "title": "HP",
+      "slug": "hp",
+      "status": true,
+      "logo": "https://utfs.io/f/ceba64e1-33b6-47b0-8b76-f839ff610c1d-7aw30t.jpeg",
+      "createdAt": "2024-06-10T00:45:17.243Z",
+      "updatedAt": "2024-06-10T00:45:17.243Z"
+    }
+  },
+  "success": true,
+  "error": null
+}
+  `;
+  const baseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1`;
+
+return (
+
+<div className="space-y-8">
+  <div className="py-6">
+    <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+      Get all products
+    </h2>
+    <p className="py-3">
+      You can access the list of {productsCount} products by using the /products
+      endpoint.
+    </p>
+    <Button variant={"outline"}>
+      <h3 className="scroll-m-20 text-sm uppercase tracking-widest">
+        Request [GET]
+      </h3>
+    </Button>
+    <div className="py-4">
+      <CustomCodeBlock
+        showLineNumbers={false}
+        codeString={`${baseUrl}/products`}
+        language="jsx"
+        href={`${baseUrl}/products`}
+      />
+    </div>
+    <div className="py-3">
+      <div className="pb-3">
+        <Button variant={"outline"}>
+          <h3 className="scroll-m-20 text-sm uppercase tracking-widest">
+            Response [JSON]
+          </h3>
+        </Button>
+      </div>
+      <CustomCodeBlock
+        showLineNumbers={true}
+        codeString={allProductsCodeString}
+        language="jsx"
+      />
+    </div>
+  </div>
+  <div className="py-6">
+    <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+      Get a Single Product
+    </h2>
+    <p className="py-3">
+      You can get a single product by adding the slug as a parameter:
+      /products/slug
+    </p>
+    <Button variant={"outline"}>
+      <h3 className="scroll-m-20 text-sm uppercase tracking-widest">
+        Request [GET]
+      </h3>
+    </Button>
+    <div className="py-4">
+      <CustomCodeBlock
+        showLineNumbers={false}
+        codeString={`${baseUrl}/products/apple-iphone-15-pro-512gb-blue-titanium`}
+        language="jsx"
+        href={`${baseUrl}/products/apple-iphone-15-pro-512gb-blue-titanium`}
+      />
+    </div>
+    <div className="py-3">
+      <div className="pb-3">
+        <Button variant={"outline"}>
+          <h3 className="scroll-m-20 text-sm uppercase tracking-widest">
+            Response [JSON]
+          </h3>
+        </Button>
+      </div>
+      <CustomCodeBlock
+        showLineNumbers={true}
+        codeString={singleProductCodeString}
+        language="jsx"
+      />
+    </div>
+  </div>
+</div>
+); }
+
+```
+</Tabs.Tab>
+</Tabs>
+```

@@ -1,0 +1,163 @@
+import { Steps } from "nextra/components";
+
+# How to create and implement Json Web Token (JWT) in node.js with express.js
+
+<Steps>
+
+### Step 1 : Install Required Packages
+
+```bash copy
+  npm i jsonwebtoken
+  npm install --save @types/jsonwebtoken
+```
+
+### Step 2 : Create a Token Generation Function
+
+```ts copy
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+interface SignOption {
+  expiresIn?: string | number;
+}
+const DEFAULT_SIGN_OPTION: SignOption = {
+  expiresIn: "1h",
+};
+export function generateAccessToken(
+  payload: JwtPayload,
+  options: SignOption = DEFAULT_SIGN_OPTION
+) {
+  const secret = process.env.SECRET_KEY;
+  // Use this command to generate SECRET_KEY: openssl rand -base64 32
+  const token = jwt.sign(payload, secret!, options);
+  return token;
+}
+```
+
+In this code:
+
+`jwt.sign(payload, secretKey, options)`: This function generates a new JWT token using the provided payload, secret key, and options.
+Important Note:
+
+- Secret Key: Make sure to replace 'yourSecretKey' with a strong and secure secret key in a production environment. It's essential to keep the secret key confidential to prevent token manipulation and unauthorized access to your application.
+  Contents for step 2.
+
+### Step 3: Add the token to the Logged in User
+
+- Crate Login Api and Implement JWT Authentication
+  api = '/auth/login'
+
+- Get The User Data From Body .
+- destructure the information from user.
+- Check the (email/user) exist in database or not .
+- if there is not any user with the email we send user not found.
+- if the (user) exist in database we will check the password is valid or not .
+- compare the password in database and the password in the request body.
+- if not matched send response that wrong password.
+- if the email and password is valid create a token .
+- To create a token JsonWebToken (JWT) receive's 3 parameter
+
+- Payload - This contains the claims or data you want to include in the token.
+- Secret Key - A secure key known only to the server used for signing the token.
+- expiration - Additional settings like token expiration or algorithm selection.
+- Don't Provide the secret openly, This secret is very sensitive for the server . keep it in the .env file. I am Keeping it Open just for demonstration.
+
+- After creating the token send the response.
+
+```ts copy
+if (isPasswordCorrect) {
+  const { password, ...userWithoutPass } = existingUser;
+  const accessToken = generateAccessToken(userWithoutPass);
+  const result = {
+    ...userWithoutPass,
+    accessToken,
+  };
+  return res.json(result).status(200);
+} else {
+  return res.status(403).json({
+    user: null,
+    error: "Wrong Credentials",
+  });
+}
+```
+
+Now if we copy the token that we got after the login and go to https://jwt.io/ and past the token and press decode
+
+### Step 4 : Verify the JWT
+
+```ts copy
+import express, { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+const app = express();
+
+// Secret key for signing the JWT (in a real app, store this securely)
+const secretKey = "your-secret-key";
+
+// Define a custom type for the request that includes the user property
+interface AuthenticatedRequest extends Request {
+  user?: string | JwtPayload;
+}
+
+// Middleware to verify JWT
+function verifyToken(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
+  const token = req.headers["authorization"];
+
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
+  }
+
+  // Remove "Bearer " if the token is provided in "Bearer <token>" format
+  const tokenWithoutBearer = token.replace("Bearer ", "");
+
+  jwt.verify(tokenWithoutBearer, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Failed to authenticate token" });
+    }
+    // If the token is valid, save the decoded information to request for use in other routes
+    req.user = decoded;
+    next();
+  });
+}
+
+// Example protected route
+app.get(
+  "/protected",
+  verifyToken,
+  (req: AuthenticatedRequest, res: Response) => {
+    // If JWT is valid, return the protected content
+    res
+      .status(200)
+      .json({ message: "Welcome to the protected page!", user: req.user });
+  }
+);
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+### Protect the Route when a user makes a request
+
+```ts copy
+// Example protected route
+app.get("/protected", verifyToken, (req, res) => {
+  // If JWT is valid, return the protected content
+  res
+    .status(200)
+    .json({ message: "Welcome to the protected page!", user: req.user });
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+</Steps>

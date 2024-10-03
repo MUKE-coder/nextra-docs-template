@@ -1,0 +1,306 @@
+import { Tabs } from "nextra/components";
+import { Steps } from "nextra/components";
+
+## Component Detail Page with Code Snippet Component
+
+- Before You use this Component make sure , you have shadcn and Lucide react icons installed
+- Also to have dark mode working
+- Have Shadcn Tabs, Button and Card Components Installed
+
+Here are the Steps
+
+<Steps>
+### Install Dependencies
+
+```bash copy
+  npm install prism-react-renderer@^2.4.0
+```
+
+### Create the Component detail Page
+
+This Components Imports 2 things the `ComponentDetailPage` component and `dummyData`
+
+```tsx copy
+import ComponentDetailPage from "@/components/code/detail";
+import { dummyData } from "@/data";
+
+export default function Home() {
+  return (
+    <main className="p-8">
+      <ComponentDetailPage componentData={dummyData} />
+    </main>
+  );
+}
+```
+
+So Create the `ComponentDetailPage.tsx` in the `components/code/detail`
+and also Create `data.ts` file in the root where we will export `dummyData`
+
+### Create the ComponentDetailPage.tsx Component
+
+```tsx copy
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Stepper, StepperItem } from "./Stepper";
+import { ComponentKey, componentRegistry } from "@/registry";
+import CodeSnippet from "./CodeSnippet";
+import { ComponentData } from "@/data";
+
+interface ComponentDetailPageProps {
+  componentData: ComponentData;
+}
+
+const ComponentDetailPage: React.FC<ComponentDetailPageProps> = ({
+  componentData,
+}) => {
+  const PreviewComponent = componentRegistry[componentData.componentKey];
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-2">{componentData.name}</h1>
+      <p className="text-gray-600 dark:text-gray-300 mb-6">
+        {componentData.description}
+      </p>
+
+      <Tabs defaultValue="preview" className="mb-6">
+        <TabsList>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="code">Code</TabsTrigger>
+        </TabsList>
+        <TabsContent value="preview">
+          <Card>
+            <CardContent>
+              {PreviewComponent ? (
+                <PreviewComponent />
+              ) : (
+                <p>Preview not available</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="code">
+          <CodeSnippet code={componentData.code} language="tsx" />
+        </TabsContent>
+      </Tabs>
+
+      <Stepper>
+        {componentData.steps.map((step, index) => (
+          <StepperItem key={index} title={step.title}>
+            <div className="space-y-4">
+              {step.content.map((item, itemIndex) => (
+                <div key={itemIndex}>
+                  {item.type === "command" && (
+                    <CodeSnippet code={item.code} language="bash" />
+                  )}
+                  {item.type === "file" && (
+                    <>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {item.name}
+                      </p>
+                      <CodeSnippet code={item.code} language="typescript" />
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </StepperItem>
+        ))}
+      </Stepper>
+    </div>
+  );
+};
+
+export default ComponentDetailPage;
+```
+
+### Create the data.ts
+
+```tsx copy
+import { ComponentKey } from "./registry";
+interface Step {
+  title: string;
+  content: Array<{
+    type: "command" | "file";
+    code: string;
+    name?: string;
+  }>;
+}
+export interface ComponentData {
+  name: string;
+  description: string;
+  componentKey: ComponentKey;
+  code: string;
+  steps: Step[];
+}
+
+export const dummyData: ComponentData = {
+  name: "Apple Cards Carousel",
+  description:
+    "A sleek and minimal carousel implementation, as seen on apple.com",
+  componentKey: "AppleCardsCarousel",
+  code: `
+import Image from "next/image";
+import React from "react";
+import { Carousel, Card } from "@/components/ui/apple-cards-carousel";
+
+export function AppleCardsCarouselDemo() {
+  const cards = data.map((card, index) => (
+    <Card key={card.src} {...card} index={index} />
+  ));
+
+  return (
+    <div className="w-full h-full py-20">
+      <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-5xl font-bold text-neutral-800 dark:text-neutral-200 font-sans">
+        Apple Cards Carousel
+      </h2>
+      <Carousel>{cards}</Carousel>
+    </div>
+  );
+}`,
+  steps: [
+    {
+      title: "Installation",
+      content: [
+        {
+          type: "command",
+          code: "npm install tailwindcss@latest clsx tailwind-merge framer-motion",
+        },
+        {
+          type: "file",
+          name: "lib/utils.ts",
+          code: `
+import clsx, { ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}`,
+        },
+      ],
+    },
+    {
+      title: "Install components",
+      content: [
+        {
+          type: "command",
+          code: "# No additional command needed. Copy and paste the components you need.",
+        },
+      ],
+    },
+  ],
+};
+```
+
+So Again Create two components `CodeSnippet.tsx` and `Stepper.tsx` in the `components/code`folder
+
+### Create CodeSnippet Component
+
+```tsx copy
+"use client";
+import { Check, Copy } from "lucide-react";
+import { Button } from "../ui/button";
+import { Highlight, themes } from "prism-react-renderer";
+import { useTheme } from "next-themes";
+import { useState } from "react";
+interface CodeSnippetProps {
+  code: string;
+  language: string;
+}
+const CodeSnippet: React.FC<CodeSnippetProps> = ({ code, language }) => {
+  const [copied, setCopied] = useState(false);
+  const { theme } = useTheme();
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative">
+      <Highlight
+        theme={theme === "dark" ? themes.nightOwl : themes.github}
+        code={code}
+        language={language as any}
+      >
+        {({ className, style, tokens, getLineProps, getTokenProps }) => (
+          <pre
+            className={`${className} p-4 rounded-md overflow-x-auto`}
+            style={style}
+          >
+            {tokens.map((line, i) => (
+              <div key={i} {...getLineProps({ line, key: i })}>
+                {line.map((token, key) => (
+                  <span key={key} {...getTokenProps({ token, key })} />
+                ))}
+              </div>
+            ))}
+          </pre>
+        )}
+      </Highlight>
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute top-2 right-2"
+        onClick={copyCode}
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+};
+
+export default CodeSnippet;
+```
+
+### Create Stepper Component
+
+```tsx copy
+import { cn } from "@/lib/utils";
+import clsx from "clsx";
+import { Children, PropsWithChildren } from "react";
+
+export function Stepper({ children }: PropsWithChildren) {
+  const length = Children.count(children);
+  return (
+    <div className="flex flex-col">
+      {Children.map(children, (child, index) => {
+        return (
+          <div
+            className={cn(
+              "border-l pl-9 relative",
+              clsx({
+                "pb-5 ": index < length - 1,
+              })
+            )}
+          >
+            <div className="bg-secondary w-8 h-8 text-xs font-medium rounded-full flex items-center justify-center absolute -left-4 font-code">
+              {index + 1}
+            </div>
+            {child}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function StepperItem({
+  children,
+  title,
+}: PropsWithChildren & { title?: string }) {
+  return (
+    <div className="pt-0.5">
+      <h4 className="mt-0 mb-3 font-medium">{title}</h4>
+      <div>{children}</div>
+    </div>
+  );
+}
+```
+
+### How to add Crisp Chat widget on your site
+
+follow the Instructions in this Blog : https://help.crisp.chat/en/article/how-do-i-install-crisp-live-chat-on-nextjs-xh9yse/
+
+</Steps>

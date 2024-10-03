@@ -1,0 +1,654 @@
+# Creating a Prisma Transaction
+
+```ts copy
+import prisma from "@/lib/db";
+import { generateOrderNumber } from "@/lib/generateOrderNumber";
+import { ILineOrder } from "@/types/types";
+import { NotificationStatus } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+
+interface OrderLineItem {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+  productThumbnail: string;
+}
+
+interface CustomerData {
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  streetAddress?: string;
+  apartment?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  method?: string;
+}
+interface NewOrderProps {
+  orderItems: OrderLineItem[];
+  orderAmount: number;
+  orderType: string;
+  source: string;
+}
+type NotificationProps = {
+  message: string;
+  status?: NotificationStatus;
+  statusText: string;
+};
+export async function createNotification(data: NotificationProps) {
+  try {
+    const newNot = await prisma.notification.create({
+      data,
+    });
+    revalidatePath("/dashboard");
+    return newNot;
+  } catch (error) {
+    console.log(error);
+  }
+}
+export async function updateNotificationStatusById(id: string) {
+  try {
+    const updatedNot = await prisma.notification.update({
+      where: {
+        id,
+      },
+      data: {
+        read: true,
+      },
+    });
+    revalidatePath("/dashboard");
+    return updatedNot;
+  } catch (error) {
+    console.log(error);
+  }
+}
+export async function getNotifications() {
+  try {
+    const notifications = await prisma.notification.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      where: {
+        read: false,
+      },
+    });
+    return notifications;
+  } catch (error) {
+    console.log(error);
+  }
+}
+export async function createLineOrder(
+  newOrder: NewOrderProps,
+  customerData: CustomerData
+) {
+  const { orderItems, orderAmount, orderType, source } = newOrder;
+  try {
+    const lineOrderId = await prisma.$transaction(async (transaction) => {
+      // Create the Line Order
+      const lineOrder = await transaction.lineOrder.create({
+        data: {
+          customerId: customerData.customerId,
+          customerName: customerData.customerName,
+          customerEmail: customerData.customerEmail,
+          // Personal Details
+          firstName: customerData.firstName,
+          lastName: customerData.lastName,
+          phone: customerData.phone,
+          email: customerData.email,
+          // Shipping address
+          streetAddress: customerData.streetAddress,
+          apartment: customerData.apartment,
+          city: customerData.city,
+          state: customerData.state,
+          zipCode: customerData.zipCode,
+          country: customerData.country,
+          paymentMethod: customerData.method,
+          // payment Method
+          orderNumber: generateOrderNumber(),
+          orderAmount,
+          orderType,
+          source,
+          status: source === "pos" ? "DELIVERED" : "PROCESSING",
+        },
+      });
+
+      for (const item of orderItems) {
+        // Update Product stock quantity
+        const updatedProduct = await transaction.product.update({
+          where: { id: item.id },
+          data: {
+            stockQty: {
+              decrement: item.qty,
+            },
+          },
+        });
+
+        if (!updatedProduct) {
+          throw new Error(`Failed to update stock for product ID: ${item.id}`);
+        }
+
+        if (updatedProduct.stockQty < updatedProduct.alertQty) {
+          // Send/Create the Notification
+          const message =
+            updatedProduct.stockQty === 0
+              ? `The stock of ${updatedProduct.name} is out. Current stock: ${updatedProduct.stockQty}.`
+              : `The stock of ${updatedProduct.name} has gone below threshold. Current stock: ${updatedProduct.stockQty}.`;
+          const statusText =
+            updatedProduct.stockQty === 0 ? "Stock Out" : "Warning";
+          const status: NotificationStatus =
+            updatedProduct.stockQty === 0 ? "DANGER" : "WARNING";
+
+          const newNotification = {
+            message,
+            status,
+            statusText,
+          };
+          await createNotification(newNotification);
+          // Send email
+        }
+        // Create Line Order Item
+        const lineOrderItem = await transaction.lineOrderItem.create({
+          data: {
+            orderId: lineOrder.id,
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            productThumbnail: item.productThumbnail,
+          },
+        });
+
+        if (!lineOrderItem) {
+          throw new Error(
+            `Failed to create line order item for product ID: ${item.id}`
+          );
+        }
+
+        // Create Sale
+        const sale = await transaction.sale.create({
+          data: {
+            orderId: lineOrder.id,
+            productId: item.id,
+            qty: item.qty,
+            salePrice: item.price,
+            productName: item.name,
+            productImage: item.productThumbnail,
+            customerName: customerData.customerName,
+            customerEmail: customerData.customerEmail,
+          },
+        });
+
+        if (!sale) {
+          throw new Error(`Failed to create sale for product ID: ${item.id}`);
+        }
+      }
+      // console.log(savedLineOrder);
+      revalidatePath("/dashboard/sales");
+      return lineOrder.id;
+    });
+
+    const savedLineOrder = await prisma.lineOrder.findUnique({
+      where: {
+        id: lineOrderId,
+      },
+      include: {
+        lineOrderItems: true,
+      },
+    });
+    // console.log(savedLineOrder);
+    return savedLineOrder as ILineOrder;
+  } catch (error) {
+    console.error("Transaction error:", error);
+    throw error; // Propagate the error to the caller
+  }
+}
+```
+
+## Relationship between Sales and Shops
+
+The relationship between sale and shop is a one-to-many , sales must belong to aprticular shop
+Modifiy the Models
+
+```ts copy
+model Shop {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  slug          String   @unique
+  location      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  adminId       String   @db.ObjectId
+  products      Product[]
+  admin         User     @relation(fields: [adminId], references: [id])
+  attendantIds  String[] @db.ObjectId
+  sales         Sale[]   // Add this relation
+}
+
+model Sale {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  customerId      String    @db.ObjectId
+  customerName    String?
+  saleNumber      String    @unique
+  customerEmail   String?
+  saleAmount      Int
+  balanceAmount   Int?     @default(0)
+  paidAmount      Int
+  saleType        SaleType @default(PAID)
+  paymentMethod   PaymentMethod @default(CASH)
+  transactionCode String?
+  shopId          String    @db.ObjectId // Add this field
+  // Relationships
+  saleItems       SaleItem[]
+  customer        Customer   @relation(fields: [customerId], references: [id])
+  shop            Shop       @relation(fields: [shopId], references: [id]) // Add this relation
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+
+```
+
+## Sales Analytics Controllers
+
+`1. getShopSales Controller`
+This controller will return sales for a specific shop, categorized by the periods: today, this week, this month, and all time.
+
+```ts copy
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import {
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  endOfDay,
+  endOfWeek,
+  endOfMonth,
+} from "date-fns";
+
+const prisma = new PrismaClient();
+
+export async function getShopSales(req: Request, res: Response) {
+  const { shopId } = req.params;
+
+  // Define time periods
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const weekStart = startOfWeek(new Date());
+  const weekEnd = endOfWeek(new Date());
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+
+  try {
+    // Fetch sales for different periods
+    const salesToday = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const salesThisWeek = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+    });
+
+    const salesThisMonth = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+    });
+
+    const salesAllTime = await prisma.sale.findMany({
+      where: {
+        shopId,
+      },
+    });
+
+    res.status(200).json({
+      today: salesToday,
+      thisWeek: salesThisWeek,
+      thisMonth: salesThisMonth,
+      allTime: salesAllTime,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
+      data: null,
+    });
+  }
+}
+```
+
+`2. getShopsSales Controller`
+This controller will return sales data for all existing shops, categorized by the same periods: today, this week, this month, and all time.
+
+```ts copy
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import {
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  endOfDay,
+  endOfWeek,
+  endOfMonth,
+} from "date-fns";
+
+const prisma = new PrismaClient();
+
+export async function getShopsSales(req: Request, res: Response) {
+  // Define time periods
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const weekStart = startOfWeek(new Date());
+  const weekEnd = endOfWeek(new Date());
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+
+  try {
+    // Fetch all shops
+    const shops = await prisma.shop.findMany();
+
+    // Fetch sales for all shops for different periods
+    const salesToday = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const salesThisWeek = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+    });
+
+    const salesThisMonth = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+    });
+
+    const salesAllTime = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+    });
+
+    res.status(200).json({
+      today: salesToday,
+      thisWeek: salesThisWeek,
+      thisMonth: salesThisMonth,
+      allTime: salesAllTime,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
+      data: null,
+    });
+  }
+}
+```
+
+`3. getCategorizedShopSales Controller`
+This controller will return sales for a particular shop, with detailed categorization: sales paid in cash, sales paid by credit, sales paid by mobile money, and sales paid by hand cash.
+
+```ts copy
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import {
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  endOfDay,
+  endOfWeek,
+  endOfMonth,
+} from "date-fns";
+
+const prisma = new PrismaClient();
+
+export async function getShopSales(req: Request, res: Response) {
+  const { shopId } = req.params;
+
+  // Define time periods
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const weekStart = startOfWeek(new Date());
+  const weekEnd = endOfWeek(new Date());
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+
+  try {
+    // Fetch sales for different periods
+    const categorizeSales = async (sales: any[]) => {
+      return {
+        salesPaidInCash: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount <= 0
+        ),
+        salesPaidInCredit: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount > 0
+        ),
+        salesByMobileMoney: sales.filter(
+          (sale) => sale.paymentMethod === "MOBILE MONEY"
+        ),
+        salesByHandCash: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount <= 0
+        ),
+      };
+    };
+
+    const salesToday = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const salesThisWeek = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+    });
+
+    const salesThisMonth = await prisma.sale.findMany({
+      where: {
+        shopId,
+        createdAt: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+    });
+
+    const salesAllTime = await prisma.sale.findMany({
+      where: {
+        shopId,
+      },
+    });
+
+    res.status(200).json({
+      today: await categorizeSales(salesToday),
+      thisWeek: await categorizeSales(salesThisWeek),
+      thisMonth: await categorizeSales(salesThisMonth),
+      allTime: await categorizeSales(salesAllTime),
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
+      data: null,
+    });
+  }
+}
+```
+
+`4. getCategorizedShopsSales Controller`
+This controller will return sales for all shops, categorized similarly: sales paid in cash, sales paid by credit, sales by mobile money, and sales by hand cash.
+
+```ts copy
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import {
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  endOfDay,
+  endOfWeek,
+  endOfMonth,
+} from "date-fns";
+
+const prisma = new PrismaClient();
+
+export async function getShopsSales(req: Request, res: Response) {
+  // Define time periods
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const weekStart = startOfWeek(new Date());
+  const weekEnd = endOfWeek(new Date());
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+
+  try {
+    // Fetch all sales and group by shopId for different periods
+    const categorizeSales = (sales: any[]) => {
+      return {
+        salesPaidInCash: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount <= 0
+        ),
+        salesPaidInCredit: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount > 0
+        ),
+        salesByMobileMoney: sales.filter(
+          (sale) => sale.paymentMethod === "MOBILE MONEY"
+        ),
+        salesByHandCash: sales.filter(
+          (sale) => sale.paymentMethod === "CASH" && sale.balanceAmount <= 0
+        ),
+      };
+    };
+
+    const salesToday = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const salesThisWeek = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+    });
+
+    const salesThisMonth = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+      where: {
+        createdAt: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
+      },
+    });
+
+    const salesAllTime = await prisma.sale.groupBy({
+      by: ["shopId"],
+      _sum: {
+        saleAmount: true,
+      },
+    });
+
+    res.status(200).json({
+      today: categorizeSales(salesToday),
+      thisWeek: categorizeSales(salesThisWeek),
+      thisMonth: categorizeSales(salesThisMonth),
+      allTime: categorizeSales(salesAllTime),
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
+      data: null,
+    });
+  }
+}
+```
+
+Explanation:
+categorizeSales Function:
+
+salesPaidInCash: Sales where the payment method is cash and the balance amount is 0.
+salesPaidInCredit: Sales where the payment method is cash but the balance amount is greater than 0.
+salesByMobileMoney: Sales where the payment method is mobile money.
+salesByHandCash: Sales where the payment method is cash and the balance amount is 0 (same as salesPaidInCash).
+groupBy Method:
+
+Used in getShopsSales to aggregate sales by shopId and calculate sums of saleAmount.

@@ -17,14 +17,22 @@
   "course-guides": "Course Guides",
   "courses": "Desishub Courses",
   "how-to": "How to Guides",
-  "about": {
-    "title": "About",
-    "type": "page"
-  },
-  "contact": {
-    "title": "Contact ↗",
+  "course": {
+    "title": "Next JS Fullstack Course 📖",
     "type": "page",
-    "href": "https://twitter.com/shuding_",
+    "href": "https://coding-school-typescript.vercel.app/courses/next",
+    "newWindow": true
+  },
+  "templates": {
+    "title": "Templates 📁",
+    "type": "page",
+    "href": "https://www.reactuicomponents.com/",
+    "newWindow": true
+  },
+  "resources": {
+    "title": "Desishub Resources 👨🏻‍💻",
+    "type": "page",
+    "href": "https://resources.mosespace.com/",
     "newWindow": true
   }
 }
