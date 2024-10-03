@@ -1,9 +1,14 @@
 {
   "js-intro": "Introduction to Javascript",
   "js-basics": "JavaScript Basics",
+  "js-dataTypes": "JavaScript Data Types",
+  "js-functions": "JavaScript Functions",
   "js-dom": "DOM Manipulation with JavaScript",
+  "js-StringMethods": "JavaScript String Methods",
+  "js-loops": "Control Structures and Loops",
   "js-async": "Asynchronous JavaScript",
   "js-es6": "JavaScript ES6+ Features",
+  "js-dates": "JavaScript Dates",
   "assignments": "JavaScript Assignments",
   "js-projects": "Building projects with JavaScript"
 }

@@ -1,0 +1,67 @@
+import { FileTree } from "nextra/components";
+import { Callout } from "nextra/components";
+import Image from "next/image";
+
+#### JavaScript Data types
+
+In JavaScript, there are two main types of data: primitive data types and objects data types.
+
+**primitive:** Primitive data types are simple data types that represent a single value. The primitive data types in JavaScript are: String, Number, Boolean, Null, Undefined.
+
+![Primitive](/Javascipt-dataTypesPrimitive.png)
+
+<Callout emoji="💡">
+  JavaScript has dynamic typing: We do not have to manually define the data type
+  of the value stored in a variable. Instead, data types are determined
+  automatically.
+</Callout>
+
+To check the data type of a value in JavaScript, you can use the **typeof** operator. The **typeof** operator returns a string that represents the type of the value.
+
+```js copy
+console.log(typeof "world");
+//It will display String in the browser's console.
+console.log(typeof 144);
+//It will display Number in the browser's console.
+console.log(typeof true);
+//It will display Boolean in the browser's console.
+```
+
+In JavaScript, strings are immutable, which means that you cannot modify individual characters of a string.
+
+```js copy
+let name = "John";
+name = "Jane"; // allowed
+name[0] = "J"; // not allowed
+```
+
+In this example, the **name** variable is assigned the value **John**, which is a string. The value of the **name** variable can be changed by assigning a new value to it (e.g. name = "Jane"). However, you cannot change the individual characters of the string directly.
+
+**Objects:** Objects are complex data types that can contain multiple values and properties. Objects are used to represent real-world entities or abstract concepts with multiple characteristics. Objects are created using the **{}** syntax and can contain multiple properties, which are represented as key-value pairs. For example:
+
+![Objects](/Javascipt-dataTypes-Objects.png)
+
+```js copy
+let person = {
+  firstName: "John",
+  lastName: "Doe",
+  age: 30,
+  isEmployed: true,
+};
+```
+
+![Object2](/Javascipt-dataTypesObjects.png)
+
+In this example, the **person** object has four properties: firstName, lastName, age, and isEmployed. Each property has a key (the property name) and a value (the property value).
+
+<Callout emoji="💡">
+  You can access the properties of an object using the . notation or the []
+  notation:
+</Callout>
+```js copy console.log(person.firstName); //It will display John in the browser's
+console. console.log(person["lastName"]); //It will display Doe in the browser's
+console. ```
+<Callout emoji="💡">
+  Objects are mutable, which means that you can change their properties and
+  values at any time.
+</Callout>
