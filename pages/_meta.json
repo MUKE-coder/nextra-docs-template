@@ -23,16 +23,16 @@
     "href": "https://coding-school-typescript.vercel.app/courses/next",
     "newWindow": true
   },
+  "bootcamp": {
+    "title": "30-Day Project-Driven JavaScript Bootcamp Course 📖",
+    "type": "page",
+    "href": "https://coding-school-typescript.vercel.app/courses/project-driven-javascript-bootcamp",
+    "newWindow": true
+  },
   "templates": {
     "title": "Templates 📁",
     "type": "page",
     "href": "https://www.reactuicomponents.com/",
-    "newWindow": true
-  },
-  "resources": {
-    "title": "Desishub Resources 👨🏻‍💻",
-    "type": "page",
-    "href": "https://resources.mosespace.com/",
     "newWindow": true
   }
 }
