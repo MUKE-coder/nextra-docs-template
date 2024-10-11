@@ -1,5 +1,6 @@
 import { Steps } from "nextra/components";
 import { FileTree } from "nextra/components";
+import { Callout } from "nextra/components";
 
 # Node Js Setup with typescript
 
@@ -147,6 +148,21 @@ Install Build Tools
   <FileTree.File name="tsconfig.json" />
 </FileTree>
 
+<Callout type="info" emoji="ℹ️">
+  Dont forget to create a prisma folder with a schema and to do that you have to
+  run the command below
+</Callout>
+
+```ts copy
+
+  npx prisma init --datasource-provider mongodb
+
+```
+
+Summary of What the Code Does:
+
+The code Initialises the prisma folder and also creates the schema file in the folder , it also sets the datasource (DB) to Mongodb
+
 ### Step 8 : Create an express server
 
 Modify your src/index.ts to this
@@ -204,3 +220,13 @@ app.get("/customers", (req: Request, res: Response) => {
 ```
 
 </Steps>
+
+###### Step by step video On How To set up
+
+<iframe
+  src="https://www.youtube.com/embed/LrfYIOzbu0E?si=8LwcBEzjWLm7yKSQ"
+  title="YouTube video player"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  className="w-full h-64 md:h-80 object-contain lg:h-[500px] rounded-lg shadow-lg mb-8 mt-2"
+/>

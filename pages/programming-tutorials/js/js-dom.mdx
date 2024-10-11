@@ -1,0 +1,196 @@
+import Image from "next/image";
+import { Callout } from "nextra/components";
+import { FileTree } from "nextra/components";
+
+## DOM and DOM Manipulation
+
+### **What is DOM?**
+
+The DOM is a Web API that allows developers to use programming logic to make changes to their HTML code. It's a reliable way to make changes that turn static websites into dynamic ones.
+
+The Document Object Model (DOM) is a programming interface for HTML document. It represents the structure of a document as a tree of objects, with each object representing a part of the document (e.g., an element, an attribute, or a piece of text).
+
+![Dom](/dom.png)
+
+<Callout type="info" emoji="ℹ️">
+  **DOM manipulation** is when you use JavaScript to add, remove, and modify
+  elements of a website in (HTML & CSS)
+</Callout>
+
+#### Creating Elements
+
+To create a new element in the DOM using JavaScript, you can use the **createElement** method of the document object. This method takes a string argument representing the type of element to create (e.g., "div", "p", "h1", etc.). It returns a new element object that you can modify and append to the document.
+
+**document** refers to the current HTML document that is being displayed in the web browser. The document object is a property of the window object and represents the HTML document as a whole.
+
+```js copy
+// Create a new `div` element
+const newDiv = document.createElement("div");
+
+// Set the innerHTML of the new element
+newDiv.innerHTML = "This is a new div element";
+
+// Append the new element to the body of the document
+document.body.appendChild(newDiv);
+```
+
+#### Accessing Elements
+
+<Callout type="info" emoji="ℹ️">
+  There are several ways to access DOM elements using JavaScript:
+</Callout>
+
+**1.getElementById:** This method allows you to access an element by its unique id attribute. It returns a reference to the first element with the specified id, or null if no element is found.
+
+```js copy
+
+// Example 1
+const element = document.getElementById('elementId’)
+
+// Example 2
+const container = document.getElementById('container')
+
+```
+
+**2.getElementsByTagName:** This method allows you to access all elements with a given tag name. It returns a collection of elements with the specified tag name, or an empty collection if no elements are found.
+
+```js copy
+// Get all elements with the tag name "p"
+const elements = document.getElementsByTagName("p");
+
+// Access the first element in the collection
+const firstElement = elements[0];
+```
+
+**3.getElementsByClassName:** This method allows you to access all elements with a given class name. It returns a collection of elements with the specified class name, or an empty collection if no elements are found.
+
+```js copy
+// Get all elements with the class name "my-class"
+const elements = document.getElementsByClassName("my-class");
+
+// Access the first element in the collection
+const firstElement = elements[0];
+```
+
+**4.querySelector and querySelectorAll:** These methods allow you to access elements using CSS selector syntax. querySelector returns a reference to the first element that matches the specified selector, or null if no element is found. querySelectorAll returns a collection of all elements that match the specified selector, or an empty collection if no elements are found
+
+```js copy
+// Get the first element with the class name "my-class"
+const element = document.querySelector(".my-class");
+
+// Get all elements with the tag name "p"
+const elements = document.querySelectorAll("p");
+
+// Access the first element in the collection
+const firstElement = elements[0];
+```
+
+#### Deleting Elements
+
+To remove an element from the DOM using JavaScript, you can use the **removeChild method** of the parent element. Or the remove method of the Child itself
+
+```js copy
+// Get a reference to the element to be removed
+const element = document.getElementById("my-element");
+
+// Get a reference to the parent element
+const parent = element.parentNode;
+// Remove the element from the parent
+parent.removeChild(element);
+```
+
+Alternatively, you can use the **remove method** of the element itself to remove it from the DOM. This method is supported in modern browsers, but is not supported in Internet Explorer.
+
+```js copy
+// Get a reference to the element to be removed
+const element = document.getElementById("my-element");
+
+// Remove the element from the DOM
+element.remove();
+```
+
+<Callout type="info" emoji="ℹ️">
+  Keep in mind that once an element has been removed from the DOM, it can no
+  longer be accessed or modified using JavaScript. If you want to keep a
+  reference to the element for later use, you can store it in a variable before
+  removing it from the DOM
+</Callout>
+
+```js copy
+// Get a reference to the element to be removed
+const element = document.getElementById("my-element");
+// Store a reference to the element in a variable
+const removedElement = element;
+// Remove the element from the DOM
+element.remove();
+// Use the removed element later
+console.log(removedElement);
+```
+
+#### Modifying Elements
+
+When working with the DOM (Document Object Model) in JavaScript, modifying elements is a key task that allows you to dynamically update the content, styles, or structure of a webpage. This is essential for creating interactive, responsive web applications.
+
+**1) Change Content:** You can modify the text or HTML inside an element to update what the user sees.
+
+```js copy
+// Changing text content
+const element = document.getElementById("myElement");
+element.textContent = "Updated text";
+
+// Updating HTML content
+element.innerHTML = "<p>New HTML content</p>";
+```
+
+**2) Modify Styles::** You can change the appearance of an element by modifying its inline CSS styles directly.
+
+```js copy
+element.style.color = "red"; // Changes text color to red
+element.style.fontSize = "18px"; // Changes font size
+```
+
+**3) Add or Remove Classes::** Classes are a powerful way to apply predefined styles. You can dynamically add or remove CSS classes to modify how an element looks.
+
+```js copy
+element.classList.add("new-class"); // Adds a new class
+element.classList.remove("old-class"); // Removes a class
+```
+
+**4) Change Attributes::** HTML attributes like src, href, or alt can be modified to change an element’s behavior or properties.
+
+```js copy
+const img = document.querySelector("img");
+img.setAttribute("src", "new-image.jpg"); // Changes image source
+```
+
+#### Events & Event Listeners
+
+**Events:** are actions that occur as a result of user interaction with a webpage, such as clicking a button or hovering over an element
+
+**Event listeners** are functions that execute in response to a specific event occurring.
+
+<Callout type="info" emoji="ℹ️">
+ You can add event listeners to elements in your HTML code by using the **addEventListener() method**. This method takes two arguments: the name of the event to listen for, and a function to run when the event occurs.
+
+```js copy
+element.addEventListener("nameOfEvent", functionToRun);
+```
+
+</Callout>
+
+Example
+
+```js copy
+element.addEventListener('event', () => {
+// Do something...
+}
+
+const button = document.querySelector('button');
+
+button.addEventListener('click', () => {
+  console.log('Button was clicked!');
+});
+
+```
+
+![Dom](/eventlisteners.png)
