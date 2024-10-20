@@ -1,0 +1,52 @@
+# Introduction to React Native
+
+## What is React Native?
+
+React Native is an open-source framework developed by Facebook that allows developers to build mobile applications using JavaScript and React. Unlike traditional mobile development frameworks, which require separate codebases for iOS and Android, React Native enables you to write code once and run it on multiple platforms, including iOS, Android, and even the web in some cases.
+
+## How Was React Native Created and Its Relationship with React?
+
+React Native was developed by Facebook in 2015, born out of the need for better mobile performance and development efficiency. React Native is built on the foundation of React, which is a JavaScript library for building user interfaces. Both React and React Native follow the same principles, such as component-based architecture, virtual DOM (in React for the web), and state management. However, instead of targeting the web browser as React does, React Native targets mobile platforms, converting React components into native code like Swift for iOS or Java for Android.
+
+### Key Connection to React:
+
+- Shared Syntax and Logic: If you're familiar with React for web development, transitioning to React Native is smoother because you can reuse much of your knowledge about components, state, and props.
+- Cross-Platform Compatibility: React Native allows you to write code that works on multiple platforms, while React is primarily for web applications.
+
+## Advantages of Using React Native Compared to Other Mobile Development Frameworks
+
+1. Cross-Platform Development: With React Native, you can write a single codebase that runs on both iOS and Android platforms, reducing development time and effort.
+
+2. Performance Close to Native: React Native compiles to native code, which means apps perform almost as well as natively developed applications in most cases, offering a balance between development speed and performance.
+
+3. Faster Development: With features like hot-reloading and reusable components, React Native accelerates the development process. Developers can immediately see the impact of code changes without recompiling the entire project.
+
+4. Large Ecosystem & Community: React Native has a vast community of developers, a wide range of third-party libraries, and support from large companies, including Facebook, Instagram, and Airbnb. This means frequent updates, improvements, and access to a wealth of resources for troubleshooting.
+
+5. JavaScript as the Programming Language: Since JavaScript is one of the most popular programming languages, many developers are already familiar with it, reducing the learning curve. Additionally, companies can leverage their existing JavaScript or React developers to build mobile applications.
+
+6. Code Reusability: React Native allows for reusing code across platforms, and in some cases, even between mobile and web applications, improving efficiency.
+
+## What is Expo, Its Relation to React Native, and Why Use Expo?
+
+### What is Expo?
+
+Expo is a platform and toolkit built on top of React Native that simplifies the development process. It provides a set of tools and services designed to make developing, building, and deploying React Native apps faster and easier, especially for beginners or small projects.
+
+- Expo SDK: Expo comes with a powerful SDK that includes many features like push notifications, camera access, and location tracking out of the box.
+
+- Expo Go App: Expo Go allows developers to run their React Native apps on a physical device without having to build it for that platform, simplifying the testing process.
+
+### Relationship with React Native
+
+Expo is essentially a layer on top of React Native that abstracts away much of the complexity associated with configuring native code. It builds on React Native's core but adds additional features that are plug-and-play, making it easier for developers to get started quickly.
+
+### Why Use Expo Over React Native CLI?
+
+1. Ease of Setup: Expo allows you to get started with a project in minutes without needing to configure native dependencies, like setting up Android Studio or Xcode.
+2. No Need for Native Code: For many use cases, Expo provides all the functionality you need without having to write native code in Swift or Java, making it ideal for developers who want to stay purely in JavaScript.
+3. Rapid Prototyping: Expo is great for quickly prototyping apps or building MVPs (Minimum Viable Products) because of its simple setup and numerous built-in features.
+4. Expo Go for Instant Testing: With the Expo Go app, you can instantly preview your app on your phone just by scanning a QR code, making the development feedback loop faster.
+5. Managed Workflow: Expo’s managed workflow handles much of the complexity behind the scenes, such as updates to native code, deployment, and handling libraries, which would otherwise require manual setup in the React Native CLI workflow.
+
+However, Expo does have some limitations in terms of custom native module support, which may make direct React Native development more suitable for some complex projects.
