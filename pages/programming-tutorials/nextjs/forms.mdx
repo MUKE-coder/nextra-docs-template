@@ -1,0 +1,947 @@
+## Re-usable Forms
+
+Please Make sure to have all the Re-usable form inputs in your project. All the following forms use shadcn components and re-usable form inputs ( [Find them here](https://desishub-docs.vercel.app/programming-tutorials/nextjs/reuseable))
+
+## Popup Dialogue Forms
+
+### Popup without card
+
+```tsx copy
+"use client";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { Check, FolderPlus, Pen, Pencil, Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { FolderProps } from "@/types/types";
+import toast from "react-hot-toast";
+
+import TextInput from "../FormInputs/TextInput";
+import SubmitButton from "../FormInputs/SubmitButton";
+import { createFolder, updateFolderById } from "@/actions/fileManager";
+
+export default function FolderForm({
+  userId,
+  initialContent,
+  editingId,
+}: {
+  userId: string;
+  initialContent?: string;
+  editingId?: string;
+}) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FolderProps>({
+    defaultValues: {
+      name: initialContent || "",
+    },
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  async function saveFolder(data: FolderProps) {
+    data.userId = userId;
+    try {
+      setLoading(true);
+      if (editingId) {
+        await updateFolderById(editingId, data);
+        setLoading(false);
+        // Toast
+        toast.success("Updated Successfully!");
+      } else {
+        await createFolder(data);
+        setLoading(false);
+        toast.success("Successfully Created!");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  }
+
+  return (
+    <div>
+      <div className="py-1">
+        <Dialog>
+          <DialogTrigger asChild>
+            {editingId ? (
+              <button title="Edit Folder" className="text-blue-600">
+                <Pencil className="w-4 h-4 " />
+              </button>
+            ) : (
+              <Button title="Create Folder" variant={"outline"} size={"icon"}>
+                <FolderPlus className="w-4 h-4 " />
+              </Button>
+            )}
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingId ? "Edit Folder" : "Add New Folder"}
+              </DialogTitle>
+              {/* <DialogDescription>
+                Please Write your Comment here, with respect
+              </DialogDescription> */}
+            </DialogHeader>
+            <form className="" onSubmit={handleSubmit(saveFolder)}>
+              <div className="">
+                <div className="space-y-3">
+                  <div className="grid gap-3">
+                    <TextInput
+                      register={register}
+                      errors={errors}
+                      label=""
+                      name="name"
+                      icon={Check}
+                    />
+                    {/* <IconInput
+                      onIconSelect={setSelectedIcon}
+                      selectedIcon={selectedIcon}
+                    /> */}
+                  </div>
+                </div>
+                <div className="py-3">
+                  <SubmitButton
+                    title={editingId ? "Update" : "Add"}
+                    loading={loading}
+                  />
+                </div>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+```
+
+### Popup with Card
+
+```tsx copy
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { PaymentProps } from "@/types/types";
+import { createPayment } from "@/actions/payments";
+import toast from "react-hot-toast";
+import { generateInvoiceNumber } from "@/lib/generateInvoiceNumber";
+import TextInput from "../FormInputs/TextInput";
+import FormFooter from "./FormFooter";
+import SubmitButton from "../FormInputs/SubmitButton";
+import { getNormalDate } from "@/lib/getNormalDate";
+import { convertIsoToDateString } from "@/lib/convertISODateToNorma";
+import { convertDateToIso } from "@/lib/convertDateToIso";
+import useCurrencySettings from "@/hooks/useCurrencySettings";
+import { formatCurrency } from "@/lib/formatCurrency";
+
+export default function PaymentForm({
+  projectId,
+  userId,
+  clientId,
+  remainingAmount,
+}: {
+  projectId: string;
+  userId: string;
+  clientId: string;
+  remainingAmount: number;
+}) {
+  // invoiceNumber: string;
+  // projectId: string;
+  // userId: string;
+  // clientId: string;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PaymentProps>({
+    defaultValues: {
+      date: convertIsoToDateString(new Date().toISOString()),
+    },
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  async function saveCategory(data: PaymentProps) {
+    data.invoiceNumber = generateInvoiceNumber();
+    data.userId = userId;
+    data.clientId = clientId;
+    data.projectId = projectId;
+    const localAmount = Number(data.amount);
+    const convertedAmount = (localAmount / exchangeRate).toFixed(2);
+    const subTotal = Number(convertedAmount);
+    data.tax = Number(data.tax);
+    data.amount = subTotal + data.tax;
+    data.date = convertDateToIso(data.date);
+    try {
+      setLoading(true);
+      await createPayment(data);
+      setLoading(false);
+      // Toast
+      toast.success("Successfully Created!");
+      //reset
+      reset();
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  }
+  const { localCurrency, exchangeRate, defaultCurrency } =
+    useCurrencySettings();
+  return (
+    <div>
+      <div className="py-1">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size={"sm"}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Payment
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Payment</DialogTitle>
+              <DialogDescription>
+                The Project Remaining Amount is{" "}
+                <span>
+                  {formatCurrency(
+                    remainingAmount,
+                    defaultCurrency,
+                    exchangeRate
+                  )}
+                </span>
+                {/* <span>${remainingAmount.toLocaleString()}</span> */}
+                <p className="text-sm text-red-500 font-semibold py-1 ">
+                  Note : 1 USD = {exchangeRate} {localCurrency}
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <form className="" onSubmit={handleSubmit(saveCategory)}>
+              <div className="pt-2">
+                <div className="space-y-3">
+                  <Card>
+                    <CardContent>
+                      <div className="grid gap-6 mt-4">
+                        <div className="grid gap-3">
+                          <TextInput
+                            register={register}
+                            errors={errors}
+                            label="Payment title"
+                            name="title"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
+                          <TextInput
+                            register={register}
+                            errors={errors}
+                            label={`Paid Amount (${defaultCurrency})`}
+                            name="amount"
+                            type="number"
+                          />
+                          <TextInput
+                            register={register}
+                            errors={errors}
+                            label="Payment Date"
+                            type="date"
+                            name="date"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
+                          <TextInput
+                            register={register}
+                            errors={errors}
+                            label="Tax"
+                            name="tax"
+                            type="number"
+                          />
+                          <TextInput
+                            register={register}
+                            errors={errors}
+                            label="Payment Method"
+                            name="method"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                <div className="py-3">
+                  <SubmitButton title="Create Payment" loading={loading} />
+                </div>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+```
+
+### Popup Comment Form with Quill Editor
+
+```tsx copy
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { MessageSquare, Pen, Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { CommentProps, PaymentProps } from "@/types/types";
+import { createPayment } from "@/actions/payments";
+import toast from "react-hot-toast";
+import { generateInvoiceNumber } from "@/lib/generateInvoiceNumber";
+import TextInput from "../FormInputs/TextInput";
+import FormFooter from "./FormFooter";
+import SubmitButton from "../FormInputs/SubmitButton";
+import { getNormalDate } from "@/lib/getNormalDate";
+import { convertIsoToDateString } from "@/lib/convertISODateToNorma";
+import { convertDateToIso } from "@/lib/convertDateToIso";
+import dynamic from "next/dynamic";
+import { UserRole } from "@prisma/client";
+import { createComment, updateCommentById } from "@/actions/comments";
+
+const QuillEditor = dynamic(
+  () => import("@/components/FormInputs/QuilEditor"),
+  {
+    ssr: false,
+  }
+);
+export default function CommentForm({
+  projectId,
+  userId,
+  userName,
+  userRole,
+  initialContent,
+  editingId,
+}: {
+  projectId: string;
+  userId: string;
+  initialContent?: string;
+  userName: string;
+  userRole: UserRole;
+  editingId?: string;
+}) {
+  // invoiceNumber: string;
+  // projectId: string;
+  // userId: string;
+  // clientId: string;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CommentProps>();
+
+  const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState(initialContent);
+  async function saveComment(data: CommentProps) {
+    if (!content) {
+      toast.error("Please write something");
+    }
+    data.content = content ?? "";
+    (data.userName = userName), (data.projectId = projectId);
+    data.userRole = userRole;
+    data.userId = userId;
+    try {
+      setLoading(true);
+      if (editingId) {
+        await updateCommentById(editingId, data);
+        setLoading(false);
+        // Toast
+        toast.success("Updated Successfully!");
+      } else {
+        await createComment(data);
+        setLoading(false);
+        // Toast
+        toast.success("Successfully Created!");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  }
+  return (
+    <div>
+      <div className="py-1">
+        <Dialog>
+          <DialogTrigger asChild>
+            {editingId ? (
+              <button className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <Pen className="w-4 h-4 ml-2" />
+              </button>
+            ) : (
+              <Button variant="outline" className="w-full">
+                <MessageSquare className="mr-2 h-4 w-4" /> Add Comment
+              </Button>
+            )}
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingId ? "Edit Comment" : "Add New Comment"}
+              </DialogTitle>
+              <DialogDescription>
+                Please Write your Comment here, with respect
+              </DialogDescription>
+            </DialogHeader>
+            <form className="" onSubmit={handleSubmit(saveComment)}>
+              <div className="">
+                <div className="space-y-3">
+                  <QuillEditor
+                    label=""
+                    className=""
+                    value={content}
+                    onChange={setContent}
+                  />
+                </div>
+                <div className="py-3">
+                  <SubmitButton
+                    title={editingId ? "Update Comment" : "Add Comment"}
+                    loading={loading}
+                  />
+                </div>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+```
+
+### Multiple file File Upload Form
+
+```tsx copy
+"use client";
+import { useForm } from "react-hook-form";
+import TextInput from "../FormInputs/TextInput";
+import SubmitButton from "../FormInputs/SubmitButton";
+import { useState } from "react";
+
+import toast from "react-hot-toast";
+
+import { useRouter } from "next/navigation";
+
+import { Button } from "../ui/button";
+import Link from "next/link";
+import { File, Loader2, Paperclip, Upload, X, XCircle } from "lucide-react";
+import dynamic from "next/dynamic";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { FaFilePdf, FaImage } from "react-icons/fa";
+import MultipleFileUpload, {
+  FileProps,
+} from "../FormInputs/MultipleFileUploader";
+import { createFile, createMultipleFiles } from "@/actions/fileManager";
+import { FileProps as CreateFileProps } from "@/types/types";
+
+export default function FileUploadForm({ folderId }: { folderId: string }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [files, setFiles] = useState<FileProps[]>([]);
+  function handleImageRemove(fileIndex: any) {
+    const updatedFiles = files.filter((file, index) => index !== fileIndex);
+    setFiles(updatedFiles);
+  }
+  const router = useRouter();
+  async function onSubmit() {
+    const data: CreateFileProps[] = files.map((file) => {
+      return {
+        name: file.title,
+        type: file.type,
+        url: file.url,
+        size: file.size,
+        folderId,
+      };
+    });
+    try {
+      setIsLoading(true);
+      const res = await createMultipleFiles(data);
+      console.log(res);
+      toast.success("Files uploaded Successfully!");
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    }
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <Upload className="mr-2" /> Upload Files
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Upload your Files</DialogTitle>
+        </DialogHeader>
+        <MultipleFileUpload
+          label="Add Files"
+          files={files}
+          setFiles={setFiles}
+          endpoint="fileUploads"
+        />
+        {isLoading ? (
+          <Button disabled>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Uploading Please wait...
+          </Button>
+        ) : (
+          <Button onClick={onSubmit}>Save Files</Button>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+## Normal Forms
+
+### Form with Image Upload
+
+```tsx copy
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+import { generateSlug } from "@/lib/generateSlug";
+import toast from "react-hot-toast";
+import { Category } from "@prisma/client";
+import { CategoryProps } from "@/types/types";
+import FormHeader from "./FormHeader";
+import TextInput from "../FormInputs/TextInput";
+import TextArea from "../FormInputs/TextAreaInput";
+import ImageInput from "../FormInputs/ImageInput";
+import FormFooter from "./FormFooter";
+import { createCategory, updateCategoryById } from "@/actions/categories";
+
+export type SelectOptionProps = {
+  label: string;
+  value: string;
+};
+type CategoryFormProps = {
+  editingId?: string | undefined;
+  initialData?: Category | undefined | null;
+};
+export default function CategoryForm({
+  editingId,
+  initialData,
+}: CategoryFormProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CategoryProps>({
+    defaultValues: {
+      title: initialData?.title,
+      description: initialData?.description || "",
+    },
+  });
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const initialImage = initialData?.imageUrl || "/placeholder.svg";
+  const [imageUrl, setImageUrl] = useState(initialImage);
+
+  async function saveCategory(data: CategoryProps) {
+    try {
+      setLoading(true);
+      data.slug = generateSlug(data.title);
+      data.imageUrl = imageUrl;
+
+      if (editingId) {
+        await updateCategoryById(editingId, data);
+        setLoading(false);
+        // Toast
+        toast.success("Updated Successfully!");
+        //reset
+        reset();
+        //route
+        router.push("/dashboard/categories");
+        setImageUrl("/placeholder.svg");
+      } else {
+        await createCategory(data);
+        setLoading(false);
+        // Toast
+        toast.success("Successfully Created!");
+        //reset
+        reset();
+        setImageUrl("/placeholder.svg");
+        //route
+        router.push("/dashboard/categories");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  }
+
+  return (
+    <form className="" onSubmit={handleSubmit(saveCategory)}>
+      <FormHeader
+        href="/categories"
+        parent=""
+        title="Category"
+        editingId={editingId}
+        loading={loading}
+      />
+
+      <div className="grid grid-cols-12 gap-6 py-8">
+        <div className="lg:col-span-8 col-span-full space-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Category Title</CardTitle>
+              <CardDescription>
+                Lipsum dolor sit amet, consectetur adipiscing elit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    label="Category Title"
+                    name="title"
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <TextArea
+                    register={register}
+                    errors={errors}
+                    label="Description"
+                    name="description"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-4 col-span-full ">
+          <div className="grid auto-rows-max items-start gap-4 ">
+            <ImageInput
+              title="Category Image"
+              imageUrl={imageUrl}
+              setImageUrl={setImageUrl}
+              endpoint="categoryImage"
+            />
+          </div>
+        </div>
+      </div>
+      <FormFooter
+        href="/categories"
+        editingId={editingId}
+        loading={loading}
+        title="Category"
+        parent=""
+      />
+    </form>
+  );
+}
+```
+
+### Form with Select Input and Image Input
+
+```tsx copy
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+import { generateSlug } from "@/lib/generateSlug";
+import toast from "react-hot-toast";
+import { Project, User } from "@prisma/client";
+import { ProjectProps } from "@/types/types";
+import FormHeader from "./FormHeader";
+import TextInput from "../FormInputs/TextInput";
+import TextArea from "../FormInputs/TextAreaInput";
+import ImageInput from "../FormInputs/ImageInput";
+import FormFooter from "./FormFooter";
+
+import FormSelectInput from "../FormInputs/FormSelectInput";
+import { createProject, updateProjectById } from "@/actions/projects";
+import { convertDateToIso } from "@/lib/convertDateToIso";
+import { convertIsoToDateString } from "@/lib/convertISODateToNorma";
+import useCurrencySettings from "@/hooks/useCurrencySettings";
+
+export type SelectOptionProps = {
+  label: string;
+  value: string;
+};
+type ProjectFormProps = {
+  editingId?: string | undefined;
+  initialData?: Project | undefined | null;
+  userId: string;
+  clients: SelectOptionProps[];
+};
+export default function ProjectForm({
+  editingId,
+  initialData,
+  userId,
+  clients,
+}: ProjectFormProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProjectProps>({
+    defaultValues: {
+      name: initialData?.name,
+      description: initialData?.description || "",
+      budgetLocal: initialData?.budgetLocal || 0,
+      startDate: initialData
+        ? convertIsoToDateString(initialData?.startDate)
+        : null,
+      endDate: initialData
+        ? convertIsoToDateString(initialData?.endDate ?? "")
+        : null,
+    },
+  });
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const initialImage = initialData?.thumbnail || "/thumbnail.png";
+  const [imageUrl, setImageUrl] = useState(initialImage);
+  const initialClientId = initialData?.clientId;
+  const initialClient = clients.find((user) => user.value === initialClientId);
+  const [selectedClient, setSelectedClient] = useState<any>(initialClient);
+  async function saveProject(data: ProjectProps) {
+    try {
+      setLoading(true);
+      const myStartDate = new Date(data.startDate);
+      const myEndDate = new Date(data.endDate);
+      const differenceInTime = myEndDate.getTime() - myStartDate.getTime();
+      const deadlineInDays = differenceInTime / (1000 * 60 * 60 * 24);
+      data.deadline = Math.round(deadlineInDays);
+      data.slug = generateSlug(data.name);
+      data.thumbnail = imageUrl;
+      data.userId = userId;
+      data.clientId = selectedClient.value;
+      data.startDate = convertDateToIso(data.startDate);
+      data.endDate = convertDateToIso(data.endDate);
+      const localBudget = Number(data.budgetLocal);
+      const convertedBudget = (localBudget / exchangeRate).toFixed(2);
+      data.budget = Number(convertedBudget);
+      data.budgetLocal = Number(data.budgetLocal);
+      if (editingId) {
+        await updateProjectById(editingId, data);
+        setLoading(false);
+
+        toast.success("Updated Successfully!");
+
+        reset();
+
+        router.push("/dashboard/projects");
+        setImageUrl("/placeholder.svg");
+      } else {
+        const res = await createProject(data);
+        if (res?.status === 409) {
+          toast.error(res.error);
+        } else if (res?.status === 200) {
+          setLoading(false);
+
+          toast.success("Successfully Created!");
+
+          reset();
+          setImageUrl("/thumbnail.png");
+
+          router.push("/dashboard/projects");
+        } else {
+          toast.error("Something went wrong");
+        }
+      }
+      console.log(data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  }
+  const { localCurrency, exchangeRate } = useCurrencySettings();
+  return (
+    <form className="" onSubmit={handleSubmit(saveProject)}>
+      <FormHeader
+        href="/projects"
+        parent=""
+        title="Project"
+        editingId={editingId}
+        loading={loading}
+      />
+      <p className="text-sm text-red-500 font-semibold text-center py-1 mt-2">
+        Note : 1 USD = {exchangeRate} {localCurrency}
+      </p>
+      <div className="grid grid-cols-12 gap-6 py-8">
+        <div className="lg:col-span-8 col-span-full space-y-3">
+          <Card>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid grid-cols-12  gap-4 pt-4">
+                  <div className="lg:col-span-8 col-span-full">
+                    <TextInput
+                      register={register}
+                      errors={errors}
+                      label="Project Name"
+                      name="name"
+                    />
+                  </div>
+                  <div className="col-span-full lg:col-span-4">
+                    <TextInput
+                      register={register}
+                      errors={errors}
+                      label={`Project Budget (in ${localCurrency})`}
+                      name="budgetLocal"
+                      type="number"
+                      placeholder="10000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    type="date"
+                    label="Project Start Date"
+                    name="startDate"
+                  />
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    type="date"
+                    label="Project End Date"
+                    name="endDate"
+                  />
+                </div>
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    label="Project Budget"
+                    name="budget"
+                    placeholder="8000"
+                  />
+                  <TextInput
+                    register={register}
+                    errors={errors}
+                    label="Project Deadline"
+                    name="deadline"
+                    placeholder="eg 8 weeks"
+                  />
+                </div> */}
+                <div className="grid gap-3">
+                  <FormSelectInput
+                    label="Clients"
+                    options={clients}
+                    option={selectedClient}
+                    setOption={setSelectedClient}
+                    toolTipText="Add New Client"
+                    href="/dashboard/clients/new"
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <TextArea
+                    register={register}
+                    errors={errors}
+                    label="Project Description"
+                    name="description"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-4 col-span-full ">
+          <div className="grid auto-rows-max items-start gap-4 ">
+            <ImageInput
+              title="Project Thumbnail"
+              imageUrl={imageUrl}
+              setImageUrl={setImageUrl}
+              endpoint="projectThumbnail"
+            />
+          </div>
+        </div>
+      </div>
+      <FormFooter
+        href="/projects"
+        editingId={editingId}
+        loading={loading}
+        title="Project"
+        parent=""
+      />
+    </form>
+  );
+}
+```
