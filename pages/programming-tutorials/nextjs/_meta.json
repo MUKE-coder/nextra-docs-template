@@ -7,6 +7,7 @@
   "auth-pages": "Authentication Pages",
   "charts": "Charts",
   "redux": "Redux Toolkit",
+  "react-query": "React Query in Next Js",
   "functions": "Reusable functions",
   "excel": "Import Data from Excel",
   "datatable": "Data Table",

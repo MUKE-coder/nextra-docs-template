@@ -1,0 +1,908 @@
+# Using React Query with Prisma and Server Actions in Next.js 14
+
+# Understanding React Query (TanStack Query)
+
+## What is React Query?
+
+React Query is a powerful data-fetching and state management library for React applications that simplifies the process of fetching, caching, synchronizing, and updating server state. It's designed to handle the complex tasks of data management that most modern applications require.
+
+## Why is React Query Important?
+
+### 1. Simplifies Data Management
+
+- Eliminates the need for complex global state management (like Redux) for server data
+- Reduces boilerplate code significantly
+- Provides a declarative API for data fetching and manipulation
+
+### 2. Built-in Features
+
+- Automatic background data refetching
+- Parallel queries
+- Dependent queries
+- Optimistic updates
+- Infinite scrolling
+- Server-side rendering support
+- Error handling
+- Loading states
+- Retry logic
+
+### 3. Performance Optimization
+
+- Smart request deduplication
+- Configurable stale time and cache time
+- Automatic garbage collection
+- Parallel query orchestration
+
+## Caching Mechanism Explained
+
+React Query's caching mechanism is built around several key concepts:
+
+### 1. Query Keys
+
+```typescript
+// Simple key
+useQuery({ queryKey: ["todos"], queryFn: fetchTodos });
+
+// Composite key for specific item
+useQuery({ queryKey: ["todo", 5], queryFn: () => fetchTodoById(5) });
+
+// Complex key with filters
+useQuery({
+  queryKey: ["todos", { status: "done", type: "work" }],
+  queryFn: () => fetchTodos({ status: "done", type: "work" }),
+});
+```
+
+### 2. Cache Lifecycle States
+
+```typescript
+// Fresh → Stale → Inactive → Deleted
+
+const { data, isStale } = useQuery({
+  queryKey: ["todos"],
+  queryFn: fetchTodos,
+  staleTime: 5 * 60 * 1000, // Data becomes stale after 5 minutes
+  gcTime: 15 * 60 * 1000, // Data is kept in cache for 15 minutes
+});
+```
+
+### 3. Stale Time vs Cache Time
+
+```typescript
+useQuery({
+  queryKey: ["user", userId],
+  queryFn: fetchUser,
+  // Data remains fresh for 1 minute
+  staleTime: 60 * 1000,
+  // Cached data is kept for 5 minutes after becoming inactive
+  gcTime: 5 * 60 * 1000,
+});
+```
+
+### How Caching Works
+
+1. **Initial Request**:
+
+```typescript
+// First request fetches data and stores in cache
+const { data } = useQuery({
+  queryKey: ["user", 1],
+  queryFn: () => fetchUser(1),
+});
+```
+
+2. **Subsequent Requests**:
+
+```typescript
+// Subsequent requests within staleTime will use cached data
+const { data } = useQuery({
+  queryKey: ["user", 1],
+  queryFn: () => fetchUser(1),
+  staleTime: 30 * 1000, // 30 seconds
+});
+```
+
+3. **Background Updates**:
+
+```typescript
+const { data, isFetching } = useQuery({
+  queryKey: ["prices"],
+  queryFn: fetchPrices,
+  // Refetch on window focus
+  refetchOnWindowFocus: true,
+  // Refetch every minute
+  refetchInterval: 60 * 1000,
+});
+```
+
+### Example of Complete Caching Strategy
+
+```typescript
+function ProductList() {
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["products"],
+    queryFn: fetchProducts,
+    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+    gcTime: 15 * 60 * 1000, // Keep unused data for 15 minutes
+    refetchOnMount: "always", // Always refetch on mount
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch on internet reconnection
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  return (
+    <div>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <div>
+          {isFetching && <RefreshIndicator />}
+          <ProductGrid products={data} />
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+React Query's caching mechanism provides a powerful and flexible way to manage server state in React applications. It intelligently handles data freshness, background updates, and cache invalidation while providing fine-grained control over the caching behavior when needed.
+
+## 1. Initial Setup
+
+First Create a next Js App and then, install the necessary dependencies:
+
+```bash copy
+pnpm create next-app myShop
+```
+
+```bash copy
+npm install @tanstack/react-query @prisma/client react-intersection-observer
+npm install prisma --save-dev
+# or
+yarn add @tanstack/react-query @prisma/client react-intersection-observer
+yarn add -D prisma
+```
+
+## 2. Prisma Setup
+
+Initialize Prisma and create the schema:
+
+```bash copy
+npx prisma init
+```
+
+Update your schema.prisma:
+
+```prisma copy
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or your preferred database
+  url      = env.DATABASE_URL
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  title     String
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+Generate Prisma Client and run migrations:
+
+```bash copy
+npx prisma generate
+npx prisma db push
+```
+
+## 3. Create Prisma Client Instance
+
+```typescript copy
+// lib/prisma.ts
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+```
+
+## 4. Server Actions Setup
+
+Create server actions for product operations:
+
+```typescript copy
+// app/actions/products.ts
+"use server";
+
+import { prisma } from "@/lib/prisma";
+
+const LIMIT = 10;
+
+export async function getProducts({
+  pageParam = 0,
+}: {
+  pageParam: number;
+}): Promise<{
+  data: Product[];
+  currentPage: number;
+  nextPage: number | null;
+}> {
+  const items = await prisma.product.findMany({
+    take: LIMIT,
+    skip: pageParam,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const total = await prisma.product.count();
+
+  return {
+    data: items,
+    currentPage: pageParam,
+    nextPage: pageParam + LIMIT < total ? pageParam + LIMIT : null,
+  };
+}
+
+export async function createProduct(data: { title: string; price: number }) {
+  const product = await prisma.product.create({
+    data,
+  });
+
+  revalidatePath("/products");
+  return product;
+}
+```
+
+## 5. React Query Provider Setup
+
+```tsx copy
+// app/providers.tsx
+"use client";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
+
+export default function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 1000,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+```
+
+### Simple React Hook Usage
+
+Create the hook that will fetch and give you the data
+
+```tsx copy
+// hooks/useUsers.ts
+import { useQuery } from "@tanstack/react-query";
+
+async function fetchUsers() {
+  const response = await fetch("https://api.example.com/users");
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+}
+
+export function useUsers() {
+  return useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
+}
+```
+
+## Use the hook to display data
+
+```tsx copy
+"use client";
+
+import { useUsers } from "../hooks/useUsers";
+
+export default function UserList() {
+  const { data, isLoading, error } = useUsers();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <ul>
+      {data?.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 6. Advanced Usage : Custom Hooks for Products
+
+```typescript copy
+// hooks/useProducts.ts
+"use client";
+
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getProducts } from "@/app/actions/products";
+
+export function useInfiniteProducts() {
+  return useInfiniteQuery({
+    queryKey: ["products"],
+    queryFn: getProducts,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+```
+
+## 7. Product List Component with Infinite Scroll
+
+```tsx
+// app/products/page.tsx
+"use client";
+import { useInfiniteProducts } from "@/hooks/useProducts";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
+import Image from "next/image";
+import { ShoppingCart } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+export default function ProductListing() {
+  const { ref, inView } = useInView();
+
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteProducts();
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, fetchNextPage]);
+
+  if (isLoading)
+    return (
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white overflow-hidden shadow rounded-lg animate-pulse"
+              >
+                <div className="p-4">
+                  <div className="w-full h-48 bg-gray-200 mb-4" />
+                  <div className="h-6 bg-gray-200 mb-2" />
+                  <div className="h-4 bg-gray-200 mb-4 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="text-center text-red-600">Error loading products</div>
+        </div>
+      </div>
+    );
+
+  return (
+    <>
+      {data ? (
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {data.pages.map((page) =>
+                page.data.map((product) => (
+                  <Link
+                    href="#"
+                    key={product.id}
+                    className="bg-white overflow-hidden shadow rounded-lg"
+                  >
+                    <div className="p-4">
+                      <Image
+                        src={"/photo.png"}
+                        alt={product.title}
+                        width={512}
+                        height={512}
+                        className="w-full h-48 object-cover mb-4 rounded"
+                      />
+                      <h2 className="text-lg font-semibold text-gray-900 mb-2 truncate">
+                        {product.title}
+                      </h2>
+                      <p className="text-gray-600">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            <div ref={ref} className="mt-8 text-center">
+              {isFetchingNextPage && (
+                <div className="flex justify-center items-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
+                  <p>Loading More</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p>No Data Found</p>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+## 8. Create Product Form
+
+```tsx copy
+// app/products/create/page.tsx
+"use client";
+
+import { useCreateProduct } from "@/hooks/useProducts";
+
+export default function CreateProduct() {
+  const { mutate, isPending } = useCreateProduct();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    mutate({
+      title: formData.get("title") as string,
+      price: parseFloat(formData.get("price") as string),
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="title" className="block">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          required
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="price" className="block">
+          Price
+        </label>
+        <input
+          type="number"
+          id="price"
+          name="price"
+          step="0.01"
+          required
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+      >
+        {isPending ? "Creating..." : "Create Product"}
+      </button>
+    </form>
+  );
+}
+```
+
+## 9. Single Product Functionality
+
+### Server Action for Single Product
+
+```typescript copy
+// app/actions/products.ts
+"use server";
+
+import { prisma } from "@/lib/prisma";
+
+// Add this new function alongside existing product actions
+export async function getProduct(id: string) {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    return {
+      data: product,
+    };
+  } catch (error) {
+    throw new Error("Failed to fetch product");
+  }
+}
+```
+
+### React Query Hook for Single Product
+
+```typescript copy
+// hooks/useProduct.ts
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { getProduct } from "@/app/actions/products";
+
+export function useProduct(id: string) {
+  return useQuery({
+    queryKey: ["product", id],
+    queryFn: () => getProduct(id),
+    enabled: !!id, // Only run the query if we have an ID
+  });
+}
+```
+
+### Product Detail Page
+
+```typescript copy
+"use client";
+
+import { useProduct } from "@/hooks/useProduct";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { use } from "react";
+
+export default function ProductDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // Unwrap the params Promise using React.use()
+  const { id } = use(params);
+
+  const { data: productData, isLoading, isError, error } = useProduct(id);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="animate-pulse bg-gray-200 rounded-lg h-96" />
+          <div className="space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4 animate-pulse" />
+            <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse" />
+            <div className="h-24 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    if (error instanceof Error && error.message === "Product not found") {
+      notFound();
+    }
+    return (
+      <div className="max-w-2xl mx-auto py-8 px-4 text-center text-red-600">
+        Error loading product
+      </div>
+    );
+  }
+
+  const product = productData?.data;
+
+  if (!product) {
+    return notFound();
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Product Image */}
+        <div className="aspect-w-1 aspect-h-1">
+          <Image
+            src={`/photo.png`}
+            alt={product.title}
+            width={800}
+            height={800}
+            className=" w-full object-contain rounded-lg"
+            priority
+          />
+        </div>
+
+        {/* Product Details */}
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
+          <p className="text-2xl text-gray-900">${product.price.toFixed(2)}</p>
+
+          {/* Add any additional product details here */}
+          <div className="border-t pt-6">
+            <p className="text-gray-600">Product ID: {product.id}</p>
+            <p className="text-gray-600">
+              Added on: {new Date(product.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Adding Links to Product List
+
+Update your product list to include links to the detail page:
+
+```typescript copy
+// app/products/page.tsx
+// Add this import
+import Link from "next/link";
+
+// In your product grid, wrap each product card with a Link
+{
+  data.pages.map((page) =>
+    page.data.map((product) => (
+      <Link
+        key={product.id}
+        href={`/products/${product.id}`}
+        className="block transition-transform hover:scale-105"
+      >
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-4">
+            <Image
+              src={`https://picsum.photos/seed/${product.id}/400/400`}
+              alt={product.title}
+              width={400}
+              height={400}
+              className="w-full h-48 object-cover mb-4 rounded"
+            />
+            <h2 className="text-lg font-semibold text-gray-900 mb-2 truncate">
+              {product.title}
+            </h2>
+            <p className="text-gray-600">${product.price.toFixed(2)}</p>
+          </div>
+        </div>
+      </Link>
+    ))
+  );
+}
+```
+
+### Not Found Page
+
+```typescript copy
+// app/products/[id]/not-found.tsx
+export default function ProductNotFound() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Product Not Found
+        </h1>
+        <p className="text-gray-600 mb-6">
+          The product you're looking for doesn't exist.
+        </p>
+        <a href="/" className="text-blue-600 hover:text-blue-800">
+          Back to Products
+        </a>
+      </div>
+    </div>
+  );
+}
+```
+
+### Key Features:
+
+1. **Server Action**:
+
+   - Handles single product fetching
+   - Includes proper error handling
+   - Returns consistent response structure
+
+2. **React Query Hook**:
+
+   - Uses `useQuery` instead of `useInfiniteQuery`
+   - Enabled conditionally based on ID presence
+   - Proper type safety
+
+3. **Detail Page**:
+
+   - Responsive layout
+   - Loading skeleton
+   - Error handling with Not Found state
+   - High-quality product display
+   - SEO-friendly with priority image loading
+
+4. **List Integration**:
+   - Added links to detail pages
+   - Hover effects for better UX
+   - Smooth transitions
+
+### Best Practices:
+
+1. **Error Handling**:
+
+   ```typescript copy
+   if (isError) {
+     // Check for specific error types
+     if (error.message === "Product not found") {
+       notFound();
+     }
+     // Handle other errors
+   }
+   ```
+
+2. **Loading States**:
+
+   - Skeleton loading matches final layout
+   - Maintains layout stability
+   - Smooth transitions
+
+3. **Image Optimization**:
+
+   - Uses Next.js Image component
+   - Priority loading for hero images
+   - Proper sizing and aspect ratios
+
+4. **Navigation**:
+   - Clean URLs with dynamic routes
+   - Smooth transitions between list and detail
+   - Back navigation support
+
+Remember to:
+
+- Handle all possible error states
+- Implement proper loading states
+- Use proper TypeScript types
+- Consider implementing prefetching for better UX
+- Add proper meta tags for SEO
+
+## Best Practices and Tips
+
+1. **Type Safety**
+
+```typescript copy
+// types/product.ts
+export interface Product {
+  id: string;
+  title: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Use these types in your server actions and components
+```
+
+2. **Error Handling**
+
+```typescript copy
+// Updated server action with error handling
+export async function createProduct(data: { title: string; price: number }) {
+  try {
+    const product = await prisma.product.create({
+      data,
+    });
+    revalidatePath("/products");
+    return { success: true, data: product };
+  } catch (error) {
+    return { success: false, error: "Failed to create product" };
+  }
+}
+```
+
+3. **Loading States**
+
+```typescript copy
+// Component loading state handling
+function ProductList() {
+  const { isLoading, isFetchingNextPage } = useInfiniteProducts()
+
+  return (
+    <div>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : isFetchingNextPage ? (
+        <LoadingMore />
+      ) : (
+        // Render products
+      )}
+    </div>
+  )
+}
+```
+
+4. **Optimistic Updates**
+
+```typescript copy
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createProduct,
+    onMutate: async (newProduct) => {
+      await queryClient.cancelQueries({ queryKey: ["products"] });
+
+      const previousProducts = queryClient.getQueryData(["products"]);
+
+      queryClient.setQueryData(["products"], (old: any) => ({
+        pages: [
+          {
+            products: [{ id: "temp", ...newProduct }, ...old.pages[0].products],
+          },
+          ...old.pages.slice(1),
+        ],
+      }));
+
+      return { previousProducts };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(["products"], context?.previousProducts);
+    },
+  });
+}
+```
+
+Remember to:
+
+- Handle errors appropriately in both server actions and client components
+- Implement proper loading states for better UX
+- Use TypeScript for better type safety
+- Consider implementing optimistic updates for better user experience
+- Use proper validation for form inputs
+
+## Get the Complete Repo here
+
+[Github Repo](https://github.com/MUKE-coder/react-query-shop)
