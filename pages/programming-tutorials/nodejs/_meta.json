@@ -1,4 +1,6 @@
 {
+  "auth": "Authentication",
+  "reusable-auth": "Reusable Auth Methods",
   "setup": "Node Set up with Typescript ",
   "mvc": "MVC-Versioning and Routing ",
   "jwt": "Implementing JWT ",
