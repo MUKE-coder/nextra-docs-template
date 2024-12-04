@@ -1,0 +1,523 @@
+# Links App with Offline-First Architecture
+
+## Project Structure
+
+```
+├── src/
+│   ├── data/
+│   │   ├── queries.ts
+│   │   ├── mutations.ts
+│   │   ├── db.ts
+│   │   └── api.ts
+│   ├── store/
+│   │   └── archiveStore.ts
+│   ├── hooks/
+│   │   └── useLinks.ts
+│   ├── screens/
+│   │   ├── HomeScreen.tsx
+│   │   └── AddLinkScreen.tsx
+│   ├── components/
+│   │   ├── LinkItem.tsx
+│   │   └── LinkList.tsx
+│   └── utils/
+│       └── networkStatus.ts
+├── server/
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── src/
+│   │   ├── routes/
+│   │   │   └── links.ts
+│   │   └── index.ts
+│   └── package.json
+```
+
+## Database Implementation
+
+### SQLite Service (src/data/db.ts)
+
+```typescript
+import * as SQLite from "expo-sqlite";
+
+const db = SQLite.openDatabase("links.db");
+
+export const initDatabase = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS links (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          url TEXT NOT NULL,
+          is_archived INTEGER DEFAULT 0,
+          created_at INTEGER,
+          updated_at INTEGER,
+          is_synced INTEGER DEFAULT 0
+        );`,
+        [],
+        () => resolve(),
+        (_, error) => reject(error)
+      );
+    });
+  });
+};
+
+export const db = db;
+```
+
+### Queries (src/data/queries.ts)
+
+```typescript
+import { db } from "./db";
+import { Link } from "../types";
+
+export const getLinksOffline = (): Promise<Link[]> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM links WHERE is_archived = 0 ORDER BY created_at DESC",
+        [],
+        (_, { rows }) => resolve(rows._array),
+        (_, error) => reject(error)
+      );
+    });
+  });
+};
+
+export const getArchivedLinksOffline = (): Promise<Link[]> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM links WHERE is_archived = 1 ORDER BY created_at DESC",
+        [],
+        (_, { rows }) => resolve(rows._array),
+        (_, error) => reject(error)
+      );
+    });
+  });
+};
+```
+
+### Mutations (src/data/mutations.ts)
+
+```typescript
+import { db } from "./db";
+import { Link } from "../types";
+
+export const addLinkOffline = (link: Link): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `INSERT INTO links (id, title, url, is_archived, created_at, updated_at, is_synced)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [link.id, link.title, link.url, 0, Date.now(), Date.now(), 0],
+        () => resolve(),
+        (_, error) => reject(error)
+      );
+    });
+  });
+};
+
+export const archiveLinkOffline = (id: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "UPDATE links SET is_archived = 1, updated_at = ? WHERE id = ?",
+        [Date.now(), id],
+        () => resolve(),
+        (_, error) => reject(error)
+      );
+    });
+  });
+};
+```
+
+### API Service (src/data/api.ts)
+
+```typescript
+import { Link } from "../types";
+
+const API_URL = "http://your-api-url/api";
+
+export const getLinksOnline = async (): Promise<Link[]> => {
+  const response = await fetch(`${API_URL}/links`);
+  return response.json();
+};
+
+export const addLinkOnline = async (link: Link): Promise<Link> => {
+  const response = await fetch(`${API_URL}/links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(link),
+  });
+  return response.json();
+};
+
+export const archiveLinkOnline = async (id: string): Promise<Link> => {
+  const response = await fetch(`${API_URL}/links/${id}/archive`, {
+    method: "PATCH",
+  });
+  return response.json();
+};
+```
+
+### Archive Store (src/store/archiveStore.ts)
+
+```typescript
+import create from "zustand";
+import { persist } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+interface ArchiveState {
+  archivedLinks: string[];
+  archiveLink: (id: string) => void;
+  unarchiveLink: (id: string) => void;
+}
+
+const useArchiveStore = create<ArchiveState>()(
+  persist(
+    (set) => ({
+      archivedLinks: [],
+      archiveLink: (id) =>
+        set((state) => ({
+          archivedLinks: [...state.archivedLinks, id],
+        })),
+      unarchiveLink: (id) =>
+        set((state) => ({
+          archivedLinks: state.archivedLinks.filter((linkId) => linkId !== id),
+        })),
+    }),
+    {
+      name: "archive-storage",
+      getStorage: () => AsyncStorage,
+    }
+  )
+);
+
+export default useArchiveStore;
+```
+
+## Backend Implementation (server/prisma/schema.prisma)
+
+```prisma
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Link {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  url        String
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+```
+
+### Server Routes (server/src/routes/links.ts)
+
+```typescript
+import { Router } from "express";
+import { PrismaClient } from "@prisma/client";
+
+const router = Router();
+const prisma = new PrismaClient();
+
+router.get("/links", async (req, res) => {
+  const links = await prisma.link.findMany({
+    where: { isArchived: false },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json(links);
+});
+
+router.post("/links", async (req, res) => {
+  const link = await prisma.link.create({
+    data: {
+      title: req.body.title,
+      url: req.body.url,
+    },
+  });
+  res.json(link);
+});
+
+router.patch("/links/:id/archive", async (req, res) => {
+  const link = await prisma.link.update({
+    where: { id: req.params.id },
+    data: { isArchived: true },
+  });
+  res.json(link);
+});
+
+export default router;
+```
+
+### Custom Hook (src/hooks/useLinks.ts)
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getLinksOffline, getLinksOnline } from "../data/queries";
+import {
+  addLinkOffline,
+  addLinkOnline,
+  archiveLinkOffline,
+  archiveLinkOnline,
+} from "../data/mutations";
+import NetInfo from "@react-native-community/netinfo";
+
+export const useLinks = () => {
+  const queryClient = useQueryClient();
+
+  const { data: links } = useQuery({
+    queryKey: ["links"],
+    queryFn: async () => {
+      const netInfo = await NetInfo.fetch();
+      return netInfo.isConnected ? getLinksOnline() : getLinksOffline();
+    },
+  });
+
+  const addLinkMutation = useMutation({
+    mutationFn: async (link) => {
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected) {
+        await addLinkOnline(link);
+      }
+      await addLinkOffline(link);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["links"]);
+    },
+  });
+
+  const archiveLinkMutation = useMutation({
+    mutationFn: async (id) => {
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected) {
+        await archiveLinkOnline(id);
+      }
+      await archiveLinkOffline(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["links"]);
+    },
+  });
+
+  return {
+    links,
+    addLink: addLinkMutation.mutate,
+    archiveLink: archiveLinkMutation.mutate,
+  };
+};
+```
+
+```tsx
+// src/components/LinkItem.tsx
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from "react-native";
+import { Archive } from "lucide-react";
+
+interface LinkItemProps {
+  title: string;
+  url: string;
+  onArchive: () => void;
+}
+
+export const LinkItem = ({ title, url, onArchive }: LinkItemProps) => (
+  <View style={styles.linkItem}>
+    <TouchableOpacity
+      style={styles.linkContent}
+      onPress={() => Linking.openURL(url)}
+    >
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.url} numberOfLines={1}>
+        {url}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={onArchive} style={styles.archiveButton}>
+      <Archive size={20} color="#666" />
+    </TouchableOpacity>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  linkItem: {
+    flexDirection: "row",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    alignItems: "center",
+  },
+  linkContent: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  url: {
+    fontSize: 14,
+    color: "#666",
+  },
+  archiveButton: {
+    padding: 8,
+  },
+});
+
+// src/screens/HomeScreen.tsx
+import React from "react";
+import { View, StyleSheet, FlatList } from "react-native";
+import { useLinks } from "../hooks/useLinks";
+import { LinkItem } from "../components/LinkItem";
+import { FAB } from "../components/FAB";
+
+export const HomeScreen = ({ navigation }) => {
+  const { links, archiveLink } = useLinks();
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={links}
+        renderItem={({ item }) => (
+          <LinkItem
+            title={item.title}
+            url={item.url}
+            onArchive={() => archiveLink(item.id)}
+          />
+        )}
+        keyExtractor={(item) => item.id}
+      />
+      <FAB onPress={() => navigation.navigate("AddLink")} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+});
+
+// src/screens/AddLinkScreen.tsx
+import React, { useState } from "react";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+} from "react-native";
+import { useLinks } from "../hooks/useLinks";
+
+export const AddLinkScreen = ({ navigation }) => {
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const { addLink } = useLinks();
+
+  const handleSubmit = async () => {
+    if (!title || !url) return;
+
+    await addLink({
+      id: Date.now().toString(),
+      title,
+      url,
+      isArchived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    navigation.goBack();
+  };
+
+  return (
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Title"
+        value={title}
+        onChangeText={setTitle}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="URL"
+        value={url}
+        onChangeText={setUrl}
+        keyboardType="url"
+        autoCapitalize="none"
+      />
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Save Link</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  button: {
+    height: 48,
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});
+
+// src/components/FAB.tsx
+import React from "react";
+import { TouchableOpacity, StyleSheet } from "react-native";
+import { Plus } from "lucide-react";
+
+export const FAB = ({ onPress }) => (
+  <TouchableOpacity style={styles.fab} onPress={onPress}>
+    <Plus size={24} color="#fff" />
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  fab: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+});
+```
