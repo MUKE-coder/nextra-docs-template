@@ -521,3 +521,177 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+## With DRIZZLE ORM AND SQL
+
+# Links App with Drizzle ORM Integration
+
+## Install Dependencies
+
+```bash
+pnpm add drizzle-orm
+pnpm add -D drizzle-kit
+pnpm expo install expo-sqlite
+```
+
+## Project Structure Update
+
+```
+src/
+├── db/
+│   ├── schema.ts
+│   └── index.ts
+└── drizzle/
+    └── migrations/
+```
+
+## Database Schema (src/db/schema.ts)
+
+```typescript
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+
+export const links = sqliteTable("links", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  isArchived: integer("is_archived", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  isSynced: integer("is_synced", { mode: "boolean" }).notNull().default(false),
+});
+
+export type Link = typeof links.$inferSelect;
+export type NewLink = typeof links.$inferInsert;
+```
+
+## Database Connection (src/db/index.ts)
+
+```typescript
+import * as SQLite from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
+import { links } from "./schema";
+
+const SQLITE_FILE = "links.db";
+
+export const openConnection = () => {
+  const expo = SQLite.openDatabaseSync(SQLITE_FILE);
+  return drizzle(expo);
+};
+
+export const db = openConnection();
+
+export const initDatabase = async () => {
+  try {
+    await migrate(db, { migrationsFolder: "./drizzle/migrations" });
+  } catch (error) {
+    console.error("Migration failed:", error);
+  }
+};
+```
+
+## Updated Queries (src/data/queries.ts)
+
+```typescript
+import { eq } from "drizzle-orm";
+import { db } from "../db";
+import { links } from "../db/schema";
+
+export const getLinksOffline = async () => {
+  return db
+    .select()
+    .from(links)
+    .where(eq(links.isArchived, false))
+    .orderBy(links.createdAt);
+};
+
+export const getArchivedLinksOffline = async () => {
+  return db
+    .select()
+    .from(links)
+    .where(eq(links.isArchived, true))
+    .orderBy(links.createdAt);
+};
+```
+
+## Updated Mutations (src/data/mutations.ts)
+
+```typescript
+import { eq } from "drizzle-orm";
+import { db } from "../db";
+import { links, NewLink } from "../db/schema";
+
+export const addLinkOffline = async (link: NewLink) => {
+  await db.insert(links).values(link);
+};
+
+export const archiveLinkOffline = async (id: string) => {
+  await db
+    .update(links)
+    .set({
+      isArchived: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(links.id, id));
+};
+
+export const syncLinksOffline = async (syncedIds: string[]) => {
+  await db.update(links).set({ isSynced: true }).where(eq(links.id, syncedIds));
+};
+```
+
+## Configuration (drizzle.config.ts)
+
+```typescript
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  driver: "expo",
+  dbCredentials: {
+    databaseName: "links.db",
+  },
+  out: "./drizzle",
+});
+```
+
+## Metro Config (metro.config.js)
+
+```javascript
+const { getDefaultConfig } = require("expo/metro-config");
+
+const config = getDefaultConfig(__dirname);
+config.resolver.sourceExts.push("sql");
+
+module.exports = config;
+```
+
+## Babel Config (babel.config.js)
+
+```javascript
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ["babel-preset-expo"],
+    plugins: [["inline-import", { extensions: [".sql"] }]],
+  };
+};
+```
+
+## Usage in App
+
+```typescript
+import { useEffect } from "react";
+import { initDatabase } from "./src/db";
+import { useLinks } from "./src/hooks/useLinks";
+
+export default function App() {
+  useEffect(() => {
+    initDatabase();
+  }, []);
+
+  // Rest of your app code...
+}
+```

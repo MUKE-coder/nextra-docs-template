@@ -1,0 +1,1085 @@
+# Re-Usable form Inputs for Formik
+
+Some of these components use Theme Colors so lets first create a folder called constants and then inside create a file `Colors.ts`
+
+```ts copy
+/**
+ * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
+ * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ */
+
+const tintColorLight = "#0a7ea4";
+const tintColorDark = "#fff";
+
+export const Colors = {
+  light: {
+    text: "#11181C",
+    background: "#fff",
+    tint: tintColorLight,
+    icon: "#687076",
+    tabIconDefault: "#687076",
+    tabIconSelected: tintColorLight,
+  },
+  dark: {
+    text: "#ECEDEE",
+    background: "#151718",
+    tint: tintColorDark,
+    icon: "#9BA1A6",
+    tabIconDefault: "#9BA1A6",
+    tabIconSelected: tintColorDark,
+  },
+};
+
+export const themColors = {
+  gray: "#F6F6F6",
+  primary: "#0f172a",
+  secondary: "#f97316",
+  white: "#f8fafc",
+  black: "#020617",
+};
+```
+
+## Button Component
+
+```tsx copy
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { themColors } from "@/constants/Colors";
+
+interface ButtonProps {
+  onPress?: any;
+  color?: string;
+  filled?: boolean;
+  style?: any;
+  small?: boolean;
+  title: string;
+}
+export default function Button({
+  onPress,
+  color,
+  filled,
+  style,
+  title,
+  small = false,
+}: ButtonProps) {
+  const filledBgColor = color || themColors.primary;
+  const outlinedColor = themColors.white;
+  const bgColor = filled ? filledBgColor : outlinedColor;
+  const textColor = filled ? themColors.white : themColors.primary;
+  const className = small
+    ? "py-1 px-4 flex items-center justify-center border rounded-lg w-full"
+    : "py-2.5 px-6 flex items-center justify-center border-2 rounded-lg w-full";
+  return (
+    <TouchableOpacity
+      className={className}
+      onPress={onPress}
+      style={{
+        ...styles.button,
+        ...{ backgroundColor: bgColor },
+        ...style,
+      }}
+    >
+      <Text className="text-sm" style={{ ...{ color: textColor } }}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    borderColor: themColors.primary,
+  },
+});
+```
+
+## Formik Date Picker
+
+For this you have to install the following packages
+
+```bash copy
+pnpm add @react-native-community/datetimepicker formik date-fns
+```
+
+And here is the code for the picker
+
+```tsx copy
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useField } from "formik";
+import { format } from "date-fns";
+
+interface FormikDatePickerProps {
+  name: string;
+  label: string;
+  placeholder?: string;
+}
+
+const FormikDatePicker: React.FC<FormikDatePickerProps> = ({
+  name,
+  label,
+  placeholder = "Select date",
+}) => {
+  const [field, meta, helpers] = useField(name);
+  const [show, setShow] = useState(false);
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || field.value;
+    setShow(Platform.OS === "ios");
+    helpers.setValue(currentDate);
+  };
+
+  const showDatepicker = () => {
+    setShow(true);
+  };
+
+  return (
+    <View className="mb-4">
+      <Text className="text-sm text-gray-600 mb-1">{label}</Text>
+      <TouchableOpacity
+        onPress={showDatepicker}
+        className={`border rounded-md h-12 justify-center px-3 ${
+          meta.touched && meta.error ? "border-red-500" : "border-purple-600"
+        }`}
+      >
+        <Text className="text-base text-gray-800">
+          {field.value ? format(field.value, "dd/MM/yyyy") : placeholder}
+        </Text>
+      </TouchableOpacity>
+      {show && (
+        <DateTimePicker
+          testID="dateTimePicker"
+          value={field.value || new Date()}
+          mode="date"
+          is24Hour={true}
+          display="default"
+          onChange={onChangeDate}
+        />
+      )}
+      {meta.touched && meta.error && (
+        <Text className="text-red-500 text-xs mt-1">{meta.error}</Text>
+      )}
+    </View>
+  );
+};
+
+export default FormikDatePicker;
+```
+
+## Formik Text Input
+
+Here is the code
+
+```tsx copy
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  KeyboardTypeOptions,
+} from "react-native";
+import { useField } from "formik";
+import { cn } from "@/lib/utils";
+
+interface FormikTextInputProps {
+  name: string;
+  label: string;
+  placeholder?: string;
+  optional?: boolean;
+  keyboardType?: KeyboardTypeOptions;
+  variant?: "flat" | "outline";
+}
+
+const FormikTextInput: React.FC<FormikTextInputProps> = ({
+  name,
+  label,
+  placeholder,
+  optional = false,
+  keyboardType = "default",
+  variant = "flat",
+  ...props
+}) => {
+  const [field, meta, helpers] = useField(name);
+
+  const hasError = meta.touched && meta.error;
+
+  return (
+    <View style={styles.container}>
+      {variant === "flat" && (
+        <Text style={styles.flatLabel}>
+          {label}
+          {optional ? (
+            <Text style={styles.optionalText}> (optional)</Text>
+          ) : (
+            <Text className="text-red-600/30"> *</Text>
+          )}
+        </Text>
+      )}
+      <View
+        style={[
+          styles.inputContainer,
+          variant === "outline" ? styles.outlineInput : styles.flatInput,
+        ]}
+        className={cn("", hasError && "border-red-600")}
+      >
+        {variant === "outline" && (
+          <Text style={styles.outlineLabel}>
+            {label}
+            {optional && <Text style={styles.optionalText}> (optional)</Text>}
+          </Text>
+        )}
+        <TextInput
+          style={[
+            styles.input,
+            variant === "outline" && styles.outlineInputText,
+          ]}
+          onChangeText={helpers.setValue}
+          onBlur={() => helpers.setTouched(true)}
+          value={field.value}
+          placeholder={placeholder || `Type something`}
+          placeholderTextColor="#999"
+          keyboardType={keyboardType}
+          {...props}
+        />
+      </View>
+      {hasError && <Text style={styles.errorText}>{meta.error}</Text>}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  inputContainer: {
+    borderWidth: 1,
+    borderRadius: 4,
+    height: 48,
+    justifyContent: "center",
+  },
+  flatInput: {
+    borderBottomWidth: 1,
+    borderColor: "#E0E0E0",
+    backgroundColor: "#fff",
+  },
+  outlineInput: {
+    borderColor: "#7B7B7B",
+    backgroundColor: "white",
+  },
+  input: {
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: "#333",
+  },
+  outlineInputText: {
+    paddingTop: 12,
+  },
+  flatLabel: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 4,
+  },
+  outlineLabel: {
+    position: "absolute",
+    left: 8,
+    top: -10,
+    backgroundColor: "white",
+    paddingHorizontal: 4,
+    fontSize: 12,
+    color: "#7B7B7B",
+  },
+  optionalText: {
+    fontStyle: "italic",
+    color: "#999",
+  },
+  errorInput: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
+  },
+});
+
+export default FormikTextInput;
+```
+
+## Formik Select Input
+
+Here is the code
+
+```tsx copy
+import React, { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
+import { useField } from "formik";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
+interface Item {
+  label: string;
+  value: string;
+}
+
+interface FormSelectInputProps {
+  name: string;
+  label: string;
+  items: Item[];
+  placeholder?: string;
+}
+
+const FormSelectInput: React.FC<FormSelectInputProps> = ({
+  name,
+  label,
+  items,
+  placeholder = "Select item",
+}) => {
+  const [field, meta, helpers] = useField(name);
+  const [isFocus, setIsFocus] = useState(false);
+
+  const renderLabel = () => {
+    if (field.value || isFocus) {
+      return (
+        <Text style={[styles.label, isFocus && { color: "blue" }]}>
+          {label}
+        </Text>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      {renderLabel()}
+      <Dropdown
+        style={[styles.dropdown, isFocus && { borderColor: "blue" }]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={items}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? placeholder : "..."}
+        searchPlaceholder="Search..."
+        value={field.value}
+        onFocus={() => setIsFocus(true)}
+        onBlur={() => setIsFocus(false)}
+        onChange={(item) => {
+          helpers.setValue(item.value);
+          setIsFocus(false);
+        }}
+        renderLeftIcon={() => (
+          <AntDesign
+            style={styles.icon}
+            color={isFocus ? "blue" : "black"}
+            name="Safety"
+            size={20}
+          />
+        )}
+      />
+      {meta.touched && meta.error && (
+        <Text style={styles.errorText}>{meta.error}</Text>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "white",
+    paddingVertical: 12,
+  },
+  dropdown: {
+    height: 50,
+    borderColor: "gray",
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  label: {
+    position: "absolute",
+    backgroundColor: "white",
+    left: 22,
+    top: 8,
+    zIndex: 999,
+    paddingHorizontal: 8,
+    fontSize: 14,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 5,
+  },
+});
+
+export default FormSelectInput;
+```
+
+## Purchase Select Input
+
+```tsx copy
+import React, { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
+import { useField } from "formik";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
+interface FormSelectInputProps {
+  name: string;
+  label: string;
+  items: any[];
+  placeholder?: string;
+  onValueChange?: (value: string) => void; // Add this line to accept a prop
+}
+
+const FormSelectInput: React.FC<FormSelectInputProps> = ({
+  name,
+  label,
+  items,
+  placeholder = "Select item",
+  onValueChange, // Destructure onValueChange here
+}) => {
+  const [field, meta, helpers] = useField(name);
+  const [isFocus, setIsFocus] = useState(false);
+
+  const renderLabel = () => {
+    if (field.value || isFocus) {
+      return (
+        <Text style={[styles.label, isFocus && { color: "blue" }]}>
+          {label}
+        </Text>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      {renderLabel()}
+      <Dropdown
+        style={[styles.dropdown, isFocus && { borderColor: "blue" }]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={items}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? placeholder : "..."}
+        searchPlaceholder="Search..."
+        value={field.value} // Binding Formik's value here
+        onFocus={() => setIsFocus(true)}
+        onBlur={() => setIsFocus(false)}
+        onChange={(item) => {
+          helpers.setValue(item.value); // Update the selected value using Formik
+          setIsFocus(false);
+          if (onValueChange) {
+            onValueChange(item.value); // Call the passed onValueChange function
+          }
+        }}
+        renderLeftIcon={() => (
+          <AntDesign
+            style={styles.icon}
+            color={isFocus ? "blue" : "black"}
+            name="Safety"
+            size={20}
+          />
+        )}
+      />
+      {meta.touched && meta.error && (
+        <Text style={styles.errorText}>{meta.error}</Text>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "white",
+    paddingVertical: 12,
+  },
+  dropdown: {
+    height: 50,
+    borderColor: "gray",
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  label: {
+    position: "absolute",
+    backgroundColor: "white",
+    left: 22,
+    top: 8,
+    zIndex: 999,
+    paddingHorizontal: 8,
+    fontSize: 14,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 5,
+  },
+});
+
+export default FormSelectInput;
+```
+
+## Example Usage
+
+Here is an example on how to use the Inputs
+
+```tsx copy
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { Entypo } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import InlineLoader from "@/components/InlineLoader";
+import { showMessage } from "react-native-flash-message";
+import FormikTextInput from "@/components/FormInputs/FormikTextInput";
+import FormSelectInput from "@/components/FormInputs/FormSelectInput";
+import { useFocusEffect } from "expo-router";
+import { getCustomerById } from "@/api/data";
+import Loader from "@/components/loader";
+import axios from "axios";
+
+export default function AddCustomer() {
+  const [loading, setLoading] = useState(false);
+  const [customerFetch, setCustomerFetch] = useState(false);
+  const [initialValues, setInitialValues] = useState({
+    customerType: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    gender: "",
+    country: "Uganda",
+    maxCreditLimit: "",
+    maxCreditDays: "",
+    taxPin: "",
+    dob: "",
+    email: "",
+    NIN: "",
+    location: "",
+  });
+
+  const { customerId } = useLocalSearchParams();
+  // console.log('customerId:', customerId);
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        try {
+          if (customerId) {
+            setCustomerFetch(true);
+            const customerData = await getCustomerById(customerId as string);
+            // console.log('Customer data:', customerData);
+            setInitialValues({
+              customerType: customerData.customerType || "",
+              firstName: customerData.firstName || "",
+              lastName: customerData.lastName || "",
+              phone: customerData.phone || "",
+              gender: customerData.gender || "",
+              country: customerData.country || "Uganda",
+              maxCreditLimit: customerData.maxCreditLimit || "",
+              maxCreditDays: customerData.maxCreditDays || "",
+              taxPin: customerData.taxPin || "",
+              dob: customerData.dob || "",
+              email: customerData.email || "",
+              NIN: customerData.NIN || "",
+              location: customerData.string || "",
+            });
+
+            setCustomerFetch(false);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+        }
+      };
+
+      fetchData();
+    }, [])
+  );
+
+  const validationSchema = Yup.object().shape({
+    customerType: Yup.string().required("Customer Type is required"),
+    firstName: Yup.string().required("First Name is required"),
+    lastName: Yup.string().required("Last Name is required"),
+    maxCreditLimit: Yup.number()
+      .typeError("Max Credit Limit must be a number")
+      .positive("Max Credit Limit must be positive")
+      .required("Max Credit Limit is required"),
+    maxCreditDays: Yup.number()
+      .typeError("Max Credit Days must be a number")
+      .integer("Max Credit Days must be an integer")
+      .min(1, "Must be at least 1 day")
+      .max(365, "Cannot be more than 365 days")
+      .required("Max Credit Days is required"),
+  });
+
+  const handleSave = async (values: any, actions: any) => {
+    setLoading(true);
+
+    const customerData = {
+      customerType: values.customerType,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      phone: values.phone,
+      gender: "NOT_FOUND",
+      country: values.country,
+      location: values.location,
+      maxCreditLimit: parseFloat(values.maxCreditLimit),
+      maxCreditDays: parseInt(values.maxCreditDays, 10),
+      taxPin: values.taxPin,
+      dob: values.dob || null,
+      email: values.email,
+      NIN: values.NIN,
+    };
+    console.log(customerData);
+    try {
+      if (customerId) {
+        const response = await axios.put(
+          `${API_URL}/customers/${customerId}`,
+          customerData
+        );
+
+        if (response.status === 200) {
+          showMessage({
+            message: `Customer Updated successfully`,
+            type: "success",
+          });
+          router.push("/manage/customers");
+        }
+      } else {
+        const response = await fetch(
+          "https://ipos-api.up.railway.app/api/v1/customers",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(customerData),
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log("Customer created:", data);
+          showMessage({
+            message: "Customer Created",
+            description: "Customer has been successfully created.",
+            type: "success",
+          });
+          setLoading(false);
+          setTimeout(() => {
+            router.push("/manage/customers");
+          }, 3000);
+        } else {
+          showMessage({
+            message: data.error || "An unexpected error occurred",
+            description: "Ooops something wrong happened.",
+            type: "danger",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      showMessage({
+        message: "An unexpected error occurred",
+        description: "An unexpected error occurred.",
+        type: "danger",
+      });
+    } finally {
+      setLoading(false);
+      // actions.resetForm();
+    }
+  };
+
+  if (customerFetch) {
+    return <Loader />;
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="shadow-sm pt-[8%] pl-9 pb-[4%] flex flex-row items-center gap-2 mb-2"
+      >
+        <Entypo name="chevron-left" size={28} color="black" />
+        <Text className="text-[#0d9488] font-black" style={styles.title}>
+          {customerId ? "Update Customer" : "Add Customer"}
+        </Text>
+      </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={80}
+      >
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleSave}
+        >
+          {({ handleSubmit, errors, touched, resetForm, setFieldValue }) => (
+            <>
+              <ScrollView contentContainerStyle={styles.scrollView}>
+                <View style={styles.container}>
+                  <View className="mt-2">
+                    <Text className="mb-1 text-[#020617]">
+                      Select Customer Type:
+                    </Text>
+                    <FormSelectInput
+                      name="customerType"
+                      label="Select Customer Type:"
+                      items={[
+                        {
+                          label: "RETAIL",
+                          value: "RETAIL",
+                        },
+                        {
+                          label: "WHOLESALE",
+                          value: "WHOLESALE",
+                        },
+                        {
+                          label: "DISTRIBUTOR",
+                          value: "DISTRIBUTOR",
+                        },
+                        {
+                          label: "OTHER",
+                          value: "OTHER",
+                        },
+                      ]}
+                      placeholder="Select Customer Type"
+                    />
+
+                    {errors.customerType && touched.customerType && (
+                      <Text style={styles.errorText}>
+                        {errors.customerType}
+                      </Text>
+                    )}
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="firstName"
+                      label=" Enter first Name:"
+                      placeholder="Eg : Kooza"
+                    />
+                    <View />
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="lastName"
+                      label=" Enter Last Name:"
+                      placeholder="Eg : Collinz"
+                    />
+                    <View />
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="email"
+                      label="Email::"
+                      placeholder="Eg : koozacollinz1@gmail.com"
+                      keyboardType="email-address"
+                      optional
+                    />
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="phone"
+                      label="Phone Number:"
+                      placeholder="Eg : 077000038"
+                      keyboardType="number-pad"
+                      optional
+                    />
+                    <View />
+                  </View>
+                  {/* <View>
+                    <Text className="mb-1 text-[#020617]">Select Gender</Text>
+                    <FormSelectInput
+                      name="gender"
+                      label="Select Gender"
+                      items={[
+                        { label: 'MALE', value: 'MALE' },
+                        {
+                          label: 'FEMALE',
+                          value: 'FEMALE',
+                        },
+                      ]}
+                      placeholder="Select Gender"
+                    />
+                  </View> */}
+
+                  {/* {errors.gender && touched.gender && (
+                    <Text style={styles.errorText}>{errors.gender}</Text>
+                  )} */}
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="country"
+                      label="Enter country:"
+                      placeholder="Eg : Uganada"
+                      optional
+                      //   keyboardType="number-pad"
+                    />
+                    <View />
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="maxCreditLimit"
+                      label="Max Credit Limit:"
+                      placeholder="Eg : 5000"
+                      keyboardType="number-pad"
+                    />
+                    <View />
+                  </View>
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="maxCreditDays"
+                      label="Max Credit Days:"
+                      placeholder="Eg : 2"
+                      keyboardType="number-pad"
+                    />
+                    <View />
+                  </View>
+
+                  {/* <View style={styles.formField}>
+                    <FormikTextInput
+                      name="taxPin"
+                      label="Tax pin:"
+                      placeholder="Eg : 20"
+                      keyboardType="number-pad"
+                      optional
+                    />
+                    <View />
+                  </View> */}
+
+                  {/* <View style={styles.formField}>
+                    <FormikTextInput
+                      name="NIN"
+                      label="Enter National ID:"
+                      placeholder="Eg : 849494030"
+                      optional
+                    />
+                    <View />
+                  </View> */}
+
+                  <View style={styles.formField}>
+                    <FormikTextInput
+                      name="location"
+                      label="Enter location:"
+                      placeholder="Eg : Kampala"
+                      optional
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => resetForm()}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                {loading ? (
+                  <InlineLoader title="Saving Please wait " />
+                ) : (
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={() => handleSubmit()}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {customerId ? "Update Customer" : "Add Customer"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
+        </Formik>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    paddingHorizontal: 20,
+    paddingBottom: 80,
+  },
+  formField: {
+    marginBottom: 7,
+  },
+  container: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 25,
+  },
+  backButton: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    paddingVertical: "8%",
+    paddingLeft: "9%",
+    paddingBottom: "4%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: "#9ca3af",
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  errorText: {
+    fontSize: 12,
+    color: "red",
+    marginBottom: 10,
+  },
+  passwordContainer: {
+    position: "relative",
+  },
+  passwordInput: {
+    paddingRight: 40,
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 10,
+    top: "25%",
+  },
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  cancelButton: {
+    backgroundColor: "#ccc",
+    padding: 10,
+    borderRadius: 4,
+    flex: 1,
+    marginRight: 10,
+  },
+  cancelButtonText: {
+    color: "#000",
+    textAlign: "center",
+    fontSize: 16,
+  },
+  submitButton: {
+    backgroundColor: "#0d9488",
+    padding: 10,
+    borderRadius: 4,
+    flex: 1,
+  },
+  submitButtonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 16,
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 5,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 10,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "red",
+    borderRadius: 5,
+    paddingRight: 30,
+    marginBottom: 10,
+    backgroundColor: "#ebebeb",
+  },
+  placeholder: {
+    color: "#334155",
+  },
+});
+```

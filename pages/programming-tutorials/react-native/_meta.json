@@ -1,4 +1,9 @@
 {
   "index": "Introduction",
-  "get-started": "Get Started with Expo"
+  "data-table": "Data Table",
+  "tabs": "Tab Navigation",
+  "get-started": "Get Started with Expo",
+  "installation": "Installation",
+  "formik": "Handling forms with Formik",
+  "form-inputs": "Reusable form inputs"
 }

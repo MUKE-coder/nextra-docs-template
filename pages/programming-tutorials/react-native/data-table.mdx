@@ -1,0 +1,652 @@
+# Implementing Data table
+
+A data table is a structured way to display and organize data in rows and columns, making it easy to read, sort, filter, and interact with large sets of information. Let me create a example data table using React Native and explain its key components.
+
+## Create the DataTable.tsx in components/datatable
+
+```tsx copy
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Platform,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useAuth } from "@/context/AuthContext";
+import Toast from "react-native-toast-message";
+import { generateSlug } from "@/utils/generate-slug";
+import { generateProductCode } from "@/utils/generateSlug";
+import DuplicateProductModal from "../DuplicateProductModal";
+import { IShop } from "@/types/types";
+
+interface Column<T> {
+  key: string;
+  title: string;
+  render?: (item: T) => React.ReactNode;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface DataTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  categories?: Category[];
+  onEdit: (item: T) => void;
+  onDelete: (item: T) => void;
+  title?: string;
+  allowDuplicate?: boolean;
+}
+
+const ITEMS_PER_PAGE = 10;
+
+const DataTable = <T extends Record<string, any>>({
+  data,
+  columns,
+  categories,
+  onEdit,
+  onDelete,
+  allowDuplicate = false,
+  title = "",
+}: DataTableProps<T>) => {
+  const [sortConfig, setSortConfig] = useState<{
+    key: string | null;
+    direction: "ascending" | "descending";
+  }>({ key: null, direction: "ascending" });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<T | null>(null);
+  const [shops, setShops] = useState<IShop[]>([]);
+  const base_url = process.env.EXPO_PUBLIC_API_URL;
+
+  const fetchShops = useCallback(async () => {
+    try {
+      const response = await fetch(`${base_url}/shops`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+
+      setShops(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  const handleDuplicate = async (newShopId: string, newName: string) => {
+    if (!selectedProduct) return;
+
+    const { id, createdAt, updatedAt, ...productData } = selectedProduct;
+    const newSKU = `${productData.sku}-${Math.floor(Math.random() * 10000)}`;
+
+    const newProductData = {
+      ...productData,
+      name: newName,
+      shopId: newShopId,
+      slug: generateSlug(newName),
+      productCode: generateProductCode(newName, productData.sku),
+      sku: newSKU,
+    };
+
+    try {
+      const response = await fetch(`${base_url}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newProductData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: result.error || "Failed to duplicate product",
+        });
+      } else {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Product duplicated successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error duplicating product:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to duplicate product",
+      });
+    }
+  };
+  const clearFilters = () => {
+    setSelectedCategory(null);
+    setStartDate(null);
+    setEndDate(null);
+    setSearchQuery("");
+    setFilterModalVisible(false);
+  };
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const matchesSearch = Object.values(item).some(
+        (val) =>
+          val &&
+          val.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      const matchesCategory = selectedCategory
+        ? item.categoryId === selectedCategory
+        : true;
+      const matchesDateRange =
+        startDate && endDate
+          ? new Date(item.createdAt) >= startDate &&
+            new Date(item.createdAt) <= endDate
+          : true;
+      return matchesSearch && matchesCategory && matchesDateRange;
+    });
+  }, [data, searchQuery, selectedCategory, startDate, endDate]);
+
+  const sortedData = useMemo(() => {
+    let sortableItems = [...filteredData];
+    if (sortConfig.key !== null) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key!] < b[sortConfig.key!]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key!] > b[sortConfig.key!]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredData, sortConfig]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedData, currentPage]);
+
+  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE);
+
+  const requestSort = (key: string) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const renderHeader = () => (
+    <View className="flex-row bg-gray-100">
+      {columns.map((column) => (
+        <TouchableOpacity
+          key={column.key}
+          className="flex-1 flex-row justify-between items-center p-3"
+          onPress={() => requestSort(column.key)}
+        >
+          <Text className="font-bold">{column.title}</Text>
+          {sortConfig.key === column.key && (
+            <Text>{sortConfig.direction === "ascending" ? "▲" : "▼"}</Text>
+          )}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+  const { user } = useAuth();
+
+  const userRole = user?.role;
+
+  const showItemOptions = (item: any) => {
+    if (userRole !== "ATTENDANT") {
+      Alert.alert(`${title} Options`, "Choose an action", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        // {
+        //   text: 'Duplicate',
+        //   onPress: () => {
+        //     setSelectedProduct(item);
+        //     setDuplicateModalVisible(true);
+        //   },
+        // },
+        {
+          text: "Edit",
+          onPress: () => onEdit(item),
+        },
+        {
+          text: "Delete",
+          onPress: () => onDelete(item),
+          style: "destructive",
+        },
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, [fetchShops]);
+  const renderItem = ({ item }: { item: T }) => (
+    <View className="flex-row border-b border-gray-200 items-center relative">
+      {columns.map((column) => (
+        <View key={column.key} className="flex-1 p-3">
+          {column.render ? (
+            column.render(item)
+          ) : (
+            <Text>{String(item[column.key])}</Text>
+          )}
+        </View>
+      ))}
+      <View className="w-10 flex-row justify-center items-center">
+        {allowDuplicate && (
+          <TouchableOpacity
+            onPress={() => {
+              setDuplicateModalVisible(true);
+              setSelectedProduct(item);
+            }}
+          >
+            <Ionicons name="duplicate" size={20} color="gray" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={() => showItemOptions(item ? item : null)}>
+          <Ionicons name="ellipsis-vertical" size={24} color="gray" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderPagination = () => (
+    <View className="flex-row justify-between items-center p-4 bg-gray-100">
+      <TouchableOpacity
+        onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        disabled={currentPage === 1}
+      >
+        <Ionicons
+          name="chevron-back"
+          size={24}
+          color={currentPage === 1 ? "gray" : "black"}
+        />
+      </TouchableOpacity>
+      <Text>{`${currentPage} of ${totalPages}`}</Text>
+      <TouchableOpacity
+        onPress={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        disabled={currentPage === totalPages}
+      >
+        <Ionicons
+          name="chevron-forward"
+          size={24}
+          color={currentPage === totalPages ? "gray" : "black"}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderFilterModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={filterModalVisible}
+      onRequestClose={() => setFilterModalVisible(false)}
+    >
+      <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+        <View className="bg-white p-5 rounded-lg w-4/5">
+          <Text className="text-lg font-bold mb-3">Filter</Text>
+          {categories && (
+            <>
+              <Text className="font-semibold mb-2">Category:</Text>
+              <View className="mb-4">
+                {categories.map((category) => (
+                  <TouchableOpacity
+                    key={category.id}
+                    onPress={() => setSelectedCategory(category.id)}
+                    className={`p-2 mb-1 rounded ${
+                      selectedCategory === category.id
+                        ? "bg-blue-200"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    <Text>{category.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+          <Text className="font-semibold mb-2">Date Range:</Text>
+          <View className="mb-4">
+            <TouchableOpacity
+              onPress={() => setShowStartDatePicker(true)}
+              className="p-2 mb-1 bg-gray-100 rounded"
+            >
+              <Text>
+                {startDate ? startDate.toDateString() : "Select Start Date"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowEndDatePicker(true)}
+              className="p-2 mb-1 bg-gray-100 rounded"
+            >
+              <Text>
+                {endDate ? endDate.toDateString() : "Select End Date"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View className="flex-row justify-between">
+            <TouchableOpacity
+              onPress={clearFilters}
+              className="bg-red-500 p-2 rounded flex-1 mr-2"
+            >
+              <Text className="text-white text-center">Clear Filters</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setFilterModalVisible(false)}
+              className="bg-blue-500 p-2 rounded flex-1 ml-2"
+            >
+              <Text className="text-white text-center">Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={startDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowStartDatePicker(Platform.OS === "ios");
+            if (selectedDate) setStartDate(selectedDate);
+          }}
+        />
+      )}
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={endDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowEndDatePicker(Platform.OS === "ios");
+            if (selectedDate) setEndDate(selectedDate);
+          }}
+        />
+      )}
+    </Modal>
+  );
+
+  return (
+    <View className="flex-1 bg-white">
+      <View className="px-4 py-2">
+        <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2">
+          <Ionicons name="search" size={20} color="gray" />
+          <TextInput
+            className="flex-1 ml-2"
+            placeholder="Search..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <TouchableOpacity onPress={() => setFilterModalVisible(true)}>
+            <Ionicons name="filter" size={20} color="gray" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View className="px-2 flex-1 bg-white">
+        <FlatList
+          data={paginatedData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={renderHeader}
+          stickyHeaderIndices={[0]}
+          ListFooterComponent={renderPagination}
+        />
+      </View>
+      {renderFilterModal()}
+      <DuplicateProductModal
+        isVisible={duplicateModalVisible}
+        onClose={() => setDuplicateModalVisible(false)}
+        onDuplicate={handleDuplicate}
+        shops={shops}
+        currentShopId={selectedProduct?.shopId || ""}
+      />
+    </View>
+  );
+};
+
+export default DataTable;
+```
+
+## Create a top bar component
+
+```tsx copy
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome5, FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import ShopSelector from "../ShopSelector";
+import { useAuth } from "@/context/AuthContext";
+
+interface TopBarProps {
+  title: string;
+  href: any;
+  onRefresh: () => void;
+}
+
+const TopBar: React.FC<TopBarProps> = ({ title, href, onRefresh }) => {
+  const { user } = useAuth();
+  const isAttendant = user?.role === "ATTENDANT";
+  const [isShopSelectorVisible, setIsShopSelectorVisible] = useState(false);
+  const handleCloseShopSelector = () => {
+    setIsShopSelectorVisible(false);
+  };
+
+  const handleOpenShopSelector = () => {
+    setIsShopSelectorVisible(true);
+  };
+
+  return (
+    <View className="flex-row justify-between items-center p-4 bg-white border-b border-gray-200 mt-6">
+      <View className="flex-row items-center">
+        <TouchableOpacity onPress={() => router.back()} className="p-2 mr-1">
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text className="text-xl font-bold">{title}</Text>
+      </View>
+      <View className="flex-row">
+        <TouchableOpacity
+          onPress={() => router.push(href)}
+          className="p-2 mr-2"
+        >
+          <Ionicons name="add" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onRefresh} className="p-2">
+          <Ionicons name="refresh" size={24} color="black" />
+        </TouchableOpacity>
+        {isAttendant ? (
+          ""
+        ) : (
+          <TouchableOpacity onPress={handleOpenShopSelector} className="p-2">
+            <FontAwesome6 name="house-chimney-window" size={20} color="black" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <ShopSelector
+        isVisible={isShopSelectorVisible}
+        onClose={handleCloseShopSelector}
+      />
+    </View>
+  );
+};
+
+export default TopBar;
+// const styles = StyleSheet.create({
+//   filterButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginLeft: 'auto',
+//     marginTop: 12,
+//   },
+//   filterText: {
+//     color: '#0d9488',
+//     marginLeft: 5,
+//     fontSize: 13,
+//     fontWeight: '500',
+//   },
+// });
+```
+
+## Example Usage for data table
+
+We used this component to display a list of customers
+
+```tsx copy
+import React, { useContext, useEffect } from "react";
+import {
+  SafeAreaView,
+  Text,
+  ActivityIndicator,
+  View,
+  TouchableOpacity,
+} from "react-native";
+import { router } from "expo-router";
+import Toast from "react-native-toast-message";
+import DataTable from "@/components/DataTable/DataTable";
+import TopBar from "@/components/DataTable/TopBar";
+import { Customer, CustomerContext } from "@/context/CustomerContext";
+
+const CustomersPage: React.FC = () => {
+  const { customers, loading, error, refreshCustomers } =
+    useContext(CustomerContext);
+  useEffect(() => {
+    if (customers.length === 0) {
+      refreshCustomers();
+    }
+  }, [customers, refreshCustomers]);
+
+  const columns = [
+    {
+      key: "firstName",
+      title: "Name",
+      render: (item: Customer) => (
+        <Text>{`${item.firstName} ${item.lastName}`}</Text>
+      ),
+    },
+    {
+      key: "phone",
+      title: "Phone",
+      render: (item: Customer) => (
+        <Text className="text-center">{item.phone}</Text>
+      ),
+    },
+    {
+      key: "maxCreditLimit",
+      title: "Credit Limit",
+      render: (item: Customer) => (
+        <Text className="text-center">{item.maxCreditLimit}</Text>
+      ),
+    },
+  ];
+
+  const handleEdit = (customer: Customer) => {
+    router.push(`/manage/customers/add-customers?customerId=${customer.id}`);
+  };
+
+  const handleDelete = async (item: Customer) => {
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/customers/${item.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.ok) {
+        Toast.show({
+          text1: "Deleted",
+          text2: "Customer deleted successfully",
+          type: "success",
+        });
+        refreshCustomers();
+      } else {
+        Toast.show({
+          text1: "Delete Failed",
+          text2: "Customer failed to be deleted",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      Toast.show({
+        text1: "Error",
+        text2: "An error occurred while deleting the customer",
+        type: "error",
+      });
+    }
+  };
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500 mb-4">Error: {error}</Text>
+        <TouchableOpacity
+          onPress={refreshCustomers}
+          className="bg-blue-500 px-4 py-2 rounded"
+        >
+          <Text className="text-white">Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <TopBar
+        href="/manage/customers/add-customers"
+        title="Customers"
+        onRefresh={refreshCustomers}
+      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#4F46E5"
+          className="flex-1 justify-center"
+        />
+      ) : customers.length > 0 ? (
+        <DataTable
+          title="Customer"
+          data={customers || []}
+          columns={columns}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      ) : (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-lg mb-4">No customers found</Text>
+          <TouchableOpacity
+            onPress={refreshCustomers}
+            className="bg-blue-500 px-4 py-2 rounded"
+          >
+            <Text className="text-white">Refresh</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+export default CustomersPage;
+```

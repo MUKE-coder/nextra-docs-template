@@ -1,0 +1,376 @@
+# Using Formik and Yup in React Native: A Practical Guide
+
+## Setup
+
+First, install the required dependencies:
+
+```bash
+npm install formik yup
+# or
+yarn add formik yup
+```
+
+## 1. Setting Up the Validation Schema
+
+Define your validation rules using Yup:
+
+```typescript
+const validationSchema = Yup.object().shape({
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title must be at least 3 characters"),
+  url: Yup.string().required("URL is required"),
+});
+```
+
+Common Yup validations:
+
+- `.required()` - Field cannot be empty
+- `.min()` - Minimum length
+- `.max()` - Maximum length
+- `.email()` - Must be valid email
+- `.url()` - Must be valid URL
+- `.matches()` - Must match regex pattern
+
+## 2. Defining Form Types
+
+Use TypeScript interfaces to define your form values:
+
+```typescript
+interface FormValues {
+  title: string;
+  url: string;
+}
+```
+
+## 3. Implementing Formik
+
+Basic Formik setup:
+
+```typescript
+<Formik
+  initialValues={{ title: "", url: "" }}
+  validationSchema={validationSchema}
+  onSubmit={handleSubmit}
+>
+  {/* Form content goes here */}
+</Formik>
+```
+
+Key Formik props:
+
+- `initialValues`: Initial form state
+- `validationSchema`: Yup validation schema
+- `onSubmit`: Function called on form submission
+
+## 4. Using Formik Props
+
+Formik provides several props through its render prop function:
+
+```typescript
+{({
+  handleChange,    // Updates form values
+  handleBlur,      // Marks field as touched
+  handleSubmit,    // Submits the form
+  values,          // Current form values
+  errors,          // Validation errors
+  touched,         // Fields that have been touched
+}) => (
+  // Your form JSX
+)}
+```
+
+## 5. Creating Form Fields
+
+Example of a form field with validation:
+
+```typescript
+<View>
+  <TextInput
+    className="h-12 border border-gray-200 rounded-lg px-4 mb-1"
+    placeholder="Title"
+    value={values.title}
+    onChangeText={handleChange("title")}
+    onBlur={handleBlur("title")}
+  />
+  {touched.title && errors.title && (
+    <Text className="text-red-500 text-sm px-1">{errors.title}</Text>
+  )}
+</View>
+```
+
+Key points:
+
+- Use `handleChange(fieldName)` for updating values
+- Use `handleBlur(fieldName)` to track touched state
+- Show errors only when field is touched (`touched.fieldName`)
+
+## 6. Handling Form Submission
+
+Create a submit handler:
+
+```typescript
+const handleSubmit = async (values: FormValues) => {
+  const newLink = {
+    id: Date.now().toString(),
+    title: values.title,
+    url: values.url,
+    isArchived: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  // Process form data
+  console.log(newLink);
+  router.push("/links");
+};
+```
+
+## Best Practices
+
+1. **Error Handling**
+
+   - Always show validation errors after field is touched
+   - Use clear, user-friendly error messages
+   - Position error messages consistently
+
+2. **User Experience**
+
+   - Provide immediate feedback on validation
+   - Use appropriate keyboard types
+   - Handle loading states during submission
+
+3. **TypeScript Integration**
+
+   - Define interfaces for form values
+   - Use proper types for validation schema
+   - Leverage TypeScript's type checking
+
+4. **Styling**
+   - Use consistent styling for form elements
+   - Provide clear visual feedback for errors
+   - Make interactive elements obviously clickable
+
+## Common Patterns
+
+1. **Field Wrapper Component**
+
+```typescript
+const FormField = ({ name, ...props }) => (
+  <View>
+    <TextInput
+      onChangeText={handleChange(name)}
+      onBlur={handleBlur(name)}
+      value={values[name]}
+      {...props}
+    />
+    {touched[name] && errors[name] && (
+      <Text className="text-red-500">{errors[name]}</Text>
+    )}
+  </View>
+);
+```
+
+2. **Custom Validation Messages**
+
+```typescript
+Yup.string().required(() => customErrorMessage);
+```
+
+3. **Conditional Validation**
+
+```typescript copy
+Yup.string().when("otherField", {
+  is: true,
+  then: Yup.string().required(),
+});
+```
+
+## Full working Form Component
+
+```tsx copy
+import { router } from "expo-router";
+import React from "react";
+import { View, TextInput, TouchableOpacity, Text } from "react-native";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+const validationSchema = Yup.object().shape({
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title must be at least 3 characters"),
+  url: Yup.string().required("URL is required"),
+});
+
+interface FormValues {
+  title: string;
+  url: string;
+}
+
+export default function Add() {
+  const handleSubmit = async (values: FormValues) => {
+    const newLink = {
+      id: Date.now().toString(),
+      title: values.title,
+      url: values.url,
+      isArchived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    console.log(newLink);
+    // await addLink(newLink);
+    router.push("/links");
+  };
+
+  return (
+    <View className="flex-1 p-4 bg-white pt-12">
+      <View className="py-4">
+        <Text className="font-bold text-3xl">Add New Link</Text>
+      </View>
+
+      <Formik
+        initialValues={{ title: "", url: "" }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+        }) => (
+          <View className="space-y-4">
+            <View>
+              <TextInput
+                className="h-12 border border-gray-200 rounded-lg px-4 mb-1"
+                placeholder="Title"
+                value={values.title}
+                onChangeText={handleChange("title")}
+                onBlur={handleBlur("title")}
+              />
+              {touched.title && errors.title && (
+                <Text className="text-red-500 text-sm px-1">
+                  {errors.title}
+                </Text>
+              )}
+            </View>
+
+            <View>
+              <TextInput
+                className="h-12 border border-gray-200 rounded-lg px-4 mb-1"
+                placeholder="URL"
+                value={values.url}
+                onChangeText={handleChange("url")}
+                onBlur={handleBlur("url")}
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+              {touched.url && errors.url && (
+                <Text className="text-red-500 text-sm px-1">{errors.url}</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              className={`h-12 rounded-lg items-center justify-center bg-blue-500`}
+              onPress={() => handleSubmit()}
+            >
+              <Text className="text-white text-base font-medium">
+                Save Link
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Formik>
+    </View>
+  );
+}
+```
+
+## Keyboard Avoid View
+
+KeyboardAvoidingView is a React Native component that helps manage the user interface when the keyboard appears on screen. Let me explain its purpose and implementation:
+
+### Purpose:
+
+- Automatically adjusts the height/position of content when keyboard appears
+- Prevents the keyboard from covering input fields
+- Ensures form elements remain visible and accessible when typing
+- Essential for forms and input-focused screens on mobile devices
+
+Here's a practical example:
+
+```tsx copy
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+
+export default function Add() {
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+    >
+      <ScrollView className="flex-1">{/* Your form content */}</ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+```
+
+Key Properties:
+
+`behavior`: Specifies how the view should adjust
+
+`'padding'`: Adds padding below content (recommended for iOS)
+`'height'`: Adjusts height of the view (better for Android)
+`'position'`: Absolute positioning of content
+
+keyboardVerticalOffset: Distance between keyboard and input
+
+`<KeyboardAvoidingView keyboardVerticalOffset={90}>`
+
+enabled: Toggle the behavior
+`<KeyboardAvoidingView enabled={true}>`
+
+Best Practices:
+
+- Always use Platform.OS to set appropriate behavior
+- Combine with ScrollView for scrollable content
+- Place it at the root of your screen component
+- Test on both iOS and Android devices
+
+Common Pattern with Formik:
+
+```tsx copy
+export default function Add() {
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+    >
+      <ScrollView className="flex-1 px-4">
+        <Formik initialValues={{ title: "", url: "" }} onSubmit={handleSubmit}>
+          {({ handleSubmit }) => (
+            <View className="space-y-4">
+              <TextInput />
+              {/* Other form fields */}
+            </View>
+          )}
+        </Formik>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+```
+
+### Without KeyboardAvoidingView:
+
+- Keyboard might cover input fields
+- Users can't see what they're typing
+- Poor user experience
+- Might need to manually dismiss keyboard
+
+### With KeyboardAvoidingView:
+
+- Content automatically adjusts to keyboard
+- All input fields remain visible
+- Smooth user experience
+- Native-feeling behavior on both platforms

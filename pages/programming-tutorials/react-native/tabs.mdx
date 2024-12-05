@@ -1,0 +1,903 @@
+# Creating Tabs in Expo Router: A Comprehensive Guide
+
+## Official Documentation
+
+- Expo Router Tabs: https://docs.expo.dev/router/advanced/tabs/
+- Lucide React Native Icons: https://lucide.dev/icons/
+- NativeWind: https://www.nativewind.dev/
+
+## Basic Tab Setup
+
+### 1. File Structure
+
+```
+app/
+├── (tabs)/
+│   ├── _layout.tsx      # Tab navigator configuration
+│   ├── index.tsx        # First tab screen
+│   ├── profile.tsx      # Profile tab screen
+│   └── settings.tsx     # Settings tab screen
+└── _layout.tsx          # Root layout
+```
+
+### 2. Basic Tab Implementation
+
+```typescript
+// app/(tabs)/_layout.tsx
+import { Tabs } from "expo-router";
+import { Home, User, Settings } from "lucide-react";
+
+export default function TabsLayout() {
+  return (
+    <Tabs>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <Home color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => <User color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }) => <Settings color={color} size={24} />,
+        }}
+      />
+    </Tabs>
+  );
+}
+```
+
+## Styling Options
+
+### 1. Tab Bar Styling
+
+```typescript
+<Tabs
+  screenOptions={{
+    // Tab bar style
+    tabBarStyle: {
+      backgroundColor: '#ffffff',
+      borderTopWidth: 1,
+      borderTopColor: '#e2e8f0',
+      height: 60,
+      paddingBottom: 8,
+    },
+    // Active and inactive colors
+    tabBarActiveTintColor: '#3b82f6',
+    tabBarInactiveTintColor: '#94a3b8',
+    // Label styling
+    tabBarLabelStyle: {
+      fontSize: 12,
+      fontWeight: '500',
+    },
+  }}
+>
+```
+
+### 2. Individual Tab Styling
+
+```typescript
+<Tabs.Screen
+  name="index"
+  options={{
+    tabBarLabel: "Home",
+    tabBarIcon: ({ color, size, focused }) => (
+      <View style={{ opacity: focused ? 1 : 0.5 }}>
+        <Home color={color} size={size} />
+      </View>
+    ),
+    tabBarLabelStyle: {
+      fontSize: 12,
+    },
+  }}
+/>
+```
+
+## Advanced Features
+
+### 1. Badges
+
+```typescript
+<Tabs.Screen
+  name="notifications"
+  options={{
+    tabBarBadge: "3",
+    tabBarBadgeStyle: {
+      backgroundColor: "#ef4444",
+    },
+  }}
+/>
+```
+
+### 2. Custom Tab Bar
+
+```typescript
+function CustomTabBar({ state, navigation }) {
+  return (
+    <View className="flex-row justify-around bg-white border-t border-gray-200 py-2">
+      {state.routes.map((route, index) => (
+        <TouchableOpacity
+          key={route.key}
+          onPress={() => navigation.navigate(route.name)}
+          className={`items-center px-4 ${
+            state.index === index ? 'opacity-100' : 'opacity-50'
+          }`}
+        >
+          {/* Your custom tab design */}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// Use in Tabs
+<Tabs tabBar={(props) => <CustomTabBar {...props} />}>
+```
+
+### 3. Hiding Tab Bar on Specific Screens
+
+```typescript
+<Tabs.Screen
+  name="fullscreen"
+  options={{
+    tabBarStyle: { display: "none" },
+    headerShown: false,
+  }}
+/>
+```
+
+## Icons and Assets
+
+### 1. Using Lucide Icons
+
+```bash
+npm install lucide-react-native
+```
+
+```typescript
+import { Home, Search, Bell, User } from 'lucide-react-native';
+
+// Usage
+<TabBarIcon: ({ color }) => <Home color={color} size={24} />
+```
+
+### 2. Using Custom SVG Icons
+
+```typescript
+import { Svg, Path } from "react-native-svg";
+
+const CustomIcon = ({ color }) => (
+  <Svg width={24} height={24} viewBox="0 0 24 24" fill={color}>
+    <Path d="..." />
+  </Svg>
+);
+```
+
+## Navigation Patterns
+
+### 1. Nested Navigation
+
+```typescript
+// app/(tabs)/home/_layout.tsx
+import { Stack } from "expo-router";
+
+export default function HomeStack() {
+  return (
+    <Stack>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="details" />
+    </Stack>
+  );
+}
+```
+
+### 2. Handling Deep Linking
+
+```typescript
+// app/(tabs)/_layout.tsx
+<Tabs
+  screenOptions={{
+    href: {
+      home: '/',
+      profile: '/profile',
+      settings: '/settings',
+    },
+  }}
+>
+```
+
+## Best Practices
+
+1. **Performance**
+   - Lazy load tab screens
+   - Minimize re-renders
+   - Use memo for tab bar icons
+
+```typescript
+const TabIcon = React.memo(({ color, size }) => (
+  <Home color={color} size={size} />
+));
+```
+
+2. **Accessibility**
+
+```typescript
+<Tabs.Screen
+  options={{
+    tabBarAccessibilityLabel: "Home Tab",
+    tabBarTestID: "HomeTab",
+  }}
+/>
+```
+
+3. **State Management**
+
+```typescript
+// Using React Navigation's useNavigationState
+import { useNavigationState } from "@react-navigation/native";
+
+const currentTab = useNavigationState(
+  (state) => state?.routes[state.index]?.name
+);
+```
+
+4. **Error Boundaries**
+
+```typescript
+import { ErrorBoundary } from "expo-router";
+
+export default function TabsLayout() {
+  return (
+    <ErrorBoundary>
+      <Tabs>{/* ... */}</Tabs>
+    </ErrorBoundary>
+  );
+}
+```
+
+## Ecommerce Tabs
+
+E-commerce Tabs:
+
+- Minimalist design with subtle shadows
+- Small dot indicator for active tab
+- Increased stroke width on active icons
+- Clean, commerce-focused icons
+- Light background with dark accents
+
+```tsx copy
+// 1. E-commerce App Tabs - Elegant and minimalist
+import { Tabs } from "expo-router";
+import { Home, Search, ShoppingBag, Heart, User } from "lucide-react";
+
+export const EcommerceTabs = () => {
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopWidth: 0,
+          elevation: 0,
+          height: 65,
+          paddingTop: 8,
+          paddingBottom: 8,
+          shadowColor: "#000",
+          shadowOffset: {
+            width: 0,
+            height: -4,
+          },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+        },
+        tabBarActiveTintColor: "#111827",
+        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarLabelStyle: {
+          fontFamily: "Inter",
+          fontSize: 11,
+          marginTop: 4,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Shop",
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <Home size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+              {focused && (
+                <View className="h-1 w-1 rounded-full bg-black mt-1" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <Search
+                size={24}
+                color={color}
+                strokeWidth={focused ? 2.5 : 1.5}
+              />
+              {focused && (
+                <View className="h-1 w-1 rounded-full bg-black mt-1" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          title: "Cart",
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <ShoppingBag
+                size={24}
+                color={color}
+                strokeWidth={focused ? 2.5 : 1.5}
+              />
+              {focused && (
+                <View className="h-1 w-1 rounded-full bg-black mt-1" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="wishlist"
+        options={{
+          title: "Wishlist",
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <Heart
+                size={24}
+                color={color}
+                strokeWidth={focused ? 2.5 : 1.5}
+              />
+              {focused && (
+                <View className="h-1 w-1 rounded-full bg-black mt-1" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <User size={24} color={color} strokeWidth={focused ? 2.5 : 1.5} />
+              {focused && (
+                <View className="h-1 w-1 rounded-full bg-black mt-1" />
+              )}
+            </View>
+          ),
+        }}
+      />
+    </Tabs>
+  );
+};
+```
+
+## Fitness Tabs
+
+- Dark mode design
+- Cyan accent color for active state
+- Scale animation on active tab
+- Glowing background effect
+- Bold, energetic feel
+
+```tsx copy
+// 2. Fitness App Tabs - Bold and energetic
+import { Dumbbell, Calendar, Trophy, Compass, UserCircle } from "lucide-react";
+
+export const FitnessTabs = () => {
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: "#111827",
+          borderTopWidth: 0,
+          height: 65,
+          paddingBottom: 8,
+        },
+        tabBarActiveTintColor: "#22D3EE",
+        tabBarInactiveTintColor: "#6B7280",
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+          marginTop: 4,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="workout"
+        options={{
+          title: "Workout",
+          tabBarIcon: ({ color, focused }) => (
+            <View className={`items-center ${focused ? "scale-110" : ""}`}>
+              <View
+                className={`p-2 rounded-xl ${focused ? "bg-cyan-500/20" : ""}`}
+              >
+                <Dumbbell size={22} color={color} />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="plans"
+        options={{
+          title: "Plans",
+          tabBarIcon: ({ color, focused }) => (
+            <View className={`items-center ${focused ? "scale-110" : ""}`}>
+              <View
+                className={`p-2 rounded-xl ${focused ? "bg-cyan-500/20" : ""}`}
+              >
+                <Calendar size={22} color={color} />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: "Discover",
+          tabBarIcon: ({ color, focused }) => (
+            <View className={`items-center ${focused ? "scale-110" : ""}`}>
+              <View
+                className={`p-2 rounded-xl ${focused ? "bg-cyan-500/20" : ""}`}
+              >
+                <Compass size={22} color={color} />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: "Progress",
+          tabBarIcon: ({ color, focused }) => (
+            <View className={`items-center ${focused ? "scale-110" : ""}`}>
+              <View
+                className={`p-2 rounded-xl ${focused ? "bg-cyan-500/20" : ""}`}
+              >
+                <Trophy size={22} color={color} />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <View className={`items-center ${focused ? "scale-110" : ""}`}>
+              <View
+                className={`p-2 rounded-xl ${focused ? "bg-cyan-500/20" : ""}`}
+              >
+                <UserCircle size={22} color={color} />
+              </View>
+            </View>
+          ),
+        }}
+      />
+    </Tabs>
+  );
+};
+```
+
+## Social Media Apps
+
+- Modern, floating tab bar
+- Rounded button effect for active state
+- Color + background change for active tabs
+- No labels for cleaner look
+- Playful animations and transitions
+
+```tsx copy
+// 3. Social Media App Tabs - Modern and playful
+import { Home, Hash, MessageCircle, Bell, User } from "lucide-react";
+
+export const SocialTabs = () => {
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopWidth: 0,
+          height: 65,
+          paddingVertical: 8,
+          shadowColor: "#000",
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+        },
+        tabBarActiveTintColor: "#8B5CF6",
+        tabBarInactiveTintColor: "#A1A1AA",
+        tabBarShowLabel: false,
+      }}
+    >
+      <Tabs.Screen
+        name="feed"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <View
+                className={`p-3 rounded-2xl transition-all ${
+                  focused ? "bg-violet-100" : ""
+                }`}
+              >
+                <Home
+                  size={24}
+                  color={focused ? "#8B5CF6" : "#A1A1AA"}
+                  strokeWidth={focused ? 2.5 : 1.5}
+                />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <View
+                className={`p-3 rounded-2xl transition-all ${
+                  focused ? "bg-violet-100" : ""
+                }`}
+              >
+                <Hash
+                  size={24}
+                  color={focused ? "#8B5CF6" : "#A1A1AA"}
+                  strokeWidth={focused ? 2.5 : 1.5}
+                />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <View
+                className={`p-3 rounded-2xl transition-all ${
+                  focused ? "bg-violet-100" : ""
+                }`}
+              >
+                <MessageCircle
+                  size={24}
+                  color={focused ? "#8B5CF6" : "#A1A1AA"}
+                  strokeWidth={focused ? 2.5 : 1.5}
+                />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <View
+                className={`p-3 rounded-2xl transition-all ${
+                  focused ? "bg-violet-100" : ""
+                }`}
+              >
+                <Bell
+                  size={24}
+                  color={focused ? "#8B5CF6" : "#A1A1AA"}
+                  strokeWidth={focused ? 2.5 : 1.5}
+                />
+              </View>
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View className="items-center">
+              <View
+                className={`p-3 rounded-2xl transition-all ${
+                  focused ? "bg-violet-100" : ""
+                }`}
+              >
+                <User
+                  size={24}
+                  color={focused ? "#8B5CF6" : "#A1A1AA"}
+                  strokeWidth={focused ? 2.5 : 1.5}
+                />
+              </View>
+            </View>
+          ),
+        }}
+      />
+    </Tabs>
+  );
+};
+```
+
+## Simple One
+
+```tsx copy
+import { Tabs } from "expo-router";
+import React from "react";
+import { BarChart2, FileText, Home, Search, User } from "lucide-react-native";
+
+export default function TabLayout() {
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: "#818cf8",
+        tabBarInactiveTintColor: "#94a3b8",
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopWidth: 1,
+          borderTopColor: "#e2e8f0",
+        },
+        headerShown: false,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="links"
+        options={{
+          tabBarLabel: "Links",
+          tabBarIcon: ({ color }) => <Search size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          tabBarLabel: "Add",
+          tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="achieved"
+        options={{
+          tabBarLabel: "Achieved",
+          tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="details/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      {/* <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+        }}
+      /> */}
+    </Tabs>
+  );
+}
+```
+
+## Advanced with Linear Gradient
+
+```tsx copy
+import { Tabs } from "expo-router";
+import React from "react";
+import { StyleSheet, View, Platform } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons, FontAwesome6 } from "@expo/vector-icons";
+import { useAuth } from "@/context/AuthContext";
+import { BlurView } from "expo-blur";
+
+const TabLayout = () => {
+  const { user } = useAuth();
+  // const isAttendant = user?.role === 'ATTENDANT';
+  // const isAdmin = user?.role === 'ADMIN';
+
+  const TabBarIcon = ({
+    name,
+    color,
+    focused,
+  }: {
+    name: any;
+    color: string;
+    focused: any;
+  }) => (
+    <View style={[styles.iconWrapper, focused && styles.activeIconWrapper]}>
+      <LinearGradient
+        colors={
+          focused ? ["#064e3b", "#0d9488"] : ["transparent", "transparent"]
+        }
+        style={styles.iconGradient}
+      >
+        <MaterialCommunityIcons
+          name={name}
+          size={24}
+          color={focused ? "#fff" : "#64748b"}
+        />
+      </LinearGradient>
+    </View>
+  );
+
+  return (
+    <Tabs
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: "#0d9488",
+        tabBarInactiveTintColor: "#64748b",
+        headerShown: false,
+        tabBarBackground: () => (
+          <BlurView intensity={95} style={StyleSheet.absoluteFill} tint="light">
+            <LinearGradient
+              colors={["rgba(255,255,255,0.9)", "rgba(241,245,249,0.9)"]}
+              style={StyleSheet.absoluteFill}
+            />
+          </BlurView>
+        ),
+        tabBarStyle: styles.tabBar,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarIcon: ({ color, focused }) => {
+          let iconName;
+
+          if (route.name === "index") {
+            iconName = focused ? "shield-home" : "home-outline";
+          } else if (route.name === "inventory") {
+            iconName = focused ? "view-grid-plus" : "point-of-sale";
+          } else if (route.name === "sales") {
+            iconName = focused ? "cash-register" : "sale";
+          } else if (route.name === "menu") {
+            iconName = focused ? "menu-open" : "menu";
+          }
+
+          return <TabBarIcon name={iconName} color={color} focused={focused} />;
+        },
+      })}
+    >
+      {/* Single home screen for both admin and attendant */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          // href: isAttendant ? null : undefined,
+        }}
+      />
+
+      {/* <Tabs.Screen
+        name="main"
+        options={{
+          title: 'Home',
+          href: isAdmin ? null : undefined,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconWrapper, focused && styles.activeIconWrapper]}>
+              <LinearGradient
+                colors={focused ? ['#064e3b', '#0d9488'] : ['transparent', 'transparent']}
+                style={styles.iconGradient}
+              >
+                <FontAwesome6
+                  name="house"
+                  size={20}
+                  color={focused ? '#fff' : '#64748b'}
+                />
+              </LinearGradient>
+            </View>
+          ),
+        }}
+      /> */}
+
+      <Tabs.Screen name="inventory" options={{ title: "Inventory" }} />
+      <Tabs.Screen
+        name="checkout"
+        options={{
+          title: "",
+          tabBarButton: () => null,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tabs.Screen
+        name="shops"
+        options={{
+          title: "",
+          tabBarButton: () => null,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "",
+          tabBarButton: () => null,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tabs.Screen
+        name="notification-detail"
+        options={{
+          title: "",
+          tabBarButton: () => null,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tabs.Screen name="sales" options={{ title: "Sales" }} />
+      <Tabs.Screen name="menu" options={{ title: "Menu" }} />
+    </Tabs>
+  );
+};
+
+const styles = StyleSheet.create({
+  tabBar: {
+    position: "absolute",
+    elevation: Platform.OS === "android" ? 20 : 0,
+    backgroundColor: "transparent",
+    height: 65,
+    borderTopWidth: 0,
+    paddingHorizontal: 10,
+    paddingBottom: Platform.OS === "ios" ? 20 : 10,
+    paddingTop: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  tabBarLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 4,
+  },
+  iconWrapper: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  activeIconWrapper: {
+    backgroundColor: "rgba(241,245,249,0.8)",
+  },
+  iconGradient: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+});
+
+export default TabLayout;
+```

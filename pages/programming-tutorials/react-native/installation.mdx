@@ -1,0 +1,200 @@
+# Setting Up Expo and NativeWind: A Complete Guide
+
+## Official Documentation Links
+
+- Expo Docs: https://docs.expo.dev/
+- NativeWind Docs: https://www.nativewind.dev/
+- Tailwind CSS Docs: https://tailwindcss.com/docs
+
+## 1. Installing Expo CLI
+
+```bash
+# Install Expo CLI globally
+npm install -g expo-cli
+
+# Check installation
+expo --version
+```
+
+## 2. Creating a New Expo Project
+
+### Using the Latest Expo SDK with Tabs and expo router
+
+```bash copy
+# Create new project
+npx create-expo-app@latest YourAppName
+pnpm create expo-app YourAppName
+
+# Navigate to project
+cd YourAppName
+```
+
+## 3. Installing NativeWind
+
+You will need to install nativewind and it's peer dependencies tailwindcss, react-native-reanimated and react-native-safe-area-context
+
+### Step 1: Install Dependencies
+
+```bash
+pnpm install nativewind tailwindcss react-native-reanimated react-native-safe-area-context
+```
+
+### Step 2: Setup Tailwind CSS
+
+Run npx tailwindcss init to create a tailwind.config.js file
+
+Add the paths to all of your component files in your tailwind.config.js file.
+
+```bash
+# Create tailwind config file
+npx tailwindcss init
+```
+
+### Step 3: Configure Tailwind
+
+Update `tailwind.config.js`:
+
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+### Step 4: Configure Babel
+
+Update `babel.config.js`:
+
+```javascript
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
+      "nativewind/babel",
+    ],
+  };
+};
+```
+
+### Step 5: Create Global CSS File
+
+Create `global.css` in your project root:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+### Step 6: Import CSS in App Entry
+
+In `App.tsx` or `app/_layout.tsx`:
+
+```typescript
+import "../global.css";
+```
+
+### Step 6: Modify your metro.config.js
+
+If your project does not have a `metro.config.js` run npx expo customize `metro.config.js`
+
+```js copy
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
+
+const config = getDefaultConfig(__dirname);
+
+module.exports = withNativeWind(config, { input: "./global.css" });
+```
+
+### Step 7 : Configure Typescript
+
+NativeWind extends the React Native types via declaration merging. The simplest method to include the types is to create a new `nativewind-env.d.ts` file and add a triple-slash directive referencing the types.
+
+```ts copy
+/// <reference types="nativewind/types" />
+```
+
+## 4. Running Your Project
+
+```bash copy
+# Start the development server
+npx expo start
+
+# For iOS
+npx expo start --ios
+
+# For Android
+npx expo start --android
+
+# For web
+npx expo start --web
+```
+
+## 5. Testing NativeWind Setup
+
+Create a test component to verify the setup:
+
+```typescript copy
+import { View, Text } from "react-native";
+
+export default function TestComponent() {
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text className="text-xl font-bold text-blue-500">
+        NativeWind is working!
+      </Text>
+    </View>
+  );
+}
+```
+
+## Common Issues and Solutions
+
+1. **Styles Not Applying**
+
+   - Verify babel plugin is correctly configured
+   - Check content paths in tailwind config
+   - Make sure global.css is imported
+
+2. **TypeScript Errors**
+   Create if not exist and Add to your `nativewind-env.d.ts` file:
+
+   ```typescript
+   /// <reference types="nativewind/types" />
+   ```
+
+3. **Hot Reload Issues**
+   - Clear metro bundler cache:
+   ```bash
+   npx expo start --clear
+   ```
+
+## Best Practices
+
+1. **Project Structure**
+
+```
+YourAppName/
+├── app/                 # Expo Router pages
+├── components/          # Reusable components
+├── global.css          # Tailwind imports
+├── tailwind.config.js  # Tailwind configuration
+└── babel.config.js     # Babel configuration
+```
+
+2. **TypeScript Configuration**
+
+   - Use strict mode in tsconfig
+   - Enable component type checking
+   - Use proper import aliases
+
+3. **Development Workflow**
+   - Use Expo Go for quick testing
+   - Test on both iOS and Android
+   - Keep dependencies updated
