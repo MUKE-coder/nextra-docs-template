@@ -258,6 +258,15 @@ export default router;
 
 ### Custom Hook (src/hooks/useLinks.ts)
 
+Install Dependencies
+
+```bash copy
+pnpm add @tanstack/react-query
+pnpm add @react-native-community/netinfo
+pnpm add zustand @react-native-async-storage/async-storage
+pnpm add -D babel-plugin-inline-import
+```
+
 ```typescript
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getLinksOffline, getLinksOnline } from "../data/queries";
@@ -524,6 +533,8 @@ const styles = StyleSheet.create({
 
 ## With DRIZZLE ORM AND SQL
 
+Here are the Docs : https://orm.drizzle.team/docs/get-started/expo-new
+
 # Links App with Drizzle ORM Integration
 
 ## Install Dependencies
@@ -678,6 +689,12 @@ module.exports = function (api) {
     plugins: [["inline-import", { extensions: [".sql"] }]],
   };
 };
+```
+
+## Generate dirzzle migrations
+
+```bash copy
+npx drizzle-kit generate
 ```
 
 ## Usage in App

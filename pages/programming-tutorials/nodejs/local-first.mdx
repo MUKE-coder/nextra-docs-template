@@ -1,0 +1,844 @@
+import { Steps, Tabs, Callout } from "nextra/components";
+
+# Building an Offline-First Links App with Expo and Node.js
+
+This guide will walk you through building a fully functional offline-first links management application using Expo, SQLite, Drizzle ORM, React Query, and Node.js with Prisma.
+
+<Callout emoji="💡">
+  The app allows users to save and archive links with offline support. When
+  offline, data is stored locally in SQLite and synced with MongoDB when back
+  online.
+</Callout>
+
+Here are the five most crucial documentation resources for this project with direct
+links:
+
+Expo Docs - Offline SQLite Storage
+
+https://docs.expo.dev/versions/latest/sdk/sqlite/
+Essential for understanding how to implement offline storage in Expo
+
+Drizzle ORM - SQLite Guide
+
+https://orm.drizzle.team/docs/quick-sqlite/expo-sqlite
+Critical for setting up and using Drizzle ORM with Expo SQLite
+
+TanStack Query (React Query) - Overview
+
+https://tanstack.com/query/latest/docs/react/overview
+Fundamental for handling online/offline data synchronization
+
+Expo Router - Installation & Usage
+
+https://docs.expo.dev/routing/introduction/
+Core navigation system for the app structure
+
+Formik - React Native Forms
+
+https://formik.org/docs/guides/react-native
+Essential for handling form inputs and validation in React Native
+
+## Features
+
+- Offline-first architecture with SQLite
+- Online sync with MongoDB
+- Link management (add, archive)
+- Network status indicator
+- Automatic sync when back online
+- Form validation with Formik
+- Type safety with TypeScript
+
+## Prerequisites
+
+Before starting, make sure you have the following installed:
+
+<Tabs items={["Required Tools", "Development Tools", "Editor Extensions"]}>
+  <Tabs.Tab>
+    - Node.js 18 or higher - pnpm/npm/yarn - Expo CLI - MongoDB
+  </Tabs.Tab>
+  <Tabs.Tab>
+    - Android Studio/Xcode - VSCode or similar - MongoDB Compass (optional)
+  </Tabs.Tab>
+  <Tabs.Tab>- ESLint - Prettier - TypeScript</Tabs.Tab>
+</Tabs>
+
+## Project Setup
+
+<Steps>
+### Create New Expo Project
+
+First, create a new Expo project with TypeScript template:
+
+```bash copy
+pnpm create expo-app linkify
+cd linkify
+```
+
+## Install Dependencies
+
+Install the required dependencies:
+
+### Core dependencies
+
+```bash copy
+pnpm add @tanstack/react-query @react-native-community/netinfo expo-crypto
+pnpm expo install expo-sqlite
+pnpm add drizzle-orm
+pnpm add -D drizzle-kit
+pnpm install lucide-react-native
+```
+
+### Database & Storage
+
+```bash copy
+pnpm @react-native-async-storage/async-storage
+
+```
+
+### Forms & Validation
+
+```bash copy
+pnpm add formik yup
+```
+
+## Project Structure
+
+Here's how we'll organize our project:
+
+<FileTree>
+  <FileTree.Folder name="src" defaultOpen>
+    <FileTree.Folder name="db">
+      <FileTree.File name="index.ts" />
+      <FileTree.File name="schema.ts" />
+    </FileTree.Folder>
+    <FileTree.Folder name="data">
+      <FileTree.File name="api.ts" />
+      <FileTree.File name="mutations.ts" />
+      <FileTree.File name="queries.ts" />
+    </FileTree.Folder>
+    <FileTree.Folder name="hooks">
+      <FileTree.File name="useLinks.ts" />
+    </FileTree.Folder>
+    <FileTree.Folder name="components">
+      <FileTree.File name="LinkItem.tsx" />
+      <FileTree.File name="OnlineIndicator.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="screens">
+      <FileTree.File name="Add.tsx" />
+      <FileTree.File name="Links.tsx" />
+    </FileTree.Folder>
+    <FileTree.Folder name="types">
+      <FileTree.File name="link.ts" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+  <FileTree.Folder name="server">
+    <FileTree.Folder name="prisma">
+      <FileTree.File name="schema.prisma" />
+    </FileTree.Folder>
+    <FileTree.File name="index.ts" />
+  </FileTree.Folder>
+</FileTree>
+</Steps>
+## Database Setup
+<Steps>
+
+### Configure Drizzle
+
+First, let's set up our SQLite schema using Drizzle ORM. `Create src/db/schema.ts`:
+
+```ts copy
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+
+export const links = sqliteTable("links", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  isArchived: integer("is_archived", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+  isSynced: integer("is_synced", { mode: "boolean" }).notNull().default(false),
+});
+
+export type Link = typeof links.$inferSelect;
+export type NewLink = typeof links.$inferInsert;
+```
+
+## Database Connection
+
+Create the database connection in `src/db/index.ts:`
+
+```ts copy
+import * as SQLite from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { links } from "./schema";
+
+const SQLITE_FILE = "links.db";
+
+export const openConnection = () => {
+  const expo = SQLite.openDatabaseSync(SQLITE_FILE);
+  return drizzle(expo);
+};
+
+export const db = openConnection();
+```
+
+## Data Layer Implementation
+
+### API Configuration
+
+Set up the API client in `src/data/api.ts`:
+
+```typescript copy filename="src/data/api.ts"
+import { Platform } from "react-native";
+import { Link, NewLink } from "@/db/schema";
+
+const getBaseUrl = () => {
+  if (__DEV__) {
+    if (Platform.OS === "android") {
+      return "http://10.0.2.2:8000/api/v1"; // Android Emulator
+    }
+    return "http://localhost:8000/api/v1"; // iOS Simulator
+  }
+  return "YOUR_PRODUCTION_API_URL";
+};
+
+export const API_URL = getBaseUrl();
+
+export const getLinksOnline = async (): Promise<Link[]> => {
+  const response = await fetch(`${API_URL}/links`);
+  return response.json();
+};
+
+export const addLinkOnline = async (link: NewLink): Promise<Link> => {
+  const response = await fetch(`${API_URL}/links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(link),
+  });
+  return response.json();
+};
+
+export const syncMultipleLinks = async (links: NewLink[]): Promise<Link[]> => {
+  const response = await fetch(`${API_URL}/links/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ links }),
+  });
+  return response.json();
+};
+```
+
+## Database Queries
+
+Create database queries in `src/data/queries.ts`:
+
+```tsx copy
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { links } from "@/db/schema";
+
+export const getLinksOffline = async () => {
+  return db
+    .select()
+    .from(links)
+    .where(eq(links.isArchived, false))
+    .orderBy(links.createdAt);
+};
+
+export const getUnSyncedLinks = async () => {
+  return db.select().from(links).where(eq(links.isSynced, false));
+};
+```
+
+## Database Mutations
+
+Create mutations in src/data/mutations.ts:
+
+```ts copy
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { links } from "@/db/schema";
+import type { NewLink } from "@/db/schema";
+
+export const addLinkOffline = async (
+  link: Omit<NewLink, "createdAt" | "updatedAt">
+) => {
+  try {
+    const now = Date.now();
+    await db.insert(links).values({
+      ...link,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error("SQLite error:", error);
+    throw error;
+  }
+};
+
+export const updateLinkSyncStatus = async (id: string, synced: boolean) => {
+  await db.update(links).set({ isSynced: synced }).where(eq(links.id, id));
+};
+```
+
+## API Functions for Fetching and querying
+
+```ts copy
+import { API_URL } from "@/config/api";
+import { Link, NewLink } from "@/db/schema";
+
+// const API_URL = "http://localhost:8000/api/v1";
+
+export const getLinksOnline = async (): Promise<Link[]> => {
+  const response = await fetch(`${API_URL}/links`);
+  return response.json();
+};
+
+export const addLinkOnline = async (link: NewLink): Promise<Link> => {
+  console.log(link, API_URL);
+  const response = await fetch(`${API_URL}/links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(link),
+  });
+  return response.json();
+};
+
+export const archiveLinkOnline = async (id: string): Promise<Link> => {
+  const response = await fetch(`${API_URL}/links/${id}/archive`, {
+    method: "PATCH",
+  });
+  return response.json();
+};
+
+// src/data/api.ts
+export const syncMultipleLinks = async (links: NewLink[]): Promise<Link[]> => {
+  try {
+    const response = await fetch(`${API_URL}/links/sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ links }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Sync API Error:", error);
+    throw error;
+  }
+};
+```
+
+## Custom Hooks
+
+### useLinks Hook
+
+Create a custom hook for managing links in src/hooks/useLinks.ts:
+
+```tsx copy
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import NetInfo from "@react-native-community/netinfo";
+import { getLinksOffline, getUnSyncedLinks } from "../data/queries";
+import { addLinkOffline, updateLinkSyncStatus } from "../data/mutations";
+import { addLinkOnline, getLinksOnline, syncMultipleLinks } from "@/data/api";
+import { Link, NewLink } from "@/db/schema";
+
+export const useLinks = () => {
+  const queryClient = useQueryClient();
+  const [isOnline, setIsOnline] = useState(false);
+
+  // Monitor network status
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const online = state.isConnected && state.isInternetReachable;
+      setIsOnline(!!online);
+
+      if (online) {
+        syncOfflineData();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Function to sync offline data
+  const syncOfflineData = async () => {
+    try {
+      const unsyncedLinks = await getUnSyncedLinks();
+
+      if (unsyncedLinks.length > 0) {
+        await syncMultipleLinks(unsyncedLinks);
+
+        for (const link of unsyncedLinks) {
+          await updateLinkSyncStatus(link.id, true);
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["links"] });
+      }
+    } catch (error) {
+      console.error("Sync failed:", error);
+    }
+  };
+
+  const linksQuery = useQuery({
+    queryKey: ["links"],
+    queryFn: async () => {
+      const netInfo = await NetInfo.fetch();
+      return netInfo.isConnected
+        ? await getLinksOnline()
+        : await getLinksOffline();
+    },
+  });
+
+  const addLinkMutation = useMutation({
+    mutationFn: async (newLink: NewLink) => {
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected) {
+        await addLinkOnline(newLink);
+        return await addLinkOffline({ ...newLink, isSynced: true });
+      }
+      return await addLinkOffline(newLink);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links"] });
+    },
+  });
+
+  return {
+    links: linksQuery.data,
+    isLoading: linksQuery.isLoading,
+    isError: linksQuery.isError,
+    error: linksQuery.error,
+    addLink: addLinkMutation.mutate,
+    isAdding: addLinkMutation.isPending,
+    isOnline,
+  };
+};
+```
+
+## UI Components Implementation
+
+### Online Indicator
+
+Create a component to show online/offline status in `src/components/OnlineIndicator.tsx`:
+
+```typescript copy filename="src/components/OnlineIndicator.tsx"
+import React from "react";
+import { View, Text } from "react-native";
+import { useLinks } from "@/hooks/useLinks";
+
+export function OnlineIndicator() {
+  const { isOnline } = useLinks();
+
+  return (
+    <View className="flex-row items-center">
+      <View
+        className={`w-2 h-2 rounded-full mr-2 ${
+          isOnline ? "bg-green-500" : "bg-red-500"
+        }`}
+      />
+      <Text className="text-sm text-gray-600">
+        {isOnline ? "Online" : "Offline"}
+      </Text>
+    </View>
+  );
+}
+```
+
+## Link Item Component
+
+Create a component for displaying individual links in src/`components/LinkItem.tsx:`
+
+```tsx copy
+import { View, Text, TouchableOpacity, Linking } from "react-native";
+import { Archive } from "lucide-react-native";
+
+interface LinkItemProps {
+  title: string;
+  url: string;
+  isArchived: boolean;
+  onArchive: () => void;
+}
+
+export function LinkItem({ title, url, isArchived, onArchive }: LinkItemProps) {
+  return (
+    <View
+      className={`flex-row p-4 border-b border-gray-100 items-center ${
+        isArchived ? "opacity-50" : ""
+      }`}
+    >
+      <TouchableOpacity className="flex-1" onPress={() => Linking.openURL(url)}>
+        <Text className="text-base font-medium mb-1">{title}</Text>
+        <Text className="text-sm text-gray-500" numberOfLines={1}>
+          {url}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity className="p-2" onPress={onArchive}>
+        <Archive size={20} color={isArchived ? "#3b82f6" : "#666"} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+```
+
+## Add Link Form
+
+Create the form for adding new links in `src/screens/Add.tsx:`
+
+```tsx copy
+import { router } from "expo-router";
+import React from "react";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from "react-native";
+import { Formik, FormikHelpers } from "formik";
+import * as Yup from "yup";
+import * as Crypto from "expo-crypto";
+import { useLinks } from "@/hooks/useLinks";
+import { NewLink } from "@/db/schema";
+
+interface FormValues {
+  title: string;
+  url: string;
+}
+
+const validationSchema = Yup.object().shape({
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title must be less than 100 characters"),
+  url: Yup.string()
+    .required("URL is required")
+    .url("Please enter a valid URL")
+    .max(2048, "URL is too long"),
+});
+
+export default function Add() {
+  const { addLink, isAdding } = useLinks();
+
+  const handleSubmit = async (
+    values: FormValues,
+    { resetForm }: FormikHelpers<FormValues>
+  ) => {
+    try {
+      const newLink = {
+        id: Crypto.randomUUID(),
+        title: values.title,
+        url: values.url,
+        isArchived: false,
+        isSynced: false,
+      };
+
+      await addLink(newLink);
+      resetForm();
+      router.push("/links");
+    } catch (error) {
+      console.error("Failed to create link:", error);
+    }
+  };
+
+  return (
+    <View className="flex-1 p-4 bg-white pt-12">
+      <View className="py-4">
+        <Text className="font-bold text-3xl">Add New Link</Text>
+      </View>
+
+      <Formik<FormValues>
+        initialValues={{ title: "", url: "" }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          isSubmitting,
+        }) => (
+          <View className="space-y-4">
+            <View>
+              <TextInput
+                className={`h-12 border rounded-lg px-4 mb-1 ${
+                  touched.title && errors.title
+                    ? "border-red-500"
+                    : "border-gray-200"
+                }`}
+                placeholder="Title"
+                value={values.title}
+                onChangeText={handleChange("title")}
+                onBlur={handleBlur("title")}
+                editable={!isSubmitting}
+              />
+              {touched.title && errors.title && (
+                <Text className="text-red-500 text-sm px-1">
+                  {errors.title}
+                </Text>
+              )}
+            </View>
+
+            <View>
+              <TextInput
+                className={`h-12 border rounded-lg px-4 mb-1 ${
+                  touched.url && errors.url
+                    ? "border-red-500"
+                    : "border-gray-200"
+                }`}
+                placeholder="URL"
+                value={values.url}
+                onChangeText={handleChange("url")}
+                onBlur={handleBlur("url")}
+                keyboardType="url"
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
+                editable={!isSubmitting}
+              />
+              {touched.url && errors.url && (
+                <Text className="text-red-500 text-sm px-1">{errors.url}</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              className={`h-12 rounded-lg items-center justify-center ${
+                isSubmitting || isAdding ? "bg-blue-300" : "bg-blue-500"
+              }`}
+              onPress={() => handleSubmit()}
+              disabled={isSubmitting || isAdding}
+            >
+              {isSubmitting || isAdding ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white text-base font-medium">
+                  Save Link
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </Formik>
+    </View>
+  );
+}
+```
+
+## Backend API Implementation
+
+### Prisma Schema
+
+Create the Prisma schema in server/prisma/schema.prisma:
+
+```ts copy
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Link {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  url        String
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+```
+
+## Server Setup
+
+Create the Express server in server/index.ts:
+
+```ts copy
+import express from "express";
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
+
+const app = express();
+const prisma = new PrismaClient();
+
+app.use(cors());
+app.use(express.json());
+
+// Validation schema
+const LinkSchema = z.object({
+  id: z.string(),
+  title: z.string().min(3).max(100),
+  url: z.string().url().max(2048),
+  isArchived: z.boolean().default(false),
+});
+
+// Get all links
+app.get("/api/v1/links", async (req, res) => {
+  try {
+    const links = await prisma.link.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(links);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch links" });
+  }
+});
+
+// Create a link
+app.post("/api/v1/links", async (req, res) => {
+  try {
+    const validatedData = LinkSchema.parse(req.body);
+    const link = await prisma.link.create({
+      data: validatedData,
+    });
+    res.json(link);
+  } catch (error) {
+    res.status(400).json({ error: "Invalid link data" });
+  }
+});
+
+// Sync multiple links
+app.post("/api/v1/links/sync", async (req, res) => {
+  try {
+    const { links } = req.body;
+    const validatedLinks = z.array(LinkSchema).parse(links);
+
+    const createdLinks = await prisma.link.createMany({
+      data: validatedLinks,
+      skipDuplicates: true,
+    });
+
+    res.json(createdLinks);
+  } catch (error) {
+    res.status(400).json({ error: "Invalid links data" });
+  }
+});
+
+app.listen(8000, "0.0.0.0", () => {
+  console.log("Server running on port 8000");
+});
+```
+
+## React Query Setup in the Layout
+
+```tsx copy
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import { Text, View } from "react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { db } from "@/db";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
+import migrations from "@/drizzle/migrations";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 2,
+    },
+  },
+});
+
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  const [isMigrated, setIsMigrated] = useState(false);
+  const [migrationError, setMigrationError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function runMigrations() {
+      try {
+        await migrate(db, migrations);
+        setIsMigrated(true);
+      } catch (error) {
+        setMigrationError(
+          error instanceof Error ? error : new Error("Migration failed")
+        );
+      }
+    }
+
+    runMigrations();
+  }, []);
+
+  if (migrationError) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Migration error: {migrationError.message}</Text>
+      </View>
+    );
+  }
+
+  if (!isMigrated) {
+    return null;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+## Configure Babel
+
+Create or update `babel.config.js`:
+
+```javascript copy filename="babel.config.js"
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
+      "nativewind/babel",
+    ],
+    plugins: [
+      [
+        "inline-import",
+        {
+          extensions: [".sql"],
+        },
+      ],
+    ],
+  };
+};
+```
+
+## Configure Metro
+
+Create `metro.config.js:`
+
+```js copy
+const { getDefaultConfig } = require("expo/metro-config");
+
+const config = getDefaultConfig(__dirname);
+config.resolver.sourceExts.push("sql");
+
+module.exports = config;
+```
+
+</Steps>
