@@ -1,8 +1,6 @@
 {
   "auth": "Authentication",
   "reusable-auth": "Reusable Auth Methods",
-  "local-first": "Building Local First Mobile App",
-  "offline": "Offline First Mobile App",
   "setup": "Node Set up with Typescript ",
   "mvc": "MVC-Versioning and Routing ",
   "jwt": "Implementing JWT ",

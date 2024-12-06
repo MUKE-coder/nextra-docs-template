@@ -1,6 +1,8 @@
 {
   "index": "Introduction",
   "data-table": "Data Table",
+  "local-first": "Building Local First Mobile App",
+  "offline": "Offline First Mobile App",
   "tabs": "Tab Navigation",
   "get-started": "Get Started with Expo",
   "installation": "Installation",
